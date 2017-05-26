@@ -85,7 +85,7 @@ class MafScheme(object):
 
     def __len__(self):
         """
-        :return: The number of columns in this scheme 
+        :return: The number of columns in this scheme
         """
         return len(self.__column_name_to_column_class)
 

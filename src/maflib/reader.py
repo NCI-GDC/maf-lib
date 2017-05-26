@@ -142,8 +142,8 @@ class MafReader(object):
         # is the "no restrictions anything goes" scheme, then use the "no
         # restrictions" scheme with the given column names.
         if column_names is not None and \
-                (self.__scheme is None
-                 or isinstance(self.__scheme, NoRestrictionsScheme)):
+                (self.__scheme is None or isinstance(self.__scheme,
+                                                     NoRestrictionsScheme)):
             if self.validation_stringency is not ValidationStringency.Silent:
                 self.__logger.warn(
                     "No matching scheme was found in the header, defaulting "

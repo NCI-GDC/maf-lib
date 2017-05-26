@@ -1,8 +1,10 @@
+import gzip
 import os
 import tempfile
 import unittest
+
 from maflib.scheme_factory import find_scheme_class
-import gzip
+
 
 def tmp_file(lines):
     """

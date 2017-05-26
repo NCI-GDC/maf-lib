@@ -15,9 +15,9 @@ from maflib.column_values import *
 from maflib.util import abstractclassmethod
 
 try:
-  basestring
+    basestring
 except NameError:
-  basestring = (str, bytes)
+    basestring = (str, bytes)
 
 
 def get_column_types():
@@ -30,7 +30,7 @@ def get_column_types():
         # Get all available column types
 
     return inspect.getmembers(sys.modules["maflib.column_types"],
-                                      predicate)
+                              predicate)
 
 
 class NullableEmptyStringIsNone(object):
@@ -294,7 +294,8 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
         return ";".join([str(v) for v in self.value])
 
 
-class SequenceOfStrings(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
+class SequenceOfStrings(NullableEmptyStringIsEmptyList,
+                        SequenceOfValuesColumn):
     """A column that represents a sequence of zero or more strings"""
     @classmethod
     def __column_class__(cls):

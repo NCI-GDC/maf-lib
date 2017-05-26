@@ -1,7 +1,8 @@
+from maflib.column_types import StringColumn, FloatColumn
 from maflib.reader import *
 from maflib.schemes import *
 from maflib.tests.testutils import *
-from maflib.column_types import StringColumn, FloatColumn
+
 
 class TestMafReader(unittest.TestCase):
 

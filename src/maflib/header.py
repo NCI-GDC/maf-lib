@@ -5,7 +5,8 @@
                                  represented by a pragma line in the MAF
 * MafHeaderRecord                container for one pragma line in the MAF, with
                                  a key and value
-* MafHeaderVersionRecord         specialized container for storing the "version"
+* MafHeaderVersionRecord         specialized container for storing the
+                                 "version"
                                  pragma
 * MafHeaderAnnotationSpecRecord  specialized container for storing the
                                  "annotation.spec" pragma.
@@ -252,7 +253,7 @@ class MafHeader(MutableMapping):
 
     @classmethod
     def scheme_header_lines(cls, scheme):
-        """Gets the list of header lines as they would be printed in a 
+        """Gets the list of header lines as they would be printed in a
         MafHeader for the given scheme."""
         return [
             "%s%s %s" % (MafHeader.HeaderLineStartSymbol,

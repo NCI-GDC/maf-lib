@@ -1,11 +1,11 @@
 import unittest
-
 from collections import OrderedDict
 
 from maflib.column import MafColumnRecord, MafCustomColumnRecord
-from maflib.schemes import MafScheme
 from maflib.column_types import StringColumn, FloatColumn
+from maflib.schemes import MafScheme
 from maflib.validation import MafValidationErrorType
+
 
 class TestMafColumnRecord(unittest.TestCase):
     class NullableColumn(MafColumnRecord):

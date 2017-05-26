@@ -6,7 +6,6 @@ from enum import Enum, unique
 
 from maflib.logger import Logger
 from maflib.reader import MafReader
-from maflib.scheme_factory import all_schemes, find_scheme
 from maflib.validation import ValidationStringency
 from maftools.subcommand import Subcommand
 from maftools.util import StoreEnumAction
@@ -14,10 +13,10 @@ from maftools.util import StoreEnumAction
 
 class ValidationErrors(object):
     """Container for storing and writing validation errors.
-    
-    Validation errors can be added via the ``extend`` method.  The ``write`` 
+
+    Validation errors can be added via the ``extend`` method.  The ``write``
     method writes the errors until the maximum number of errors has been
-    written. It also clears the errors after writing to reduce memory.    
+    written. It also clears the errors after writing to reduce memory.
     """
     def __init__(self, max_errors=sys.maxsize):
         self.num = 0
@@ -31,8 +30,8 @@ class ValidationErrors(object):
         self.errors.extend(reader_errors)
 
     def write(self, handle):
-        """Writes the current list of errors to the handler.  If too many 
-        errors have been written across all calls to ``write``, returns False, 
+        """Writes the current list of errors to the handler.  If too many
+        errors have been written across all calls to ``write``, returns False,
         otherwise True."""
         result = True
         num_errors_to_print = len(self.errors)
@@ -63,24 +62,9 @@ class Validate(Subcommand):
         """
         Add arguments to a subparser.
         """
-        versions = list(set(s.version() for s in all_schemes()))
-        annotations = [s.annotation_spec() for s in all_schemes()]
         subparser.add_argument('-i', '--input', dest='input', action='append',
                                required=True,
                                help='One or more MAF files.')
-        subparser.add_argument('-v', '--version',
-                               default=None,
-                               choices=versions,
-                               help="Use the given version when validating "
-                                    "rather than what's in the header.  "
-                                    "Choices: %s" % ", ".join(versions))
-        subparser.add_argument('-a', '--annotation',
-                               type=str, default=None,
-                               choices=annotations,
-                               help="Use the given annotation specification "
-                                    "when validating rather than what's in "
-                                    "the header.  "
-                                    "Choices: %s" % ", ".join(annotations))
         subparser.add_argument('-m', '--mode',
                                action=StoreEnumAction, type=Mode,
                                default=Mode.Verbose,
@@ -90,8 +74,8 @@ class Validate(Subcommand):
                                help="The maximum number of errors before "
                                     "stopping.")
         subparser.add_argument('-o', '--output', default=None,
-                               help="The output file, otherwise output will be "
-                                    "to standard output.")
+                               help="The output file, otherwise output will be"
+                                    " to standard output.")
 
     @classmethod
     def __get_description__(cls):
@@ -102,10 +86,10 @@ class Validate(Subcommand):
 
     @classmethod
     def __process_errors(cls, options, reader, logger, handle, errors):
-        """Adds the current set of errors from the reader to the error class 
-        and clears the errors in the reader.  If the mode is verbose, writes 
-        the errors to the handler, stopping when the specified maximum has 
-        been reached.  Returns true if too many errors have been found, 
+        """Adds the current set of errors from the reader to the error class
+        and clears the errors in the reader.  If the mode is verbose, writes
+        the errors to the handler, stopping when the specified maximum has
+        been reached.  Returns true if too many errors have been found,
         false otherwise."""
 
         # Transfer errors from reader to errors
@@ -124,20 +108,6 @@ class Validate(Subcommand):
         return False
 
     @classmethod
-    def __validate_options(cls, options, scheme, logger):
-        """Validate the command line options"""
-        if scheme is not None:
-            if options.version is None:
-                logger.info("No version given, defaulting to version '%s' "
-                            "based on -a/--annotation", scheme.version())
-            if options.annotation is None:
-                if scheme.is_basic():
-                    logger.info("The scheme is assumed to be the basic scheme")
-                else:
-                    logger.info("No annotation given, defaulting to "
-                                "annotation '%s'", scheme.annotation_spec())
-
-    @classmethod
     def __print_report(cls, options, errors, handle):
         """Prints out the validation report"""
 
@@ -152,32 +122,17 @@ class Validate(Subcommand):
                 handle.write("%s\t%d\t%s\n" % (tpe.name, count, tpe.value))
 
     @classmethod
-    def main(cls, options):
+    def __main__(cls, options):
         """The main method."""
         logger = Logger.get_logger(cls.__name__)
-
-        if options.version or options.annotation:
-            scheme = find_scheme(version=options.version,
-                                 annotation=options.annotation)
-            if not scheme:
-                tuples = ["\t%s %s" % (s.version(), s.annotation_spec()) for
-                          s in all_schemes()]
-                raise ValueError("Could not find a scheme with version '%s' "
-                                 "and annotation '%s'.  Available schemes:\n%s"
-                                 % (options.version, options.annotation,
-                                    "\n".join(tuples)))
-        else:
-            scheme=None
-
-        cls.__validate_options(options, scheme, logger)
 
         if options.output is None:
             handle = sys.stdout
         else:
             handle = open(options.output, "w")
 
-        errors = ValidationErrors(options.max_errors \
-                                      if options.max_errors else sys.maxsize)
+        errors = ValidationErrors(options.max_errors
+                                  if options.max_errors else sys.maxsize)
 
         for path in options.input:
             logger.info("Examining %s", path)
@@ -186,7 +141,7 @@ class Validate(Subcommand):
             silent = ValidationStringency.Silent
             reader = MafReader.reader_from(path=path,
                                            validation_stringency=silent,
-                                           scheme=scheme)
+                                           scheme=options.scheme)
 
             if not cls.__process_errors(options, reader, logger,
                                         handle, errors):
@@ -207,6 +162,7 @@ class Validate(Subcommand):
 
         if options.output:
             handle.close()
+
 
 @unique
 class Mode(Enum):
