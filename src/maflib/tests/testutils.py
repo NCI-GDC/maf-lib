@@ -20,7 +20,7 @@ def tmp_file(lines):
 
 def read_lines(path):
     if path.endswith(".gz"):
-        fh = gzip.open(path, "rb")
+        fh = gzip.open(path, "rt")
     else:
         fh = open(path, 'r')
     lines = fh.readlines()
