@@ -1,0 +1,16 @@
+*.pyc
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+doc_build
+parts
+bin
+var
+sdist
+.idea
+*.htmlcov
+*.coverage
