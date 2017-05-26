@@ -1,5 +1,6 @@
 """A set of useful utility classes and methods"""
 import sys
+
 try:
     # Python 2
     from cStringIO import StringIO
@@ -9,6 +10,7 @@ except ImportError:
 from contextlib import contextmanager
 
 from maflib.logger import Logger
+
 
 class LineReader(object):
     """
@@ -46,6 +48,7 @@ class LineReader(object):
         return self
 
     def next(self):
+        """Gets the next line"""
         return self.__next__()
 
     def __next__(self):
@@ -87,6 +90,7 @@ def extend_class(base_cls, cls):
     """Apply mixins"""
     base_cls_name = base_cls.__name__
     return type(base_cls_name, (cls, base_cls), {})
+
 
 def extend_instance(obj, cls):
     """Apply mixins after object creation"""

@@ -1,7 +1,7 @@
 """This modules implements a container type for a column value in a MafRecord.
 
-* MafColumnRecord        generic container for storing key and value pairs for a
-                         given column in a MafRecord.
+* MafColumnRecord        generic container for storing key and value pairs for
+                         a given column in a MafRecord.
 * MafCustomColumnRecord  a MafColumnRecord to simplify the creation of
                          sub-classes that wish to constrain both the type and
                          value of the column.
@@ -37,7 +37,8 @@ class MafColumnRecord(object):
 
     def validate(self, reset_errors=True, scheme=None, line_number=None):
         """
-        Validates that the value is of the correct type and an acceptable value.
+        Validates that the value is of the correct type and an acceptable
+        value.
         :return: a list of validation errors found, if any.
         """
 
@@ -158,7 +159,8 @@ class MafCustomColumnRecord(MafColumnRecord):
     A MafColumnRecord to simplify the creation of sub-classes that wish to
     constrain both the type and value of the column.
 
-    Sub-classes should implement the ``__build__`` and ``__validate__`` methods.
+    Sub-classes should implement the ``__build__`` and ``__validate__``
+    methods.
     """
 
     __metaclass__ = abc.ABCMeta
@@ -224,14 +226,14 @@ class MafCustomColumnRecord(MafColumnRecord):
             error = MafValidationError(
                 MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT,
                 "%s in column with name '%s'" % (msg, self.key),
-                line_number=None)
+                line_number=line_number)
             self.validation_errors.append(error)
         return super(MafCustomColumnRecord, self).validate(
             reset_errors=False,  # we reset above!
             scheme=scheme, line_number=line_number)
 
     def __str__(self):
-        """Delegates the conversion to a string for non-null values to 
+        """Delegates the conversion to a string for non-null values to
         __string_it__()"""
         super_str = super(MafCustomColumnRecord, self).__str__()
         if super_str:
@@ -240,6 +242,6 @@ class MafCustomColumnRecord(MafColumnRecord):
             return super_str
 
     def __string_it__(self):
-        """Sub-classes can override this method to print a string when the 
+        """Sub-classes can override this method to print a string when the
         value is not null"""
         return str(self.value)

@@ -98,8 +98,8 @@ class MafRecord(MutableMapping):
         of columns, inserting `None` for values for any columns between the old
         and new length; these columns will have no name.
 
-        :param key: The key may be one of four things: 1. If an `int`, 
-        it is assumed to be the `column_index` of the column.  The 
+        :param key: The key may be one of four things: 1. If an `int`,
+        it is assumed to be the `column_index` of the column.  The
         `column_index` of`column` will be set to `int(key)` if not already set.
         If already set, then `column.column_index` should equal `int(key)`. 2.
         If an `MafColumnRecord`, then the `MafColumnRecord` should have the same

@@ -1,14 +1,15 @@
-import unittest
 import os
+import unittest
 from collections import OrderedDict
 
+from maflib.column_types import IntegerColumn, RequireNullValue
 from maflib.scheme_factory import combine_column_dicts, get_column_types, \
     build_scheme_class, build_schemes, validate_schemes, SchemeDatum, \
     get_built_in_filenames, load_all_scheme_data, load_all_schemes, \
     find_scheme_class
 from maflib.schemes import MafScheme, NoRestrictionsScheme
-from maflib.column_types import IntegerColumn, RequireNullValue
 from maflib.tests.testutils import tmp_file
+
 
 class TestSchemeFactory(unittest.TestCase):
 

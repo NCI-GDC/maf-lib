@@ -73,7 +73,7 @@ def build_scheme_class(datum, base_scheme, column_types):
                         if cls_name == column_cls_name), None)
             if not cls:
                 raise ValueError("Could not find a column type with name "
-                                 "'%s' for column '%s'" \
+                                 "'%s' for column '%s'"
                                  % (column_cls_name,
                                     column_name))
             column_dict[str(column_name)] = cls
@@ -94,12 +94,6 @@ def build_scheme_class(datum, base_scheme, column_types):
     setattr(tpe, "version", classmethod(lambda cls: datum.version))
     setattr(tpe, "annotation_spec", classmethod(lambda cls: datum.annotation))
     setattr(tpe, "__column_dict__", classmethod(lambda cls: column_dict))
-
-    #return type(str(name), (MafScheme,), {
-    #    "version": lambda(cls): datum.version,
-    #    "annotation_spec": lambda(cls): datum.annotation,
-    #    "__column_dict__": lambda(cls): column_dict
-    #})
 
     return tpe
 
@@ -221,6 +215,7 @@ def load_all_schemes(extra_filenames=None):
 __ALL_SCHEMES = []
 __LOADED_ALL_SCHEMES = False
 
+
 def all_schemes(extra_filenames=None):
     """Gets all the known schemes."""
     global __LOADED_ALL_SCHEMES
@@ -250,6 +245,7 @@ def find_scheme_class(version=None, annotation=None):
         return next((s for s in schemes if s.version() == version and
                      s.annotation_spec() == annotation), None)
 
+
 def find_scheme(version=None, annotation=None):
     """Finds the scheme with the given version and annotation from all the
     known schemes.  If no version is given, get the first scheme with the
@@ -258,4 +254,3 @@ def find_scheme(version=None, annotation=None):
     scheme).  Returns an instance of the scheme."""
     cls = find_scheme_class(version=version, annotation=annotation)
     return cls() if cls else None
-

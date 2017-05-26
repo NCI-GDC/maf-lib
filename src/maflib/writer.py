@@ -79,12 +79,12 @@ class MafWriter(object):
 
     @classmethod
     def from_fd(cls,
-                fd,
+                desc,
                 header,
                 validation_stringency=None):
         """Create a MafWriter from the given file handle."""
         return MafWriter(
-            handle=fd,
+            handle=desc,
             header=header,
             validation_stringency=validation_stringency
         )
@@ -100,7 +100,7 @@ class MafWriter(object):
         else:
             handle = open(path, "w")
         return MafWriter.from_fd(
-            fd=handle,
+            desc=handle,
             header=header,
             validation_stringency=validation_stringency
         )

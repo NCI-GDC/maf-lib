@@ -4,15 +4,18 @@ Enumerations.
 """
 from enum import Enum, unique
 
+
 class MafEnum(Enum):
-    """An enumeration that whose string representation is its value as a 
+    """An enumeration that whose string representation is its value as a
     string"""
     def __str__(self):
         return str(self.value)
 
+
 @unique
 class NullableYesOrNoEnum(MafEnum):
-    """Enumeration for "Yes" or "No" column values, with Null being non-value"""
+    """Enumeration for "Yes" or "No" column values, with Null being
+    non-value"""
     Null = ""
     No = "0"
     Yes = "1"

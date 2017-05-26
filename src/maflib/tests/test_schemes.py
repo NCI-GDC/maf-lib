@@ -6,6 +6,7 @@ from maflib.schemes import MafScheme, NoRestrictionsScheme
 from maflib.tests.testutils import GdcV1_0_0_BasicScheme, \
     GdcV1_0_0_ProtectedScheme, GdcV1_0_0_PublicScheme
 
+
 class TestMafScheme(unittest.TestCase):
     class TestScheme(MafScheme):
         @classmethod

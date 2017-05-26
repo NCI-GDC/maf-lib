@@ -1,5 +1,3 @@
-import tempfile
-
 from maflib.column_types import StringColumn, FloatColumn
 from maflib.reader import *
 from maflib.schemes import *

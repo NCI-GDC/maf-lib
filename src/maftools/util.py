@@ -59,13 +59,14 @@ class StoreEnumAction(argparse._StoreAction):
                                               help=help,
                                               metavar=metavar)
 
+
 def writer_from_reader(reader, options):
     """
     Builds a writer from the given reader and command line options.
-    :param options: the command line options, which should have "output", 
+    :param options: the command line options, which should have "output",
     "version", and "annotation" defined.
     :param reader: the reader from which to records will be obtained
-    :return: 
+    :return:
     """
     out_header = MafHeader.from_reader(
         reader=reader,
@@ -81,7 +82,7 @@ def writer_from_reader(reader, options):
         )
     else:
         writer = MafWriter.from_fd(
-            fd=sys.stdout,
+            desc=sys.stdout,
             header=out_header,
             validation_stringency=options.validation_stringency
         )

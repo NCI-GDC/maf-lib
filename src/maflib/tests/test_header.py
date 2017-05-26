@@ -1,14 +1,14 @@
+import os
 import tempfile
 import unittest
-import os
 
 from maflib.header import *
+from maflib.reader import MafReader
+from maflib.schemes import *
 from maflib.tests.testutils import tmp_file, GdcV1_0_0_PublicScheme, \
     GdcV1_0_0_ProtectedScheme, GdcV1_0_0_BasicScheme
 from maflib.util import LineReader
-from maflib.schemes import *
 from maflib.validation import MafFormatException
-from maflib.reader import MafReader
 
 
 class TestMafHeaderRecord(unittest.TestCase):

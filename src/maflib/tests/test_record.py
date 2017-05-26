@@ -1,9 +1,10 @@
 import unittest
 from collections import OrderedDict
 
+from maflib.column_types import StringColumn, FloatColumn
 from maflib.record import *
 from maflib.schemes import MafScheme
-from maflib.column_types import StringColumn, FloatColumn
+
 
 class TestMafRecord(unittest.TestCase):
 
