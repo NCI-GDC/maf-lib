@@ -6,18 +6,23 @@ from maflib.validation import ValidationStringency
 from maftools.util import StoreEnumAction
 from maftools.validate import Validate
 from maflib.logger import Logger
+from maftools.view import View
+
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
 
 
 def main(args=None):
+    """The main method for maf tools"""
     Logger.setup_root_logger()
 
-    """The main method for maf tools"""
     parser = argparse.ArgumentParser()
 
     # Add any pre-subcommand arguments
     parser.add_argument('-v', '--validation-stringency',
                         action=StoreEnumAction,
-                        type=ValidationStringency)
+                        type=ValidationStringency,
+                        default=ValidationStringency.Strict)
     # Add any pre-subcommand arguments
     parser.add_argument('-s', '--schemes', action='append',
                         help="One or more JSON files with custom scheme "
@@ -27,6 +32,7 @@ def main(args=None):
     subparsers = parser.add_subparsers(dest="subcommand")
     subparsers.required = True
     Validate.add(subparsers=subparsers)
+    View.add(subparsers=subparsers)
 
     options = parser.parse_args(args=args)
 
