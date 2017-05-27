@@ -228,3 +228,17 @@ class MafCustomColumnRecord(MafColumnRecord):
         return super(MafCustomColumnRecord, self).validate(
             reset_errors=False,  # we reset above!
             scheme=scheme, line_number=line_number)
+
+    def __str__(self):
+        """Delegates the conversion to a string for non-null values to 
+        __string_it__()"""
+        super_str = super(MafCustomColumnRecord, self).__str__()
+        if super_str:
+            return self.__string_it__()
+        else:
+            return super_str
+
+    def __string_it__(self):
+        """Sub-classes can override this method to print a string when the 
+        value is not null"""
+        return str(self.value)

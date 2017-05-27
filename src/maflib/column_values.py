@@ -4,16 +4,14 @@ Enumerations.
 """
 from enum import Enum, unique
 
+class MafEnum(Enum):
+    """An enumeration that whose string representation is its value as a 
+    string"""
+    def __str__(self):
+        return str(self.value)
 
 @unique
-class YesOrNoEnum(Enum):
-    """Enumeration for "Yes" or "No" column values"""
-    No = True
-    Yes = False
-
-
-@unique
-class NullableYesOrNoEnum(Enum):
+class NullableYesOrNoEnum(MafEnum):
     """Enumeration for "Yes" or "No" column values, with Null being non-value"""
     Null = None
     No = "0"
@@ -21,14 +19,7 @@ class NullableYesOrNoEnum(Enum):
 
 
 @unique
-class YOrNEnum(Enum):
-    """Enumeration for "Yes" or "No" column values"""
-    No = True
-    Yes = False
-
-
-@unique
-class NullableYOrNEnum(Enum):
+class NullableYOrNEnum(MafEnum):
     """Enumeration for "Y" or "N" column values, with Null being non-value"""
     Null = None
     No = "Y"
@@ -36,21 +27,21 @@ class NullableYOrNEnum(Enum):
 
 
 @unique
-class PickEnum(Enum):
+class PickEnum(MafEnum):
     """Enumeration for the MAF 'Pick' column value"""
     Null = None
     Yes = "1"
 
 
 @unique
-class StrandEnum(Enum):
+class StrandEnum(MafEnum):
     """Enumeration for the MAF 'Strand' column value"""
     Plus = '+'
     Minus = '-'
 
 
 @unique
-class VariantClassificationEnum(Enum):
+class VariantClassificationEnum(MafEnum):
     """Enumeration for the MAF 'Variant_Classification' column value"""
     FrameShiftDeletion = "Frame_Shift_Del"
     FrameShiftInsertion = "Frame_Shift_Ins"
@@ -74,7 +65,7 @@ class VariantClassificationEnum(Enum):
 
 
 @unique
-class VariantTypeEnum(Enum):
+class VariantTypeEnum(MafEnum):
     """Enumeration for the MAF 'Variant_Type' column value"""
     SNP = "SNP"
     DNP = "DNP"
@@ -86,14 +77,14 @@ class VariantTypeEnum(Enum):
 
 
 @unique
-class VerificationStatusEnum(Enum):
+class VerificationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Verification_Status' column value"""
-    Verified = 1
-    Unknown = 2
+    Verified = "Verified"
+    Unknown = "Unknown"
 
 
 @unique
-class MutationStatusEnum(Enum):
+class MutationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Mutation_Status' column value"""
     NoStatus = "None"
     Germline = "Germline"
@@ -105,7 +96,7 @@ class MutationStatusEnum(Enum):
 
 
 @unique
-class ValidationStatusEnum(Enum):
+class ValidationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Validation_Status' column value"""
     Untested = "Untested"
     Inconclusive = "Inconclusive"
@@ -114,7 +105,7 @@ class ValidationStatusEnum(Enum):
 
 
 @unique
-class SequencerEnum(Enum):
+class SequencerEnum(MafEnum):
     """Enumeration for the MAF 'Sequencer' column value"""
     IlluminaGaII = "Illumina Genome Analyzer II"
     IllluminaGaIIx = "Illumina GAIIx"
@@ -133,7 +124,7 @@ class SequencerEnum(Enum):
 
 
 @unique
-class FeatureTypeEnum(Enum):
+class FeatureTypeEnum(MafEnum):
     """Enumeration for the MAF 'Feature_Type' column value"""
     Blank = ""
     Transcript = "Transcript"
@@ -142,7 +133,7 @@ class FeatureTypeEnum(Enum):
 
 
 @unique
-class ImpactEnum(Enum):
+class ImpactEnum(MafEnum):
     """Enumeration for the MAF 'Impact' column value"""
     Modifier = "MODIFIER"
     Low = "LOW"
@@ -151,7 +142,7 @@ class ImpactEnum(Enum):
 
 
 @unique
-class MC3OverlapEnum(Enum):
+class MC3OverlapEnum(MafEnum):
     """Enumeration for the MAF 'MC3_Overlap' column value"""
     Unknown = "Unknown"
     _True = "True"
@@ -159,7 +150,7 @@ class MC3OverlapEnum(Enum):
 
 
 @unique
-class GdcValidationStatusEnum(Enum):
+class GdcValidationStatusEnum(MafEnum):
     """Enumeration for the MAF 'GDC_Validation_Status' column value"""
     Unknown = "Unknown"
     Valid = "Valid"
