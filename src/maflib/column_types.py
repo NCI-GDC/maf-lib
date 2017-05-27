@@ -13,6 +13,7 @@ import sys
 from maflib.util import abstractclassmethod
 from maflib.column import MafColumnRecord, MafCustomColumnRecord
 from maflib.column_values import *
+import enum
 
 
 def get_column_types():
@@ -247,6 +248,9 @@ class EnumColumn(MafCustomColumnRecord):
         else:
             return None
 
+    def __string_it__(self):
+        return str(self.value.value)
+
 
 class SequenceOfValuesColumn(MafCustomColumnRecord):
     """An abstract class whose value is a list of zero or more values defined by
@@ -280,6 +284,9 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
                           str(self.value),
                           msg)
         return None
+
+    def __string_it__(self):
+        return ";".join([str(v) for v in self.value])
 
 
 class SequenceOfStrings(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
@@ -364,6 +371,9 @@ class Canonical(MafCustomColumnRecord):
         else:
             return None
 
+    def __string_it__(self):
+        return "YES" if self.value else ""
+
 
 class NullableYesOrNo(EnumColumn):
     """A column that represents the string "Yes" or "No", with the empty
@@ -405,12 +415,14 @@ class NullableYOrN(EnumColumn):
 
 class SequenceOfNullableYesOrNo(NullableEmptyStringIsEmptyList,
                                 SequenceOfValuesColumn):
+    """A column that represents a sequence of nullable yes or no."""
     @classmethod
     def __column_class__(cls):
         """
         :return: the class of the column to use
         """
         return NullableYesOrNo
+
 
 class PickColumn(EnumColumn):
     """A column that represents the 'Pick' MAF column, with possible values
