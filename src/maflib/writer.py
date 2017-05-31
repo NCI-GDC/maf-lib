@@ -7,8 +7,9 @@
 import gzip
 
 from maflib.logger import Logger
-from maflib.validation import ValidationStringency
 from maflib.record import MafRecord
+from maflib.validation import ValidationStringency
+
 
 class MafWriter(object):
     """A writer of a MAF file"""
@@ -77,22 +78,29 @@ class MafWriter(object):
         self._handle.close()
 
     @classmethod
-    def writer_from(cls,
-                    header,
-                    validation_stringency=None,
-                    path=None,
-                    handle=None):
-        """Create a MafWriter from the given path or file handle."""
-        if not path:
-            if not handle:
-                raise Exception("Either a file path or file handle must be "
-                                "given.")
-        elif path.endswith(".gz"):
+    def from_fd(cls,
+                fd,
+                header,
+                validation_stringency=None):
+        """Create a MafWriter from the given file handle."""
+        return MafWriter(
+            handle=fd,
+            header=header,
+            validation_stringency=validation_stringency
+        )
+
+    @classmethod
+    def from_path(cls,
+                  path,
+                  header,
+                  validation_stringency=None):
+        """Create a MafWriter from the given path ."""
+        if path.endswith(".gz"):
             handle = gzip.open(path, "wt")
         else:
             handle = open(path, "w")
-        return MafWriter(
-            handle=handle,
+        return MafWriter.from_fd(
+            fd=handle,
             header=header,
             validation_stringency=validation_stringency
         )

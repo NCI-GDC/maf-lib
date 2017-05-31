@@ -1,15 +1,16 @@
 """Module with a maftool to validate a MAF file"""
 import sys
+from argparse import ArgumentTypeError
 
 from enum import Enum, unique
-from argparse import ArgumentTypeError
 
 from maflib.logger import Logger
 from maflib.reader import MafReader
+from maflib.scheme_factory import all_schemes, find_scheme
+from maflib.validation import ValidationStringency
 from maftools.subcommand import Subcommand
 from maftools.util import StoreEnumAction
-from maflib.validation import ValidationStringency
-from maflib.scheme_factory import all_schemes, find_scheme
+
 
 class ValidationErrors(object):
     """Container for storing and writing validation errors.
@@ -69,11 +70,13 @@ class Validate(Subcommand):
                                help='One or more MAF files.')
         subparser.add_argument('-v', '--version',
                                default=None,
+                               choices=versions,
                                help="Use the given version when validating "
                                     "rather than what's in the header.  "
                                     "Choices: %s" % ", ".join(versions))
         subparser.add_argument('-a', '--annotation',
                                type=str, default=None,
+                               choices=annotations,
                                help="Use the given annotation specification "
                                     "when validating rather than what's in "
                                     "the header.  "

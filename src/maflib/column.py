@@ -50,7 +50,6 @@ class MafColumnRecord(object):
 
             scheme_column_index = scheme.column_index(name=self.key)
             scheme_column_class = scheme.column_class(name=self.key)
-            names = scheme.column_names()
 
             if scheme_column_index is None:
                 add_errors(MafValidationError(
@@ -72,8 +71,10 @@ class MafColumnRecord(object):
             elif not isinstance(self, scheme_column_class):
                 add_errors(MafValidationError(
                     MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT,
-                    "Column with name '%s' is in the wrong format: '%s'" %
-                    (self.key, str(self.value)),
+                    "Column with name '%s' is in the wrong format. "
+                    "Found '%s' expected '%s'" %
+                    (self.key, str(self.__class__),
+                     str(scheme_column_class)),
                     line_number=line_number
                 ))
 

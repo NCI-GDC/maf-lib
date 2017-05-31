@@ -10,11 +10,12 @@ version and annotation specification pragmas respectively.
 * GdcV1_0_0_PublicScheme     the GDC v1.0.0 public scheme
 * GdcV1_0_0_ProtectedScheme  the GDC v1.0.0 protected scheme
 """
-from collections import OrderedDict
 import abc
+from collections import OrderedDict
 
-from maflib.util import abstractclassmethod
 from maflib.column import MafColumnRecord
+from maflib.util import abstractclassmethod
+
 
 class MafScheme(object):
     """ The base scheme all schemes should implement.

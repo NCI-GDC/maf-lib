@@ -12,12 +12,13 @@
 """
 
 from collections import MutableMapping, OrderedDict
+from copy import deepcopy
 
-from maflib.scheme_factory import all_schemes
 from maflib.logger import Logger
+from maflib.scheme_factory import all_schemes
+from maflib.scheme_factory import find_scheme
 from maflib.validation import MafValidationError, MafValidationErrorType, \
     ValidationStringency
-from maflib.scheme_factory import find_scheme
 
 
 class MafHeader(MutableMapping):
@@ -237,6 +238,17 @@ class MafHeader(MutableMapping):
         return cls.from_lines(lines=lines,
                               validation_stringency=validation_stringency,
                               logger=logger)
+
+    @classmethod
+    def from_reader(cls, reader, version=None, annotation=None):
+        header = deepcopy(reader.header())
+        if version:
+            header[MafHeader.VersionKey] = \
+                MafHeaderVersionRecord(value=version)
+        if annotation:
+            header[MafHeader.AnnotationSpecKey] = \
+                MafHeaderAnnotationSpecRecord(value=annotation)
+        return header
 
     @classmethod
     def scheme_header_lines(cls, scheme):

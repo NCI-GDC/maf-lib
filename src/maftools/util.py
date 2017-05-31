@@ -1,5 +1,9 @@
 """Module for maftools parsing utilities"""
 import argparse
+import sys
+
+from maflib.header import MafHeader
+from maflib.writer import MafWriter
 
 
 class EnumType(object):
@@ -54,3 +58,31 @@ class StoreEnumAction(argparse._StoreAction):
                                               required=required,
                                               help=help,
                                               metavar=metavar)
+
+def writer_from_reader(reader, options):
+    """
+    Builds a writer from the given reader and command line options.
+    :param options: the command line options, which should have "output", 
+    "version", and "annotation" defined.
+    :param reader: the reader from which to records will be obtained
+    :return: 
+    """
+    out_header = MafHeader.from_reader(
+        reader=reader,
+        version=options.version,
+        annotation=options.annotation
+    )
+
+    if options.output:
+        writer = MafWriter.from_path(
+            path=options.output,
+            header=out_header,
+            validation_stringency=options.validation_stringency
+        )
+    else:
+        writer = MafWriter.from_fd(
+            fd=sys.stdout,
+            header=out_header,
+            validation_stringency=options.validation_stringency
+        )
+    return writer
