@@ -6,11 +6,12 @@
 import gzip
 
 from maflib.header import MafHeader
+from maflib.logger import Logger
 from maflib.record import MafRecord
 from maflib.schemes import NoRestrictionsScheme
 from maflib.validation import ValidationStringency, MafValidationError, \
     MafValidationErrorType
-from maflib.logger import Logger
+
 
 class MafReader(object):
     """A reader for a MAF file.

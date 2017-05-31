@@ -8,6 +8,8 @@ from maflib.tests.testutils import tmp_file, GdcV1_0_0_PublicScheme, \
 from maflib.util import LineReader
 from maflib.schemes import *
 from maflib.validation import MafFormatException
+from maflib.reader import MafReader
+
 
 class TestMafHeaderRecord(unittest.TestCase):
 
@@ -350,6 +352,33 @@ class TestMafHeader(unittest.TestCase):
         self.assertEqual(str(header), "%s\n%s\n%s" % (version_line,
                                                       record1_line,
                                                       record2_line))
+
+    def test_from_reader(self):
+        scheme = GdcV1_0_0_ProtectedScheme()
+
+        lines = [
+            TestMafHeader.__version_line,
+            TestMafHeader.__annotation_line
+        ]
+        reader = MafReader(lines=lines,
+                           validation_stringency=ValidationStringency.Silent,
+                           scheme=scheme)
+        reader.close()
+
+        # No overrides
+        header = MafHeader.from_reader(reader=reader)
+        self.assertEqual(header.scheme().version(), scheme.version())
+        self.assertEqual(header.scheme().annotation_spec(),
+                         scheme.annotation_spec())
+
+        # Override version and annotation
+        scheme = GdcV1_0_0_PublicScheme()
+        header = MafHeader.from_reader(reader=reader,
+                                       version=scheme.version(),
+                                       annotation=scheme.annotation_spec())
+        self.assertEqual(header.scheme().version(), scheme.version())
+        self.assertEqual(header.scheme().annotation_spec(),
+                         scheme.annotation_spec())
 
     def test_scheme_header_lines(self):
         scheme = TestMafHeader.Scheme

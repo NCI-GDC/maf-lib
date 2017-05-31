@@ -13,7 +13,7 @@ class MafEnum(Enum):
 @unique
 class NullableYesOrNoEnum(MafEnum):
     """Enumeration for "Yes" or "No" column values, with Null being non-value"""
-    Null = None
+    Null = ""
     No = "0"
     Yes = "1"
 
@@ -21,7 +21,7 @@ class NullableYesOrNoEnum(MafEnum):
 @unique
 class NullableYOrNEnum(MafEnum):
     """Enumeration for "Y" or "N" column values, with Null being non-value"""
-    Null = None
+    Null = ""
     No = "Y"
     Yes = "N"
 
@@ -29,7 +29,7 @@ class NullableYOrNEnum(MafEnum):
 @unique
 class PickEnum(MafEnum):
     """Enumeration for the MAF 'Pick' column value"""
-    Null = None
+    Null = ""
     Yes = "1"
 
 

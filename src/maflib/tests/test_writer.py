@@ -38,8 +38,8 @@ class TestMafWriter(TestCase):
 
         # No logging to stderr/stdout
         with captured_output() as (stdout, stderr):
-            writer = MafWriter.writer_from(path=path, header=MafHeader(),
-                               validation_stringency=ValidationStringency.Silent)
+            writer = MafWriter.from_path(path=path, header=MafHeader(),
+                                         validation_stringency=ValidationStringency.Silent)
             writer.close()
             self.assertEqual(read_lines(path), [])
             self.assertEqual(str(writer.header()), "")
@@ -50,8 +50,8 @@ class TestMafWriter(TestCase):
 
         # Logging to stderr/stdout
         with captured_output() as (stdout, stderr):
-            writer = MafWriter.writer_from(path=path, header=MafHeader(),
-                               validation_stringency=ValidationStringency.Lenient)
+            writer = MafWriter.from_path(path=path, header=MafHeader(),
+                                         validation_stringency=ValidationStringency.Lenient)
             writer.close()
             self.assertEqual(read_lines(path), [])
             self.assertEqual(str(writer.header()), "")
@@ -66,8 +66,8 @@ class TestMafWriter(TestCase):
         #  Exceptions
         with captured_output():
             with self.assertRaises(MafFormatException) as context:
-                writer = MafWriter.writer_from(path=path, header=MafHeader(),
-                                   validation_stringency=ValidationStringency.Strict)
+                writer = MafWriter.from_path(path=path, header=MafHeader(),
+                                             validation_stringency=ValidationStringency.Strict)
             self.assertEqual(context.exception.tpe,
                              MafValidationErrorType.HEADER_MISSING_VERSION)
 
@@ -84,7 +84,7 @@ class TestMafWriter(TestCase):
                  ]
         with captured_output() as (stdout, stderr):
             header = MafHeader.from_lines(lines=lines)
-            writer = MafWriter.writer_from(header=header, path=path)
+            writer = MafWriter.from_path(header=header, path=path)
             writer.close()
             self.assertListEqual(read_lines(path), lines)
             self.assertEqual(str(writer.header()) + "\n" +
@@ -106,7 +106,7 @@ class TestMafWriter(TestCase):
                  TestMafWriter.__keys_line
                  ]
         header = MafHeader.from_lines(lines=lines)
-        writer = MafWriter.writer_from(header=header, path=path)
+        writer = MafWriter.from_path(header=header, path=path)
         writer._handle.write("LAST")  # Naughty
         writer.close()
         self.assertListEqual(read_lines(path), lines + ["LAST"])
@@ -121,7 +121,7 @@ class TestMafWriter(TestCase):
         header_lines = MafHeader.scheme_header_lines(scheme) \
                        + ["#key1 value1", "#key2 value2"]
         header = MafHeader.from_lines(lines=header_lines)
-        writer = MafWriter.writer_from(header=header, path=path)
+        writer = MafWriter.from_path(header=header, path=path)
         values = ["string2", "3.14", "string1"]
         record_line = MafRecord.ColumnSeparator.join(values)
         record = MafRecord.from_line(line=record_line,
@@ -155,7 +155,7 @@ class TestMafWriter(TestCase):
 
         # Write the header, and the record twice
         with captured_output() as (stdout, stderr):
-            writer = MafWriter.writer_from(
+            writer = MafWriter.from_path(
                 header=header,
                 validation_stringency=ValidationStringency.Lenient,
                 path=path)

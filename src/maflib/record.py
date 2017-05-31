@@ -6,10 +6,10 @@ the annotation values for a single mutation.
 
 from collections import MutableMapping
 
+from maflib.column import MafColumnRecord
 from maflib.logger import Logger
 from maflib.validation import ValidationStringency, MafValidationError, \
     MafValidationErrorType
-from maflib.column import MafColumnRecord
 
 
 class MafRecord(MutableMapping):

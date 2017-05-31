@@ -97,7 +97,7 @@ class TestValidate(TestCase):
 
     def test_unknown_scheme(self):
         scheme = "not-a-scheme"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(SystemExit):
             with captured_output():
                 main(args=['validate', '--input', '/path/to/nowhere', '--version', scheme])
 
