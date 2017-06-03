@@ -182,6 +182,34 @@ def load_all_scheme_data(filenames):
     return data
 
 
+def scheme_sort_key(scheme):
+    """Sort key for sorting schemes.  Sorts by version and then annotation 
+    spec.  Extracts, major, minor, and patch versions."""
+
+    def extract_version_string(str, which_name):
+        """Extracts the version string.  Expects one of the two following 
+        patterns:
+        1. "gdc-[0-9]+\.[0-9]+\.[0-9]"
+        2. "gdc-[0-9]+\.[0-9]+\.[0-9]-[a-z]+"
+        """
+        if not str.startswith("gdc-"):
+            return [-1, -1, -1, str]
+        str = str[len("gdc-"):]
+        last = ""
+        if "-" in str:
+            index = str.index("-")
+            last = str[index+1:]
+            str = str[:index]
+        return list(map(int, str.split("."))) + [last]
+
+    version = \
+        extract_version_string(scheme.version(), "version")
+    annotation_spec = \
+        extract_version_string(scheme.annotation_spec(), "annotation")
+
+    return version + annotation_spec
+
+
 def load_all_schemes(extra_filenames=None):
     """Load all the built-in schemes and any schemes given with
     ``extra_filename``.  Schemes must have a unique version and annotation
@@ -209,6 +237,9 @@ def load_all_schemes(extra_filenames=None):
     # Validate that all schemes have different combinations of version
     # and annotations
     validate_schemes(schemes=schemes)
+
+    # Sort by version
+    schemes.sort(key=scheme_sort_key)
 
     return schemes
 
