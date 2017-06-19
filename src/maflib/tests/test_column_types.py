@@ -426,6 +426,10 @@ class TestUUIDColumn(TestCase):
         id = UUID('12345678-1234-5678-1234-567812345678')
         self.is_column_is_valid(UUIDColumn.build("key", str(id)), id)
 
+        # Test the nullable version
+        self.is_column_is_valid(NullableUUIDColumn.build("key", str(id)), id, [None])
+        self.is_column_is_valid(NullableUUIDColumn.build("key", "", id), None, [None])
+
     def test_invalid(self):
         id = UUID('12345678-1234-5678-1234-567812345678')
         self.is_column_invalid(UUIDColumn.build("key", str(id)), "Foo", "was not a UUID")
@@ -437,6 +441,8 @@ class TestUUIDColumn(TestCase):
         with self.assertRaises(ValueError):
             UUIDColumn.build("key", "blah")
 
+        with self.assertRaises(ValueError):
+            UUIDColumn.build("key", "")
 
 class TestTranscriptStrand(TestCase):
     def test_valid(self):

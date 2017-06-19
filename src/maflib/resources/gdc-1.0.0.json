@@ -19,7 +19,7 @@
 		[ "dbSNP_RS", "SequenceOfStrings" ],
 		[ "dbSNP_Val_Status", "SequenceOfStrings" ],
 		[ "Tumor_Sample_Barcode", "StringColumn" ],
-		[ "Matched_Norm_Sample_Barcode", "StringColumn" ],
+		[ "Matched_Norm_Sample_Barcode", "NullableStringColumn" ],
 		[ "Match_Norm_Seq_Allele1", "NullableDnaString" ],
 		[ "Match_Norm_Seq_Allele2", "NullableDnaString" ],
 		[ "Tumor_Validation_Allele1", "NullableDnaString" ],
@@ -36,7 +36,7 @@
 		[ "BAM_File", "NullableStringColumn" ],
 		[ "Sequencer", "SequenceOfSequencers" ],
 		[ "Tumor_Sample_UUID", "UUIDColumn" ],
-		[ "Matched_Norm_Sample_UUID" , "UUIDColumn" ]
+		[ "Matched_Norm_Sample_UUID" , "NullableUUIDColumn" ]
 	],
 	"filtered" : "None"
 }
