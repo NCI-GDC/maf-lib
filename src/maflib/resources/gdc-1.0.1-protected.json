@@ -83,7 +83,7 @@
             [ "CONTEXT", "StringColumn" ],
             [ "src_vcf_id", "UUIDColumn" ],
             [ "tumor_bam_uuid", "UUIDColumn" ],
-            [ "normal_bam_uuid", "UUIDColumn" ],
+            [ "normal_bam_uuid", "NullableUUIDColumn" ],
             [ "case_id", "UUIDColumn" ],
             [ "GDC_FILTER", "SequenceOfStrings" ],
             [ "COSMIC", "SequenceOfStrings" ],
@@ -94,7 +94,7 @@
             [ "vcf_info", "NullableStringColumn" ],
             [ "vcf_format", "StringColumn" ],
             [ "vcf_tumor_gt", "StringColumn" ],
-            [ "vcf_normal_gt", "StringColumn" ]
+            [ "vcf_normal_gt", "NullableStringColumn" ]
 	],
 	"filtered" : "None"
 }

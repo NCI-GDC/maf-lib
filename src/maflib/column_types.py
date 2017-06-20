@@ -554,6 +554,12 @@ class UUIDColumn(MafCustomColumnRecord):
             return None
 
 
+class NullableUUIDColumn(NullableEmptyStringIsNone, UUIDColumn):
+    """A column that represents a UUID.  An empty string is allowed if no 
+    UUID is given."""
+    pass
+
+
 class FeatureType(EnumColumn):
     """A column that represents the 'Feature_Type' MAF column"""
     @classmethod
