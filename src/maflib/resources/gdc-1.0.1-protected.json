@@ -8,7 +8,7 @@
             [ "HGVSp_Short", "NullableStringColumn" ],
             [ "Transcript_ID", "NullableStringColumn" ],
             [ "Exon_Number", "NullableStringColumn" ],
-            [ "t_depth", "OneBasedIntegerColumn" ],
+            [ "t_depth", "ZeroBasedIntegerColumn" ],
             [ "t_ref_count", "ZeroBasedIntegerColumn" ],
             [ "t_alt_count", "ZeroBasedIntegerColumn" ],
             [ "n_depth", "ZeroBasedIntegerColumn" ],
