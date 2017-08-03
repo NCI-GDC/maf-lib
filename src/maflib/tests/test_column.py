@@ -7,6 +7,21 @@ from maflib.schemes import MafScheme
 from maflib.validation import MafValidationErrorType
 
 
+class TestScheme(MafScheme):
+    @classmethod
+    def version(cls):
+        return "test-version"
+
+    @classmethod
+    def annotation_spec(cls):
+        return "test-annotation"
+
+    @classmethod
+    def __column_dict__(cls):
+        return OrderedDict([("str1", StringColumn),
+                            ("float", FloatColumn),
+                            ("str2", StringColumn)])
+
 class TestMafColumnRecord(unittest.TestCase):
     class NullableColumn(MafColumnRecord):
         @classmethod
@@ -49,6 +64,43 @@ class TestMafColumnRecord(unittest.TestCase):
         self.assertFalse(column.is_null())
         self.assertEqual(str(column), "")
 
+    def test_build_with_scheme(self):
+        scheme = TestScheme()
+
+        # column found in the scheme, column index inferred
+        column = MafColumnRecord.build(name="float",
+                                       value=2.1,
+                                       description="Foo Bar",
+                                       scheme=scheme)
+        self.assertEqual(str(column), "2.1")
+        self.assertEqual(column.column_index, 1)
+
+        # column found in the scheme, column index validated
+        column = MafColumnRecord.build(name="float",
+                                       value=2.1,
+                                       column_index=1,
+                                       description="Foo Bar",
+                                       scheme=scheme)
+        self.assertEqual(str(column), "2.1")
+        self.assertEqual(column.column_index, 1)
+
+        # error: name not found in scheme
+        with self.assertRaises(KeyError):
+            MafColumnRecord.build(name="not-a-key",
+                                  value=2.1,
+                                  column_index=0,
+                                  description="Foo Bar",
+                                  scheme=scheme)
+
+        # error: mismatching column index
+        with self.assertRaises(ValueError):
+            MafColumnRecord.build(name="float",
+                                  value=2.1,
+                                  column_index=0,
+                                  description="Foo Bar",
+                                  scheme=scheme)
+
+
 class TestMafCustomColumnRecord(unittest.TestCase):
     class ValidColumn(MafCustomColumnRecord):
         @classmethod
@@ -64,21 +116,6 @@ class TestMafCustomColumnRecord(unittest.TestCase):
         def __validate__(self):
             return "invalid"
 
-    class TestScheme(MafScheme):
-        @classmethod
-        def version(cls):
-            return "test-version"
-
-        @classmethod
-        def annotation_spec(cls):
-            return "test-annotation"
-
-        @classmethod
-        def __column_dict__(cls):
-            return OrderedDict([("str1", StringColumn),
-                                ("float", FloatColumn),
-                                ("str2", StringColumn)])
-
     def test_validate(self):
         valid = TestMafCustomColumnRecord.ValidColumn.build("key", "value", 0)
         self.assertEqual(valid.__validate__(), None)
@@ -91,7 +128,7 @@ class TestMafCustomColumnRecord(unittest.TestCase):
         self.assertIn("invalid", errors[0].message)
 
     def test_validate_with_scheme(self):
-        scheme = TestMafCustomColumnRecord.TestScheme()
+        scheme = TestScheme()
 
         # FAIL: the column has the wrong name
         column = TestMafCustomColumnRecord.ValidColumn.build("noop", "value", 0)
@@ -124,3 +161,14 @@ class TestMafCustomColumnRecord(unittest.TestCase):
                          MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT)
         # OK: no scheme
         self.assertEqual(len(column.validate(scheme=None)), 0)
+
+    def test_build_with_scheme(self):
+        scheme = TestScheme()
+
+        # column found in the scheme, column index inferred
+        column = MafCustomColumnRecord.build(name="float",
+                                       value=2.1,
+                                       description="Foo Bar",
+                                       scheme=scheme)
+        self.assertEqual(str(column), "2.1")
+        self.assertEqual(column.column_index, 1)
