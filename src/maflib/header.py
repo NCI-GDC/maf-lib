@@ -52,6 +52,7 @@ class MafHeader(MutableMapping):
         self.validation_stringency = ValidationStringency.Silent \
             if (validation_stringency is None) else validation_stringency
         self.__records = OrderedDict()
+        self.__scheme = None
 
     def __getitem__(self, key):
         return self.__records[key]
@@ -243,6 +244,17 @@ class MafHeader(MutableMapping):
     @classmethod
     def from_reader(cls, reader, version=None, annotation=None):
         header = deepcopy(reader.header())
+        if version:
+            header[MafHeader.VersionKey] = \
+                MafHeaderVersionRecord(value=version)
+        if annotation:
+            header[MafHeader.AnnotationSpecKey] = \
+                MafHeaderAnnotationSpecRecord(value=annotation)
+        return header
+
+    @classmethod
+    def from_defaults(cls,  version=None, annotation=None):
+        header = MafHeader()
         if version:
             header[MafHeader.VersionKey] = \
                 MafHeaderVersionRecord(value=version)
