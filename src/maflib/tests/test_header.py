@@ -123,6 +123,15 @@ class TestMafHeader(unittest.TestCase):
         self.assertEqual(header.version(), TestMafHeader.Version)
         os.remove(fn)
 
+    def test_from_defaults(self):
+        header = MafHeader.from_defaults(
+            version=TestMafHeader.Scheme.version(),
+             annotation=TestMafHeader.Scheme.annotation_spec()
+        )
+        self.assertIsNotNone(header.scheme())
+        self.assertIsNotNone(header.scheme().version())
+        self.assertIsNotNone(header.scheme().annotation_spec())
+
     def test_from_lines_duplicate_keys(self):
         lines = [TestMafHeader.__version_line, TestMafHeader.__annotation_line, "#dupkey value", "#dupkey value"]
         header = MafHeader.from_lines(lines=lines, validation_stringency=ValidationStringency.Silent)
