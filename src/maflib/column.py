@@ -47,6 +47,7 @@ class MafColumnRecord(object):
 
         if scheme:
             def add_errors(error):
+                """Adds an error"""
                 self.validation_errors.append(error)
 
             scheme_column_index = scheme.column_index(name=self.key)
@@ -92,17 +93,44 @@ class MafColumnRecord(object):
             return self.value in values
 
     @classmethod
-    def build(cls, name, value, column_index=None, description=None):
+    def build(cls, name, value, column_index=None, description=None,
+              scheme=None):
         """
+        If ``scheme`` is given, then the the appropriate column type will be 
+        built by matching the provided name with the column name in the 
+        scheme.  Otherwise, a column of type ``MafColumnRecord`` will be
+        returned.
         :return: builds a ``MafColumnRecords`` from the given string.  Raises a
         ``ValueError`` if there was a formatting error.
         """
-        return MafColumnRecord(
-            key=name,
-            value=value,
-            column_index=column_index,
-            description=description
-        )
+        if scheme:
+            scheme_column_index = scheme.column_index(name=name)
+            if not scheme_column_index:
+                raise KeyError(
+                    "Column with name '%s' not found in scheme '%s'" %
+                    (name, str(scheme))
+                )
+            elif not column_index is None \
+                    and column_index != scheme_column_index:
+                raise ValueError(
+                    "Mismatch column index: found '%s', expected '%s'" %
+                    (str(column_index), str(scheme_column_index))
+                )
+            # NB: do not pass the scheme!
+            return scheme.column_class(name=name) \
+                .build(
+                name=name,
+                value=value,
+                column_index=scheme_column_index,
+                description=description
+            )
+        else:
+            return MafColumnRecord(
+                key=name,
+                value=value,
+                column_index=column_index,
+                description=description
+            )
 
     @classmethod
     def is_nullable(cls):
@@ -175,7 +203,8 @@ class MafCustomColumnRecord(MafColumnRecord):
         """
 
     @classmethod
-    def build(cls, name, value, column_index=None, description=None):
+    def build(cls, name, value, column_index=None, description=None,
+              scheme=None):
         """
         This method should not be overridden by sub-classes.
 
@@ -185,6 +214,14 @@ class MafCustomColumnRecord(MafColumnRecord):
         and if so, the value in the dictionary is returned.  Otherwise,
         the ``__build__`` method is called.
         """
+        if scheme:
+            return super(MafCustomColumnRecord, cls).build(
+                name=name,
+                value=value,
+                column_index=column_index,
+                description=description,
+                scheme=scheme
+            )
         nullable_dict = cls.__nullable_dict__()
         if nullable_dict is not None and value in nullable_dict:
             built_value = nullable_dict[value]

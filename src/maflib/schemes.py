@@ -1,7 +1,8 @@
 """A module containing schemes for a MAF file.  A scheme determines the
 number of columns, their names, and their expected values.  A scheme can be
 determined from the version and annotation specification in the MAF header's
-version and annotation specification pragmas respectively.
+version and annotation specification pragmas respectively.  It should not be
+modified after being instantiated.
 
 * MafScheme                  the base scheme all schemes should implement
 * NoRestrictionsScheme       a scheme that has no restrictions on the column
