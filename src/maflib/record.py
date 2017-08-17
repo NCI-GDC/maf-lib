@@ -136,7 +136,7 @@ class MafRecord(MutableMapping):
                                      "match replacement column's index '%d'" %
                                      (self.__columns_dict[key].column_index,
                                       column.column_index))
-        elif not column.column_index:
+        elif column.column_index is None:
             # set the column index to the next column
             column.column_index = len(self.__columns_list)
         self.__columns_dict[key] = column

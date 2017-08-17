@@ -105,7 +105,7 @@ class MafColumnRecord(object):
         """
         if scheme:
             scheme_column_index = scheme.column_index(name=name)
-            if not scheme_column_index:
+            if scheme_column_index is None:
                 raise KeyError(
                     "Column with name '%s' not found in scheme '%s'" %
                     (name, str(scheme))
