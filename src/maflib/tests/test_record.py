@@ -273,7 +273,17 @@ class TestMafRecord(unittest.TestCase):
     def test_add(self):
         record = MafRecord()
         column = MafColumnRecord("key1", "value1", column_index=0)
-        record.add(column)
+        self.assertEqual(record.add(column), record)
+        self.assertEqual(len(record), 1)
+        self.assertEqual(len(record.validate()), 0)
+        self.assertEqual(record[0], column)
+
+    def test_iadd(self):
+        record = MafRecord()
+        column = MafColumnRecord("key1", "value1", column_index=0)
+        previous_record = record
+        record += column
+        self.assertEqual(record, previous_record)
         self.assertEqual(len(record), 1)
         self.assertEqual(len(record.validate()), 0)
         self.assertEqual(record[0], column)
