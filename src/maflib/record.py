@@ -105,8 +105,9 @@ class MafRecord(MutableMapping):
         If an `MafColumnRecord`, then the `MafColumnRecord` should have the same
         `key` as the provided column. 3. If `None`, then `None` will always be
         returned. 4. Otherwise, it should be the column name, and be the same as
-        the `key` in the provided column. :param column: an instance of
-        `MafColumnRecord`. """
+        the `key` in the provided column. 
+        
+        :param column: an instance of `MafColumnRecord`. """
         if not isinstance(column, MafColumnRecord):
             raise TypeError("Adding a column that was not of type "
                             "'MafColumnRecord': '%s'" % str(type(column)))
@@ -193,7 +194,12 @@ class MafRecord(MutableMapping):
 
     def add(self, column):
         """Add the column to the record"""
-        return self.__setitem__(column.key, column)
+        return self.__iadd__(column)
+
+    def __iadd__(self, column):
+        """Add the column to the record"""
+        self.__setitem__(column.key, column)
+        return self
 
     def value(self, key):
         """Gets the value for the column with the given name"""
