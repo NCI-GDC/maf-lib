@@ -8,11 +8,19 @@ from maflib.record import MafRecord
 from maflib.column import MafColumnRecord
 
 class DummyRecord(MafRecord):
-    def __init__(self, chromosome, start, end):
+    def __init__(self, chromosome, start, end,
+                 tumor_barcode = None,
+                 normal_barcode = None):
         super(DummyRecord, self).__init__()
         self.add(MafColumnRecord("Chromosome", chromosome))
         self.add(MafColumnRecord("Start_Position", start))
         self.add(MafColumnRecord("End_Position", end))
+        if tumor_barcode:
+            self.add(MafColumnRecord("Tumor_Sample_Barcode",
+                                     tumor_barcode))
+        if normal_barcode:
+            self.add(MafColumnRecord("Matched_Norm_Sample_Barcode",
+                                     normal_barcode))
 
 
 class TestSortOrderEnforcingIterator(unittest.TestCase):
@@ -82,12 +90,12 @@ class TestMafOverlapIterator(unittest.TestCase):
     ]
 
     def test_empty_iter(self):
-        items = LocatableOverlapIterator([])
+        items = LocatableOverlapIterator([], by_barcodes=False)
         self.assertEqual(len([i for i in items]), 0)
 
     def test_single_iter_no_overlap(self):
         actual = TestMafOverlapIterator.RecordsNoOverlap
-        items = LocatableOverlapIterator([iter(actual)])
+        items = LocatableOverlapIterator([iter(actual)], by_barcodes=False)
 
         n = 0
         for i, records in enumerate(items):
@@ -100,7 +108,8 @@ class TestMafOverlapIterator(unittest.TestCase):
     def test_single_iter_overlapping(self):
         actual = TestMafOverlapIterator.RecordsOverlapping
         items = LocatableOverlapIterator(
-            [iter(TestMafOverlapIterator.RecordsOverlapping)]
+            [iter(TestMafOverlapIterator.RecordsOverlapping)],
+            by_barcodes=False
         )
 
         # one record in one list
@@ -129,8 +138,8 @@ class TestMafOverlapIterator(unittest.TestCase):
         first = TestMafOverlapIterator.RecordsNoOverlap
         second = TestMafOverlapIterator.RecordsSecondNoOverlap
         items = LocatableOverlapIterator([
-            iter(first), iter(second)
-        ])
+            iter(first), iter(second),
+        ], by_barcodes=False)
 
         n = first_i = second_i = 0
         for i, records in enumerate(items):
@@ -152,7 +161,7 @@ class TestMafOverlapIterator(unittest.TestCase):
         second = TestMafOverlapIterator.RecordsNoOverlap
         items = LocatableOverlapIterator([
             iter(first), iter(second)
-        ])
+        ], by_barcodes=False)
 
         n = 0
         for i, records in enumerate(items):
@@ -168,7 +177,7 @@ class TestMafOverlapIterator(unittest.TestCase):
         second = TestMafOverlapIterator.RecordsSecondOverlappingFirst
         items = LocatableOverlapIterator([
             iter(first), iter(second)
-        ])
+        ], by_barcodes=False)
         expected_counts = [1, 1, 2, 1, 1, 1]
 
         n = first_i = second_i = 0
@@ -194,7 +203,7 @@ class TestMafOverlapIterator(unittest.TestCase):
 
         items = LocatableOverlapIterator([
             iter([left]), iter([right])
-        ])
+        ], by_barcodes=False)
 
         # one record in one list
         records = next(items)
@@ -214,7 +223,7 @@ class TestMafOverlapIterator(unittest.TestCase):
 
         items = LocatableOverlapIterator([
             iter([left]), iter([right])
-        ])
+        ], by_barcodes=False)
 
         # one record in one list
         records = next(items)
@@ -226,6 +235,87 @@ class TestMafOverlapIterator(unittest.TestCase):
 
         with self.assertRaises(StopIteration):
             next(items)
+
+    def test_by_barcode_matching(self):
+        left = TestMafOverlapIterator.RecordsNoOverlap
+        right = TestMafOverlapIterator.RecordsNoOverlap
+
+        # add the same tumor/normal barcodes to left and right
+        left = [DummyRecord(r.chromosome, r.start, r.end, "T", "N") \
+                for r in left]
+        right = [DummyRecord(r.chromosome, r.start, r.end, "T", "N") \
+                for r in right]
+
+        # iterate by barcode
+        items = LocatableOverlapIterator([
+            iter(left), iter(right)
+        ], by_barcodes=True)
+
+        n = 0
+        for i, records in enumerate(items):
+            self.assertEqual(len(records), 2)
+            self.assertEqual(len(records[0]) + len(records[1]), 2)
+            self.assertEqual(records[0][0], left[n])
+            self.assertEqual(records[1][0], right[n])
+            n += 1
+        self.assertEqual(n, len(left))
+
+        # ignore barcode
+        items = LocatableOverlapIterator([
+            iter(left), iter(right)
+        ], by_barcodes=False)
+
+        n = 0
+        for i, records in enumerate(items):
+            self.assertEqual(len(records), 2)
+            self.assertEqual(len(records[0]) + len(records[1]), 2)
+            self.assertEqual(records[0][0], left[n])
+            self.assertEqual(records[1][0], right[n])
+            n += 1
+        self.assertEqual(n, len(left))
+
+    def test_by_barcode_mismatching(self):
+        left = TestMafOverlapIterator.RecordsNoOverlap
+        right = TestMafOverlapIterator.RecordsNoOverlap
+
+        # add different tumor/normal barcodes to left and right
+        left = [DummyRecord(r.chromosome, r.start, r.end, "A", "B") \
+                for r in left]
+        right = [DummyRecord(r.chromosome, r.start, r.end, "B", "A") \
+                for r in right]
+
+        # iterate by barcode
+        items = LocatableOverlapIterator([
+            iter(left), iter(right)
+        ], by_barcodes=True)
+
+        n = 0
+        for i, records in enumerate(items):
+            self.assertEqual(len(records), 2)
+            if n < len(left):
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(len(records[1]), 0)
+                self.assertEqual(records[0][0], left[n])
+            else:
+                self.assertEqual(len(records[0]), 0)
+                self.assertEqual(len(records[1]), 1)
+                self.assertEqual(records[1][0], right[n-len(left)])
+            n += 1
+        self.assertEqual(n, len(left) + len(right))
+
+        # ignore barcode
+        items = LocatableOverlapIterator([
+            iter(left), iter(right)
+        ], by_barcodes=False)
+
+        n = 0
+        for i, records in enumerate(items):
+            self.assertEqual(len(records), 2)
+            self.assertEqual(len(records[0]) + len(records[1]), 2)
+            self.assertEqual(records[0][0], left[n])
+            self.assertEqual(records[1][0], right[n])
+            n += 1
+        self.assertEqual(n, len(left))
 
 
 class TestAlleleOverlapType(unittest.TestCase):

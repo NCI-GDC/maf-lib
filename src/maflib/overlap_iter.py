@@ -11,7 +11,7 @@ iterator.
 """
 
 from maflib.util import PeekableIterator
-from maflib.sort_order import Coordinate
+from maflib.sort_order import BarcodeAndCoordinate, Coordinate
 from enum import Enum, unique
 
 
@@ -39,14 +39,23 @@ class LocatableOverlapIterator(object):
 
     def __init__(self,
                  iters,
-                 fasta_index=None):
+                 fasta_index=None,
+                 by_barcodes=True):
         """
         :param iters: the list of iterators.
         :param fasta_index: the path to the FASTA index for defining 
         ordering across chromosomes.
+        :param by_barcodes: True to require the same tumor and matched 
+        normal barcodes for returned locatables, False otherwise
         """
 
-        self._sort_order = Coordinate(fasta_index=fasta_index)
+        self._by_barcodes = by_barcodes
+        if self._by_barcodes:
+            self._sort_order = BarcodeAndCoordinate(fasta_index=fasta_index)
+            self._overlap_f = self.__overlaps_with_barcode
+        else:
+            self._sort_order = Coordinate(fasta_index=fasta_index)
+            self._overlap_f = self.__overlaps
 
         # Trust, but verify
         _iters = [_SortOrderEnforcingIterator(_iter, self._sort_order)
@@ -54,6 +63,19 @@ class LocatableOverlapIterator(object):
         self._iters = [PeekableIterator(_iter) for _iter in _iters]
 
         self._sort_key = self._sort_order.sort_key()
+
+    @classmethod
+    def __overlaps_with_barcode(cls, min_key, cur_key):
+        return (min_key.tumor_barcode == cur_key.tumor_barcode
+                and min_key.normal_barcode == cur_key.normal_barcode
+                and cls.__overlaps(min_key, cur_key))
+
+    @classmethod
+    def __overlaps(cls, min_key, cur_key):
+        # NB: we assume that min_key.start <= cur_key.start
+        # NB: ignores tumor and normal barcode
+        return (min_key.chromosome == cur_key.chromosome
+                and min_key.start <= cur_key.start <= min_key.end)
 
     def __iter__(self):
         return self
@@ -73,10 +95,9 @@ class LocatableOverlapIterator(object):
         min_key = min([k for k in keys if k])
 
         # 2. while we cannot add anymore, find all that are overlapping,
-        # and dd them to the list of records to be returned
-        chromosome = min_key.chromosome
-        start = min_key.start
-        end = min_key.end
+        # and add them to the list of records to be returned.  We update the
+        # end position of the minimum key (min_key) to the maximum end so far
+        # so we can return all overlapping variants.
         records = [[] for _ in self._iters]
         added = True
         while added:
@@ -90,15 +111,13 @@ class LocatableOverlapIterator(object):
                     if not keys[i]:
                         keys[i] = self._sort_key(rec)
                     # Check if it overlaps
-                    # NB: since start was the minimum start, the current
-                    # record's start cannot be less than the minimum start!
-                    if chromosome == keys[i].chromosome \
-                            and start <= keys[i].start <= end:
+                    if self._overlap_f(min_key, keys[i]):
                         # Add it to the list, update the end, set added to
                         # true, and nullify the key
                         next_rec = next(_iter)
                         records[i].append(next_rec)
-                        end = max(end, keys[i].end)
+                        if min_key.end < keys[i].end:
+                            min_key.end = keys[i].end
                         added = True
                         keys[i] = None
 
@@ -154,6 +173,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
     def __init__(self,
                  iters,
                  fasta_index=None,
+                 by_barcodes=True,
                  overlap_type=AlleleOverlapType.Equality):
         """
         :param iters: the list of iterators.
@@ -161,7 +181,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
         ordering across chromosomes.
         """
         super(LocatableByAlleleOverlapIterator, self).__init__(
-            iters, fasta_index
+            iters, fasta_index, by_barcodes
         )
         self._compare_alts = AlleleOverlapType.compare_by(overlap_type)
 
