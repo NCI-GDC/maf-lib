@@ -13,6 +13,7 @@ setup(
     license = "Apache 2.0",
     packages = ["maflib", "maftools"],
     package_dir = {"maflib" : "src/maflib", "maftools" : "src/maftools"},
+    package_data = {'maflib': ['resources/*.json']},
     install_requires = [],
     classifiers = [
         "Development Status :: 3 - Alpha",
