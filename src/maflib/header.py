@@ -32,11 +32,13 @@ class MafHeader(MutableMapping):
     Provides methods for accessing the records in the order they were added, as
     well as methods for returning the version
     (:func:`~header.MafHeader.version`), annotation specification
-    (:func:`~header.MafHeader.annotation`), and
-    scheme (:func:`~header.MafHeader.scheme`).  Additionally, the
+    (:func:`~header.MafHeader.annotation`),
+    scheme (:func:`~header.MafHeader.scheme`), and sort order (
+    :func:`~header.MafHeader.sort_order`).  Additionally, the
     :func:`~header.MafHeader.validate` method can be used
     to validate the format of the header as well as validate the contents
-    relative to the given scheme.
+    relative to the given scheme. If no sort order is found in the header,
+    the sort order will be "unsorted".
     """
 
     VersionKey = "version"
@@ -92,11 +94,11 @@ class MafHeader(MutableMapping):
             return None
 
     def sort_order(self):
-        """Gets the sort order or `None` if not present"""
+        """Gets the sort order or `Unsorted` if not present"""
         if MafHeader.SortOrderKey in self.__records:
             return self.__records[MafHeader.SortOrderKey].value
         else:
-            return None
+            return sort_order.Unsorted()
 
     def scheme(self):
         """Gets the scheme according to the version and annotation, None if

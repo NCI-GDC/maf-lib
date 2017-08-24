@@ -232,10 +232,6 @@ class TestMafHeader(unittest.TestCase):
         self.assertEqual(header.scheme().version(), scheme.version())
         self.assertEqual(header.scheme().annotation_spec(), scheme.annotation_spec())
 
-    # TODO: should we require a sort order in the header?
-    #def test_from_lines_missing_sort_order(self):
-    #   pass
-
     def test_from_lines_unsupported_sort_order(self):
         lines = [TestMafHeader.__version_line,
                  TestMafHeader.__annotation_line,
@@ -246,7 +242,7 @@ class TestMafHeader(unittest.TestCase):
 
         self.assertTrue(len(header.validation_errors) == 1)
         self.assertEqual(header.validation_errors[0].tpe, MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER)
-        self.assertIsNone(header.sort_order())
+        self.assertEqual(header.sort_order().name(), sort_order.Unsorted.name())
 
     def test_from_lines_supported_sort_order(self):
         for so in sort_order.SortOrder.all():
@@ -259,6 +255,15 @@ class TestMafHeader(unittest.TestCase):
 
             self.assertTrue(len(header.validation_errors) == 0)
             self.assertEqual(header.sort_order().name(), so.name())
+
+    def test_from_lines_no_sort_order(self):
+        lines = [TestMafHeader.__version_line,
+                 TestMafHeader.__annotation_line]
+        header = MafHeader.from_lines(lines=lines,
+                                      validation_stringency=ValidationStringency.Silent)
+
+        self.assertTrue(len(header.validation_errors) == 0)
+        self.assertEqual(header.sort_order().name(), sort_order.Unsorted.name())
 
     def test_from_lines_strict_raises_on_error(self):
         """
@@ -411,7 +416,8 @@ class TestMafHeader(unittest.TestCase):
 
         lines = [
             TestMafHeader.__version_line,
-            TestMafHeader.__annotation_line
+            TestMafHeader.__annotation_line,
+            TestMafHeader.__sort_order_line
         ]
         reader = MafReader(lines=lines,
                            validation_stringency=ValidationStringency.Silent,
@@ -423,15 +429,20 @@ class TestMafHeader(unittest.TestCase):
         self.assertEqual(header.scheme().version(), scheme.version())
         self.assertEqual(header.scheme().annotation_spec(),
                          scheme.annotation_spec())
+        self.assertEqual(header.sort_order().name(), Coordinate.name())
+
 
         # Override version and annotation
         scheme = GdcV1_0_0_PublicScheme()
         header = MafHeader.from_reader(reader=reader,
                                        version=scheme.version(),
-                                       annotation=scheme.annotation_spec())
+                                       annotation=scheme.annotation_spec(),
+                                       sort_order=sort_order.Unsorted().name())
         self.assertEqual(header.scheme().version(), scheme.version())
         self.assertEqual(header.scheme().annotation_spec(),
                          scheme.annotation_spec())
+        self.assertEqual(header.sort_order().name(),
+                         sort_order.Unsorted().name())
 
     def test_scheme_header_lines(self):
         scheme = TestMafHeader.Scheme

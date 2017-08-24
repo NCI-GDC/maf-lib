@@ -1,6 +1,8 @@
 from maflib.column_types import StringColumn, FloatColumn
+from maflib.locatable import Locatable
 from maflib.reader import *
 from maflib.schemes import *
+from maflib.sort_order import Coordinate
 from maflib.tests.testutils import *
 
 
@@ -179,6 +181,89 @@ class TestMafReader(unittest.TestCase):
         self.assertEqual(len(records), 3)
         self.assertListEqual([r["str1"].value for r in records], ["cell-1-1", "cell-2-1", "cell-3-1"])
         self.assertListEqual([r["float"].value for r in records], [1.314, 2.314, 3.314])
+
+        reader.close()
+        os.remove(fn)
+
+    class DummyRecord(Locatable):
+        def __init__(self, chr, start, end):
+            self._dict = dict()
+            self._dict["Chromosome"] = chr
+            self._dict["Start_Position"] = start
+            self._dict["End_Position"] = end
+            super(TestMafReader.DummyRecord, self).__init__( chr, start, end)
+
+        def value(self, key):
+            return self._dict[key]
+
+    def test_reader_in_order(self):
+        column_names = ["Chromosome", "Start_Position", "End_Position"]
+        scheme = NoRestrictionsScheme(column_names)
+        header_version = "%s%s %s" % (
+        MafHeader.HeaderLineStartSymbol, MafHeader.VersionKey,
+        scheme.version())
+        header_sort_order = "%s%s %s" % (
+        MafHeader.HeaderLineStartSymbol, MafHeader.SortOrderKey,
+        Coordinate())
+
+        lines = [
+            header_version,
+            header_sort_order,
+            "\t".join(column_names),
+            "\t".join(["A", "1", "1"]),
+            "\t".join(["A", "2", "2"]),
+            "\t".join(["A", "3", "3"])
+        ]
+
+        fh, fn = tmp_file(lines=lines)
+        fh.close()
+
+        reader = MafReader.reader_from(path=fn,
+                                       validation_stringency=ValidationStringency.Silent,
+                                       scheme=scheme)
+
+        self.assertEqual(reader.scheme().version(), scheme.version())
+        self.assertEqual(reader.header().version(), scheme.version())
+        self.assertEqual(reader.header().sort_order().name(), Coordinate().name())
+
+        records = [record for record in reader]
+        self.assertEqual(len(records), 3)
+
+        reader.close()
+        os.remove(fn)
+
+    def test_reader_out_of_order(self):
+        column_names = ["Chromosome", "Start_Position", "End_Position"]
+        scheme = NoRestrictionsScheme(column_names)
+        header_version = "%s%s %s" % (
+        MafHeader.HeaderLineStartSymbol, MafHeader.VersionKey,
+        scheme.version())
+        header_sort_order = "%s%s %s" % (
+        MafHeader.HeaderLineStartSymbol, MafHeader.SortOrderKey,
+        Coordinate())
+
+        lines = [
+            header_version,
+            header_sort_order,
+            "\t".join(column_names),
+            "\t".join(["A", "1", "1"]),
+            "\t".join(["A", "4", "4"]),
+            "\t".join(["A", "2", "2"])
+        ]
+
+        fh, fn = tmp_file(lines=lines)
+        fh.close()
+
+        reader = MafReader.reader_from(path=fn,
+                                       validation_stringency=ValidationStringency.Silent,
+                                       scheme=scheme)
+
+        self.assertEqual(reader.scheme().version(), scheme.version())
+        self.assertEqual(reader.header().version(), scheme.version())
+        self.assertEqual(reader.header().sort_order().name(), Coordinate().name())
+
+        with self.assertRaises(ValueError):
+            records = [record for record in reader]
 
         reader.close()
         os.remove(fn)
