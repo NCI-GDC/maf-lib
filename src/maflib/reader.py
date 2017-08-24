@@ -9,6 +9,7 @@ from maflib.header import MafHeader
 from maflib.logger import Logger
 from maflib.record import MafRecord
 from maflib.schemes import NoRestrictionsScheme
+from maflib.sort_order import SortOrderEnforcingIterator
 from maflib.validation import ValidationStringency, MafValidationError, \
     MafValidationErrorType
 
@@ -167,7 +168,9 @@ class MafReader(object):
             self.__closeable.close()
 
     def __iter__(self):
-        return self
+        return SortOrderEnforcingIterator(
+            _iter=self,
+            sort_order=self.header().sort_order())
 
     def next(self):
         return self.__next__()

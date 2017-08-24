@@ -93,7 +93,7 @@ class Unknown(SortOrder):
     def sort_key(self):
         """Returns the sort key, which is not implemented as sorting is not 
         valid for the Unknown sort order."""
-        raise Exception("Sorting not supported for Unknown order.")
+        raise NotImplementedError("Sorting not supported for Unknown order.")
 
 
 class Unsorted(SortOrder):
@@ -111,7 +111,7 @@ class Unsorted(SortOrder):
     def sort_key(self):
         """Returns the sort key, which is not implemented as sorting is not 
         valid for the Unsorted sort order."""
-        raise Exception("Sorting not supported for Unsorted order.")
+        raise NotImplementedError("Sorting not supported for Unsorted order.")
 
 
 class _CoordinateKey(SortOrderKey, Locatable):
@@ -217,3 +217,34 @@ class BarcodeAndCoordinate(Coordinate):
             return _BarcodesAndCoordinateKey(record=record,
                                              contigs=self._contigs)
         return key
+
+
+class SortOrderEnforcingIterator(object):
+    """An iterator that enforces a sort order."""
+
+    def __init__(self, _iter, sort_order):
+        self._iter = _iter
+        self._last_rec = None
+        try:
+            self._sort_f = sort_order.sort_key()
+        except NotImplementedError as e:
+            self._sort_f = None
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        """Gets the next element."""
+        return self.__next__()
+
+    def __next__(self):
+        rec = next(self._iter)
+        if self._last_rec and self._sort_f:
+            rec_key = self._sort_f(rec)
+            last_rec_key = self._sort_f(self._last_rec)
+            if rec_key < last_rec_key:
+                raise ValueError("Records out of order\n%s\n%s" %
+                                (str(self._last_rec), str(rec)))
+
+        self._last_rec = rec
+        return rec

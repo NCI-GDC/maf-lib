@@ -228,3 +228,56 @@ class TestCoordinateKey(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             sort_key(Coordinate())
+
+
+class TestSortOrderEnforcingIterator(unittest.TestCase):
+    def test_empty_iter(self):
+        so_iter = SortOrderEnforcingIterator(_iter=iter([]),
+                                             sort_order=Coordinate())
+        items = [item for item in so_iter]
+        self.assertListEqual(items, [])
+
+    def test_single_element_iter(self):
+        r1 = TestCoordinateKey.DummyRecord("C", 1, 2)
+
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1]),
+                                             sort_order=Coordinate())
+        items = [item for item in so_iter]
+        self.assertListEqual(items, [r1])
+
+    def test_multiple_elements_ok(self):
+        r1 = TestCoordinateKey.DummyRecord("C", 1, 2)
+        r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
+
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
+                                             sort_order=Coordinate())
+        items = [item for item in so_iter]
+        self.assertListEqual(items, [r1, r2])
+
+    def test_multiple_elements_fail(self):
+        r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
+        r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
+
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
+                                             sort_order=Coordinate())
+        with self.assertRaises(ValueError):
+            items = [item for item in so_iter]
+
+    def test_unsorted(self):
+        r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
+        r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
+
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
+                                             sort_order=Unsorted())
+        items = [item for item in so_iter]
+        self.assertListEqual(items, [r1, r2])
+
+
+    def test_unknown(self):
+        r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
+        r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
+
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
+                                             sort_order=Unknown())
+        items = [item for item in so_iter]
+        self.assertListEqual(items, [r1, r2])
