@@ -318,8 +318,10 @@ class TestBooleanColumn(TestCase):
 
 class TestEntrezGeneId(TestCase):
     def test_valid(self):
-        self.is_column_is_valid(EntrezGeneId.build("key", "0"), 0, [None])
+        self.is_column_is_valid(EntrezGeneId.build("key", "0"), None, [None])
         self.is_column_is_valid(EntrezGeneId.build("key", "1"), 1, [None])
+        self.assertEqual(str(EntrezGeneId.build("key", "0")), "0")
+        self.assertIsNone(EntrezGeneId.build("key", "0").value)
 
     def test_invalid(self):
         self.is_column_invalid(EntrezGeneId.build("key", "0"), "YES",
