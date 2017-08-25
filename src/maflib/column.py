@@ -170,16 +170,33 @@ class MafColumnRecord(object):
             if cls.__nullable_dict__() is not None else None
 
     def __str__(self):
-        if self.value is None:
-            nullable_dict = self.__nullable_dict__()
-            if nullable_dict is not None:
-                value = next((key for key, value in nullable_dict.items()
-                              if value == self.value), None)
-            else:
-                value = self.value
-            return "" if value is None else str(value)
-        else:
-            return str(self.value)
+        """Delegates the conversion to a string for non-null values to
+        __string_it__()"""
+
+        # check to see if the value is a "nullable value"
+        nullable_dict = self.__nullable_dict__()
+        if nullable_dict is not None:
+            possible_keys = [key for key, value in nullable_dict.items()
+                               if value == self.value]
+
+            key = next(iter(possible_keys), None)
+
+            # did we find a key for the given null value?
+            if not key is None:
+                # always prefer the empty string
+                if "" in possible_keys:
+                    return ""
+                # make sure the key (in this case is called value
+                if not isinstance(key, str):
+                    raise ValueError("Null able key '%s' was not a 'str' but"
+                    " instead '%s'" % (str(key), key.__class__.__name__))
+                return key
+        return self.__string_it__()
+
+    def __string_it__(self):
+        """Sub-classes can override this method to print a string when the
+        value is not null"""
+        return str(self.value)
 
 
 class MafCustomColumnRecord(MafColumnRecord):
@@ -269,16 +286,3 @@ class MafCustomColumnRecord(MafColumnRecord):
             reset_errors=False,  # we reset above!
             scheme=scheme, line_number=line_number)
 
-    def __str__(self):
-        """Delegates the conversion to a string for non-null values to
-        __string_it__()"""
-        super_str = super(MafCustomColumnRecord, self).__str__()
-        if super_str:
-            return self.__string_it__()
-        else:
-            return super_str
-
-    def __string_it__(self):
-        """Sub-classes can override this method to print a string when the
-        value is not null"""
-        return str(self.value)

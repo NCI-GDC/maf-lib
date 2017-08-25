@@ -26,7 +26,7 @@ class TestMafColumnRecord(unittest.TestCase):
     class NullableColumn(MafColumnRecord):
         @classmethod
         def __nullable_dict__(cls):
-            return {-10:None}
+            return {"-10":None}
 
     class NoneColumn(MafColumnRecord):
         @classmethod
@@ -46,8 +46,8 @@ class TestMafColumnRecord(unittest.TestCase):
         column = TestMafColumnRecord.NullableColumn(key="key", value=10, column_index=0, description="Foo Bar")
         self.assertTrue(column.is_nullable())
         self.assertListEqual(column.__nullable_values__(), [None])
-        self.assertDictEqual(column.__nullable_dict__(), {-10:None})
-        self.assertListEqual(column.__nullable_keys__(), [-10])
+        self.assertDictEqual(column.__nullable_dict__(), {"-10":None})
+        self.assertListEqual(column.__nullable_keys__(), ["-10"])
         self.assertFalse(column.is_null())
         self.assertEqual(str(column), "10")
 
@@ -62,7 +62,7 @@ class TestMafColumnRecord(unittest.TestCase):
                                                 column_index=0,
                                                 description="Foo Bar")
         self.assertFalse(column.is_null())
-        self.assertEqual(str(column), "")
+        self.assertEqual(str(column), "None")
 
     def test_build_with_scheme(self):
         scheme = TestScheme()

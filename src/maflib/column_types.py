@@ -474,7 +474,7 @@ class EntrezGeneId(ZeroBasedIntegerColumn):
     where zero is treated as null."""
     @classmethod
     def __nullable_dict__(cls):
-        return {0: None}
+        return {"0": None}
 
 
 class Strand(EnumColumn):
