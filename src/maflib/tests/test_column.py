@@ -28,6 +28,11 @@ class TestMafColumnRecord(unittest.TestCase):
         def __nullable_dict__(cls):
             return {"-10":None}
 
+    class InvalidNullableColumn(MafColumnRecord):
+        @classmethod
+        def __nullable_dict__(cls):
+            return {10: None}
+
     class NoneColumn(MafColumnRecord):
         @classmethod
         def __nullable_dict__(cls):
@@ -50,6 +55,11 @@ class TestMafColumnRecord(unittest.TestCase):
         self.assertListEqual(column.__nullable_keys__(), ["-10"])
         self.assertFalse(column.is_null())
         self.assertEqual(str(column), "10")
+
+    def test_invalid_nullable_column(self):
+        with self.assertRaises(ValueError):
+            TestMafColumnRecord.InvalidNullableColumn(key="key", value=10,
+                                                         column_index=0, description="Foo Bar")
 
     def test_str(self):
         column = TestMafColumnRecord.NullableColumn(key="key", value=None,
@@ -116,6 +126,11 @@ class TestMafCustomColumnRecord(unittest.TestCase):
         def __validate__(self):
             return "invalid"
 
+    class NullableColumn(MafCustomColumnRecord):
+        @classmethod
+        def __nullable_dict__(cls):
+            return {"-10": None}
+
     def test_validate(self):
         valid = TestMafCustomColumnRecord.ValidColumn.build("key", "value", 0)
         self.assertEqual(valid.__validate__(), None)
@@ -172,3 +187,12 @@ class TestMafCustomColumnRecord(unittest.TestCase):
                                        scheme=scheme)
         self.assertEqual(str(column), "2.1")
         self.assertEqual(column.column_index, 1)
+
+    def test_build_nullable(self):
+        column = TestMafCustomColumnRecord.NullableColumn.build_nullable(
+            name="Name")
+        self.assertIsNone(column.value)
+        self.assertEqual(str(column), "-10")
+
+        with self.assertRaises(ValueError):
+            TestMafCustomColumnRecord.ValidColumn.build_nullable(name="Name")

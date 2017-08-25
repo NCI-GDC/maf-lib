@@ -35,6 +35,16 @@ class MafColumnRecord(object):
         self.description = description
         self.validation_errors = list()
 
+        # check that all nullable keys are strings
+        if self.is_nullable():
+            for key in self.__nullable_keys__():
+                if not isinstance(key, str):
+                    raise ValueError("Nullable key '%s' was not a 'str' but"
+                                     " instead '%s' (%s)" % (
+                                     str(key),
+                                     key.__class__.__name__,
+                                     self.__class__.__name__))
+
     def validate(self, reset_errors=True, scheme=None, line_number=None):
         """
         Validates that the value is of the correct type and an acceptable
@@ -186,10 +196,6 @@ class MafColumnRecord(object):
                 # always prefer the empty string
                 if "" in possible_keys:
                     return ""
-                # make sure the key (in this case is called value
-                if not isinstance(key, str):
-                    raise ValueError("Null able key '%s' was not a 'str' but"
-                    " instead '%s'" % (str(key), key.__class__.__name__))
                 return key
         return self.__string_it__()
 
@@ -218,6 +224,23 @@ class MafCustomColumnRecord(MafColumnRecord):
         ``ValueError`` if there was a formatting error.  Any logic about
         converting the value or type should be done here.
         """
+
+    @classmethod
+    def build_nullable(cls, name, column_index=None, description=None,
+              scheme=None):
+        """
+        This method should not be overridden by sub-classes.
+        
+        The class should have at least one nullable key and value, from which 
+        the column is built.
+        """
+        if not cls.is_nullable():
+            raise ValueError("Column name '%s' is not nullable, "
+                             "but build_nullable was called ('%s')" %
+                             (name, cls.__name__))
+        key = cls.__nullable_keys__()[0] # get the first one
+        return cls.build(name=name, value=key, column_index=column_index,
+                  description=description, scheme=scheme)
 
     @classmethod
     def build(cls, name, value, column_index=None, description=None,
