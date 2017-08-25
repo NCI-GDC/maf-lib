@@ -163,7 +163,7 @@ class TestFloatColumn(TestCase):
 
 class TestEnumColumn(TestCase):
     @unique
-    class TestEnum(Enum):
+    class TestEnum(MafEnum):
         Foo = "1.Foo"
         Bar = "2.Bar"
         Null = "3.Null"
@@ -174,8 +174,9 @@ class TestEnumColumn(TestCase):
             return TestEnumColumn.TestEnum
 
         @classmethod
-        def __nullable_values__(cls):
-            return [TestEnumColumn.TestEnum.Null]
+        def __nullable_dict__(cls):
+            return {TestEnumColumn.TestEnum.Null.name:
+                        TestEnumColumn.TestEnum.Null}
 
     class NotNullableEnumColumn(EnumColumn):
         @classmethod
