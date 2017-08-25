@@ -219,16 +219,43 @@ class BarcodeAndCoordinate(Coordinate):
         return key
 
 
-class SortOrderEnforcingIterator(object):
-    """An iterator that enforces a sort order."""
+class SortOrderChecker(object):
+    """Checks that the records given are in sorted order"""
 
-    def __init__(self, _iter, sort_order):
-        self._iter = _iter
+    def __init__(self, sort_order):
         self._last_rec = None
         try:
             self._sort_f = sort_order.sort_key()
         except NotImplementedError as e:
             self._sort_f = None
+            pass
+
+    def add(self, rec):
+        """Check that the given record is in order relative to the previous
+        record"""
+        return self.__iadd__(rec)
+
+    def __iadd__(self, rec):
+        if self._last_rec and self._sort_f:
+            rec_key = self._sort_f(rec)
+            last_rec_key = self._sort_f(self._last_rec)
+            if rec_key < last_rec_key:
+                raise ValueError("Records out of order\n%s\n%s" %
+                                 (str(self._last_rec), str(rec)))
+        self._last_rec = rec
+        return self
+
+    def __del__(self):
+        self._last_rec = None
+        self._sort_f = None
+
+
+class SortOrderEnforcingIterator(object):
+    """An iterator that enforces a sort order."""
+
+    def __init__(self, _iter, sort_order):
+        self._checker = SortOrderChecker(sort_order=sort_order)
+        self._iter = _iter
 
     def __iter__(self):
         return self
@@ -239,12 +266,5 @@ class SortOrderEnforcingIterator(object):
 
     def __next__(self):
         rec = next(self._iter)
-        if self._last_rec and self._sort_f:
-            rec_key = self._sort_f(rec)
-            last_rec_key = self._sort_f(self._last_rec)
-            if rec_key < last_rec_key:
-                raise ValueError("Records out of order\n%s\n%s" %
-                                (str(self._last_rec), str(rec)))
-
-        self._last_rec = rec
+        self._checker.add(rec)
         return rec

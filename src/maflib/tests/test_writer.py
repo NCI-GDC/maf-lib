@@ -1,10 +1,12 @@
-from maflib.column_types import StringColumn, FloatColumn
+from maflib.column_types import StringColumn, FloatColumn, IntegerColumn
 from maflib.reader import *
 from maflib.schemes import *
+from maflib.sort_order import Coordinate
 from maflib.tests.testutils import *
 from maflib.util import captured_output
 from maflib.validation import MafFormatException
 from maflib.writer import *
+from maflib.locatable import Locatable
 
 
 class TestMafWriter(TestCase):
@@ -177,3 +179,76 @@ class TestMafWriter(TestCase):
         err_record_line = record_line.replace("error", "None")
         self.assertListEqual(read_lines(path),
                              header_lines + [err_record_line, err_record_line])
+
+    class TestCoordinateScheme(MafScheme):
+        @classmethod
+        def version(cls):
+            return "test-version"
+
+        @classmethod
+        def annotation_spec(cls):
+            return "test-annotation"
+
+        @classmethod
+        def __column_dict__(cls):
+            return OrderedDict([("Chromosome", StringColumn),
+                                ("Start_Position", IntegerColumn),
+                                ("End_Position", IntegerColumn)])
+
+    class DummyRecord(Locatable):
+        def __init__(self, chr, start, end):
+            self._dict = OrderedDict()
+            self._dict["Chromosome"] = chr
+            self._dict["Start_Position"] = start
+            self._dict["End_Position"] = end
+            super(TestMafWriter.DummyRecord, self).__init__(
+                chr, start, end)
+
+        def value(self, key):
+            return self._dict[key]
+
+        def keys(self):
+            return self._dict.keys()
+
+        def validate(self, *args, **kwargs):
+            return None
+
+        def __str__(self):
+            return "\t".join([str(v) for v in self._dict.values()])
+
+    def test_with_sorting(self):
+        scheme = TestMafWriter.TestCoordinateScheme()
+        fd, path = tempfile.mkstemp()
+
+        # Create the header
+        header_lines = MafHeader.scheme_header_lines(scheme) \
+                       + ["#key1 value1", "#key2 value2"] \
+                        + ["%s%s %s" % (MafHeader.HeaderLineStartSymbol,
+                                        MafHeader.SortOrderKey,
+                                        Coordinate().name())] \
+                       + ["\t".join(scheme.column_names())]
+        header = MafHeader.from_lines(lines=header_lines,
+                                      validation_stringency=ValidationStringency.Silent)
+
+        # Write the header, and the record twice
+        writer = MafWriter.from_path(
+            header=header,
+            validation_stringency=ValidationStringency.Lenient,
+            path=path,
+            assume_sorted=False)
+        writer += TestMafWriter.DummyRecord("chr1", 2, 2)
+        writer += TestMafWriter.DummyRecord("chr1", 3, 3)
+        writer += TestMafWriter.DummyRecord("chr1", 4, 4)
+        writer.close()
+
+        reader = MafReader.reader_from(path=path, scheme=scheme)
+        header = reader.header()
+        records = [rec for rec in reader]
+        reader.close()
+
+        self.assertEqual(header.sort_order().name(), Coordinate.name())
+
+        self.assertListEqual([r["Start_Position"].value for r in records],
+                             [2, 3, 4])
+        self.assertListEqual([r["End_Position"].value for r in records],
+                             [2, 3, 4])

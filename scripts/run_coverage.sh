@@ -42,10 +42,8 @@ pushd $ROOT_DIR 2>&1 >/dev/null;
 for TOOL in ${COVERAGE_TOOLS[@]}; do
   TOOL_NAME=$(basename $TOOL);
   TOOL_OUTPUT_DIR=${OUTPUT_DIR}/${TOOL_NAME};
-  echo "Coverage for tool '$TOOL_NAME' will be written to '$TOOL_OUTPUT_DIR'";
-  set +e
+  echo "Coverage for tool '$TOOL_NAME' will be written to '$TOOL_OUTPUT_DIR/index.html'";
   $TOOL run -m unittest discover -s src
-  set -e
   mkdir -p ${TOOL_OUTPUT_DIR};
   $TOOL report --include="src/*" --omit="src/*/tests/*,src/*/__init__.py"
   $TOOL html -d ${TOOL_OUTPUT_DIR} -i --include="src/*" --omit="src/*/tests/*,src/*/__init__.py"
