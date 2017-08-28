@@ -46,6 +46,26 @@ class TestLineReader(unittest.TestCase):
         reader.close()
         os.remove(fn)
 
+
+class TestPeekableIterator(unittest.TestCase):
+
+    def test_simple_iteration(self):
+        items = [i for i in range(10)]
+        self.assertListEqual(
+            items,
+            [item for item in PeekableIterator(iter(items))]
+        )
+
+    def test_peek(self):
+        items = PeekableIterator(iter([i for i in range(10)]))
+
+        for i, item in enumerate(items):
+            if i == 9:
+                self.assertEqual(items.peek(), None)
+            else:
+                self.assertEqual(items.peek(), i+1)
+
+
 class TestMisc(unittest.TestCase):
     class Hello(object):
         def __str__(self):

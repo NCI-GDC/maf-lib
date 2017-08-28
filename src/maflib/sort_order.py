@@ -117,10 +117,11 @@ class Unsorted(SortOrder):
 class _CoordinateKey(SortOrderKey, Locatable):
     """A little class that aids in comparing records based on chromosome, 
     start position, and end position"""
+
     def __init__(self, record, contigs):
         if not issubclass(record.__class__, Locatable):
             raise ValueError("Record of type '%s' is not a subclass of "
-                            "'Locatable'" % record.__class__.__name__)
+                             "'Locatable'" % record.__class__.__name__)
         chromosome = record.chromosome
         if contigs:
             try:
@@ -141,8 +142,8 @@ class _CoordinateKey(SortOrderKey, Locatable):
         return diff
 
     def __str__(self):
-        return "\t".join(str(s) for s in [self.chromosome, self.start,
-                                         self.end])
+        return "\t".join(
+            str(s) for s in [self.chromosome, self.start, self.end])
 
 
 class Coordinate(SortOrder):
@@ -226,7 +227,7 @@ class SortOrderChecker(object):
         self._last_rec = None
         try:
             self._sort_f = sort_order.sort_key()
-        except NotImplementedError as e:
+        except NotImplementedError:
             self._sort_f = None
             pass
 
