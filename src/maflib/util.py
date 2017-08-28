@@ -63,6 +63,36 @@ class LineReader(object):
         self._file.close()
 
 
+class PeekableIterator(object):
+    """An iterator that has a `peek()` method."""
+
+    def __init__(self, _iter):
+        self._iter = _iter
+        self.__update_peek()
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        """Gets the next record"""
+        return self.__next__()
+
+    def __next__(self):
+        if self._peek is None:
+            raise StopIteration
+        to_return = self._peek
+        self.__update_peek()
+        return to_return
+
+    def __update_peek(self):
+        self._peek = next(self._iter, None)
+
+    def peek(self):
+        """Returns the next element without consuming it, or None 
+        if there are no more elements."""
+        return self._peek
+
+
 class abstractclassmethod(classmethod):
     """A class that can be used to annotate an abstract class method"""
 
