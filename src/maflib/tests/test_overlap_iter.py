@@ -380,26 +380,28 @@ class DummyRecordWithAllele(MafRecord):
 class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
     def test_multiple_loci(self):
-        for overlap_type in AlleleOverlapType:
-            actual = [
-                DummyRecordWithAllele("A", 1, 10),
-                DummyRecordWithAllele("A", 110, 200),
-                DummyRecordWithAllele("B", 1, 10),
-                DummyRecordWithAllele("B", 110, 200),
-                DummyRecordWithAllele("C", 1, 200)
-            ]
+        for by_barcodes in [True, False]:
+            for overlap_type in AlleleOverlapType:
+                actual = [
+                    DummyRecordWithAllele("A", 1, 10),
+                    DummyRecordWithAllele("A", 110, 200),
+                    DummyRecordWithAllele("B", 1, 10),
+                    DummyRecordWithAllele("B", 110, 200),
+                    DummyRecordWithAllele("C", 1, 200)
+                ]
 
-            items = LocatableByAlleleOverlapIterator(
-                iters=[iter(actual)],
-                overlap_type=overlap_type
-            )
-            n = 0
-            for i, records in enumerate(items):
-                self.assertEqual(len(records), 1)
-                self.assertEqual(len(records[0]), 1)
-                self.assertEqual(actual[i], records[0][0])
-                n += 1
-            self.assertEqual(n, len(actual))
+                items = LocatableByAlleleOverlapIterator(
+                    iters=[iter(actual)],
+                    overlap_type=overlap_type,
+                    by_barcodes=by_barcodes
+                )
+                n = 0
+                for i, records in enumerate(items):
+                    self.assertEqual(len(records), 1)
+                    self.assertEqual(len(records[0]), 1)
+                    self.assertEqual(actual[i], records[0][0])
+                    n += 1
+                self.assertEqual(n, len(actual))
 
     def test_single_iter_overlapping(self):
         for overlap_type in AlleleOverlapType:
@@ -411,7 +413,8 @@ class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
                 items = LocatableByAlleleOverlapIterator(
                     iters=[iter(actual)],
-                    overlap_type=overlap_type
+                    overlap_type=overlap_type,
+                    by_barcodes = False
                 )
 
                 records = next(items)
@@ -429,7 +432,8 @@ class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
             items = LocatableByAlleleOverlapIterator(
                 iters=[iter(actual)],
-                overlap_type=overlap_type
+                overlap_type=overlap_type,
+                by_barcodes=False
             )
             n = 0
             for i, records in enumerate(items):
@@ -448,7 +452,8 @@ class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
             items = LocatableByAlleleOverlapIterator(
                 iters=[iter(actual)],
-                overlap_type=overlap_type
+                overlap_type=overlap_type,
+                by_barcodes=False
             )
             n = 0
             for i, records in enumerate(items):
@@ -477,7 +482,8 @@ class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
             items = LocatableByAlleleOverlapIterator(
                 iters=iters,
-                overlap_type=overlap_type
+                overlap_type=overlap_type,
+                by_barcodes=False
             )
 
             records = next(items)
@@ -522,7 +528,8 @@ class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
             items = LocatableByAlleleOverlapIterator(
                 iters=[iter([base]), iter([other])],
-                overlap_type=overlap_type
+                overlap_type=overlap_type,
+                by_barcodes=False
             )
 
             records = next(items)

@@ -76,7 +76,14 @@ class SortOrderKey(object):
     def compare(cls, this, that):
         """Convenience method for comparing two objects of the same type that
         have a total ordering."""
-        return (this > that) - (this < that)
+        if this is None and that is None:
+            return 0
+        elif this is None:
+            return 1
+        elif that is None:
+            return -1
+        else:
+            return (this > that) - (this < that)
 
 
 class Unknown(SortOrder):

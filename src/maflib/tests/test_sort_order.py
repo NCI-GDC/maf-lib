@@ -18,6 +18,7 @@ class TestSortOrder(unittest.TestCase):
         with self.assertRaises(Exception):
             key = Unsorted().sort_key()
 
+
 class TestSortOrderKey(unittest.TestCase):
 
     class Comparable(SortOrderKey):
@@ -37,6 +38,12 @@ class TestSortOrderKey(unittest.TestCase):
         self.assertEqual(SortOrderKey.compare(lower, higher), -1)
         self.assertEqual(SortOrderKey.compare(higher, lower), 1)
         self.assertEqual(SortOrderKey.compare(lower, lower), 0)
+
+    def test_compare_with_none(self):
+        self.assertEqual(SortOrderKey.compare(None, None), 0)
+        self.assertEqual(SortOrderKey.compare(None, 1), 1)
+        self.assertEqual(SortOrderKey.compare(1, None), -1)
+
 
 class TestBarcodeAndCoordinateKey(unittest.TestCase):
 
