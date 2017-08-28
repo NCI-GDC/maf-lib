@@ -12,6 +12,7 @@ from maflib.validation import ValidationStringency, MafValidationError, \
     MafValidationErrorType
 from maflib.locatable import LocatableByAllele
 
+
 class MafRecord(MutableMapping, LocatableByAllele):
     """
     A MAF record, representing one line in a MAF file, storing annotations for
@@ -30,10 +31,11 @@ class MafRecord(MutableMapping, LocatableByAllele):
         self.__line_number = line_number
         self.__columns_dict = dict()
         self.__columns_list = list()
-        self.validation_stringency = \
-            ValidationStringency.Silent \
+        self.validation_stringency = ValidationStringency.Silent \
                 if (validation_stringency is None) else validation_stringency
         self.validation_errors = list()
+        super(MafRecord, self).__init__(chromosome=None, start=None,
+                                        end=None, ref=None, alts=None)
 
     def __getitem__(self, key):
         """
