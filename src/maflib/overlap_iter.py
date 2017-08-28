@@ -1,4 +1,4 @@
-"""This module contains an implementation of an locatables overlapping 
+"""This module contains an implementation of a locatables overlapping 
 iterator.
 
 * LocatableOverlapIterator  allows for jointly iterating over multiple 
