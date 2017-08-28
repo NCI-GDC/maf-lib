@@ -1,10 +1,11 @@
 import unittest
 
-from maflib.overlap_iter import MafOverlapIterator, _SortOrderEnforcingIterator
+from maflib.overlap_iter import LocatableOverlapIterator, \
+    _SortOrderEnforcingIterator, LocatableByAlleleOverlapIterator, \
+    AlleleOverlapType
 from maflib.sort_order import Coordinate
 from maflib.record import MafRecord
 from maflib.column import MafColumnRecord
-
 
 class DummyRecord(MafRecord):
     def __init__(self, chromosome, start, end):
@@ -81,12 +82,12 @@ class TestMafOverlapIterator(unittest.TestCase):
     ]
 
     def test_empty_iter(self):
-        items = MafOverlapIterator([])
+        items = LocatableOverlapIterator([])
         self.assertEqual(len([i for i in items]), 0)
 
     def test_single_iter_no_overlap(self):
         actual = TestMafOverlapIterator.RecordsNoOverlap
-        items = MafOverlapIterator([iter(actual)])
+        items = LocatableOverlapIterator([iter(actual)])
 
         n = 0
         for i, records in enumerate(items):
@@ -96,24 +97,9 @@ class TestMafOverlapIterator(unittest.TestCase):
             n += 1
         self.assertEqual(n, len(actual))
 
-    def test_single_iter_no_overlap_unsorted(self):
-        actual = TestMafOverlapIterator.RecordsNoOverlap
-        items = MafOverlapIterator([iter(reversed(actual))],
-                                   assume_sorted=False)
-
-        n = 0
-        for i, records in enumerate(items):
-            self.assertEqual(len(records), 1)
-            self.assertEqual(len(records[0]), 1)
-            # NB: must test as strings since we always spill to disk when
-            # sorting
-            self.assertEqual(str(actual[i]), str(records[0][0]))
-            n += 1
-        self.assertEqual(n, len(actual))
-
     def test_single_iter_overlapping(self):
         actual = TestMafOverlapIterator.RecordsOverlapping
-        items = MafOverlapIterator(
+        items = LocatableOverlapIterator(
             [iter(TestMafOverlapIterator.RecordsOverlapping)]
         )
 
@@ -142,7 +128,7 @@ class TestMafOverlapIterator(unittest.TestCase):
     def test_two_iter_no_overlap(self):
         first = TestMafOverlapIterator.RecordsNoOverlap
         second = TestMafOverlapIterator.RecordsSecondNoOverlap
-        items = MafOverlapIterator([
+        items = LocatableOverlapIterator([
             iter(first), iter(second)
         ])
 
@@ -164,7 +150,7 @@ class TestMafOverlapIterator(unittest.TestCase):
     def test_two_iter_same(self):
         first = TestMafOverlapIterator.RecordsNoOverlap
         second = TestMafOverlapIterator.RecordsNoOverlap
-        items = MafOverlapIterator([
+        items = LocatableOverlapIterator([
             iter(first), iter(second)
         ])
 
@@ -180,7 +166,7 @@ class TestMafOverlapIterator(unittest.TestCase):
     def test_two_iter_second_overlaps_first(self):
         first = TestMafOverlapIterator.RecordsNoOverlap
         second = TestMafOverlapIterator.RecordsSecondOverlappingFirst
-        items = MafOverlapIterator([
+        items = LocatableOverlapIterator([
             iter(first), iter(second)
         ])
         expected_counts = [1, 1, 2, 1, 1, 1]
@@ -206,7 +192,7 @@ class TestMafOverlapIterator(unittest.TestCase):
         left = DummyRecord("A", 11, 109)
         right = DummyRecord("A", 12, 108)
 
-        items = MafOverlapIterator([
+        items = LocatableOverlapIterator([
             iter([left]), iter([right])
         ])
 
@@ -226,7 +212,7 @@ class TestMafOverlapIterator(unittest.TestCase):
         left = DummyRecord("A", 11, 109)
         right = DummyRecord("A", 100, 200)
 
-        items = MafOverlapIterator([
+        items = LocatableOverlapIterator([
             iter([left]), iter([right])
         ])
 
@@ -240,3 +226,220 @@ class TestMafOverlapIterator(unittest.TestCase):
 
         with self.assertRaises(StopIteration):
             next(items)
+
+
+class TestAlleleOverlapType(unittest.TestCase):
+
+    def test_equality(self):
+        f = AlleleOverlapType.equality
+        self.assertTrue(f([], []))
+        self.assertTrue(f([1], [1]))
+        self.assertTrue(f([1, 2], [1, 2]))
+
+        self.assertFalse(f([1], [2]))
+        self.assertFalse(f([1, 2], [2, 1]))
+        self.assertFalse(f([], [2]))
+        self.assertFalse(f([1], []))
+
+    def test_intersects(self):
+        f = AlleleOverlapType.intersects
+        self.assertTrue(f([], []))
+        self.assertTrue(f([1], [1]))
+        self.assertTrue(f([1, 2], [1, 2]))
+        self.assertTrue(f([1, 2], [2, 1]))
+        self.assertTrue(f([1, 2, 3], [3]))
+
+        self.assertFalse(f([1], [2]))
+        self.assertFalse(f([], [2]))
+        self.assertFalse(f([1], []))
+        self.assertFalse(f([1, 2, 3], []))
+        self.assertFalse(f([], [1, 2, 3]))
+
+    def test_subset(self):
+        f = AlleleOverlapType.subset
+        self.assertTrue(f([], []))
+        self.assertTrue(f([1], [1]))
+        self.assertTrue(f([1], []))
+        self.assertTrue(f([1, 2], [1, 2]))
+        self.assertTrue(f([1, 2, 3], []))
+        self.assertTrue(f([1, 2, 3], [3]))
+        self.assertTrue(f([1, 2, 3], [1, 3]))
+        self.assertTrue(f([1, 2, 3], [1, 2, 3]))
+        self.assertTrue(f([1, 2], [2, 1]))
+
+        self.assertFalse(f([1], [2]))
+        self.assertFalse(f([], [2]))
+        self.assertFalse(f([], [1, 2, 3]))
+        self.assertFalse(f([1, 2, 3], [1, 2, 3, 4]))
+
+
+class DummyRecordWithAllele(MafRecord):
+    def __init__(self, chromosome, start, end, ref="A", alts=None):
+        super(DummyRecordWithAllele, self).__init__()
+        self.add(MafColumnRecord("Chromosome", chromosome))
+        self.add(MafColumnRecord("Start_Position", start))
+        self.add(MafColumnRecord("End_Position", end))
+        self.add(MafColumnRecord("Reference_Allele", ref))
+        self._alts = alts if alts else []
+
+    @property
+    def alts(self):
+        return self._alts
+
+
+class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
+
+    def test_multiple_loci(self):
+        for overlap_type in AlleleOverlapType:
+            actual = [
+                DummyRecordWithAllele("A", 1, 10),
+                DummyRecordWithAllele("A", 110, 200),
+                DummyRecordWithAllele("B", 1, 10),
+                DummyRecordWithAllele("B", 110, 200),
+                DummyRecordWithAllele("C", 1, 200)
+            ]
+
+            items = LocatableByAlleleOverlapIterator(
+                iters=[iter(actual)],
+                overlap_type=overlap_type
+            )
+            n = 0
+            for i, records in enumerate(items):
+                self.assertEqual(len(records), 1)
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(actual[i], records[0][0])
+                n += 1
+            self.assertEqual(n, len(actual))
+
+    def test_single_iter_overlapping(self):
+        for overlap_type in AlleleOverlapType:
+            for alts in [[], ["A"], ["A", "C"]]:
+                actual = [
+                    DummyRecordWithAllele("A", 1, 10, alts=alts),
+                    DummyRecordWithAllele("A", 5, 20, alts=alts)
+                ]
+
+                items = LocatableByAlleleOverlapIterator(
+                    iters=[iter(actual)],
+                    overlap_type=overlap_type
+                )
+
+                records = next(items)
+                self.assertEqual(len(records), 1)
+                self.assertEqual(len(records[0]), 2)
+                self.assertEqual(records[0][0], actual[0])
+                self.assertEqual(records[0][1], actual[1])
+
+    def test_diff_ref_alleles(self):
+        for overlap_type in AlleleOverlapType:
+            actual = [
+                DummyRecordWithAllele("A", 1, 10, "A"),
+                DummyRecordWithAllele("A", 1, 10, "C")
+            ]
+
+            items = LocatableByAlleleOverlapIterator(
+                iters=[iter(actual)],
+                overlap_type=overlap_type
+            )
+            n = 0
+            for i, records in enumerate(items):
+                self.assertEqual(len(records), 1)
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(actual[i], records[0][0])
+                n += 1
+            self.assertEqual(n, len(actual))
+
+    def test_diff_alt_alleles(self):
+        for overlap_type in AlleleOverlapType:
+            actual = [
+                DummyRecordWithAllele("A", 1, 10, "A", ["A"]),
+                DummyRecordWithAllele("A", 1, 10, "A", ["C"])
+            ]
+
+            items = LocatableByAlleleOverlapIterator(
+                iters=[iter(actual)],
+                overlap_type=overlap_type
+            )
+            n = 0
+            for i, records in enumerate(items):
+                self.assertEqual(len(records), 1)
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(actual[i], records[0][0])
+                n += 1
+            self.assertEqual(n, len(actual))
+
+    def test_diff_alt_alleles_multiple_iters(self):
+        base = DummyRecordWithAllele("A", 1, 10, "A", ["A", "C"])
+        equality = DummyRecordWithAllele("A", 1, 10, "A", ["A", "C"])
+        intersects = \
+            DummyRecordWithAllele("A", 1, 10, "A", ["C", "D"])
+        subset = DummyRecordWithAllele("A", 1, 10, "A", ["C"])
+        disjoint = DummyRecordWithAllele("A", 1, 10, "A", ["D"])
+
+        for overlap_type in AlleleOverlapType:
+            iters = [
+                iter([base]),
+                iter([equality]),
+                iter([intersects]),
+                iter([subset]),
+                iter([disjoint])
+            ]
+
+            items = LocatableByAlleleOverlapIterator(
+                iters=iters,
+                overlap_type=overlap_type
+            )
+
+            records = next(items)
+            if overlap_type == AlleleOverlapType.Equality:
+                self.assertEqual(len(records), 5)
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(len(records[1]), 1)
+                self.assertEqual(len(records[2]), 0)
+                self.assertEqual(len(records[3]), 0)
+                self.assertEqual(len(records[4]), 0)
+                self.assertEqual(records[0][0], base)
+                self.assertEqual(records[1][0], equality)
+            elif overlap_type == AlleleOverlapType.Intersects:
+                self.assertEqual(len(records), 5)
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(len(records[1]), 1)
+                self.assertEqual(len(records[2]), 1)
+                self.assertEqual(len(records[3]), 1)
+                self.assertEqual(len(records[4]), 0)
+                self.assertEqual(records[0][0], base)
+                self.assertEqual(records[1][0], equality)
+                self.assertEqual(records[2][0], intersects)
+                self.assertEqual(records[3][0], subset)
+            else: # Subset
+                self.assertEqual(len(records), 5)
+                self.assertEqual(len(records[0]), 1)
+                self.assertEqual(len(records[1]), 1)
+                self.assertEqual(len(records[2]), 0)
+                self.assertEqual(len(records[3]), 1)
+                self.assertEqual(len(records[4]), 0)
+                self.assertEqual(records[0][0], base)
+                self.assertEqual(records[1][0], equality)
+                self.assertEqual(records[3][0], subset)
+
+            with self.assertRaises(StopIteration):
+                next(items)
+
+    def test_non_overlapping_other(self):
+        for overlap_type in AlleleOverlapType:
+            base = DummyRecordWithAllele("A", 100, 110, "A", ["A"])
+            other = DummyRecordWithAllele("A", 1, 10, "A", ["A"])
+
+            items = LocatableByAlleleOverlapIterator(
+                iters=[iter([base]), iter([other])],
+                overlap_type=overlap_type
+            )
+
+            records = next(items)
+            self.assertEqual(len(records), 2)
+            self.assertEqual(len(records[0]), 1)
+            self.assertEqual(len(records[1]), 0)
+            self.assertEqual(records[0][0], base)
+
+            with self.assertRaises(StopIteration):
+                next(items)
