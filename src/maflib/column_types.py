@@ -559,8 +559,9 @@ class NullableUUIDColumn(NullableEmptyStringIsNone, UUIDColumn):
     pass
 
 
-class FeatureType(EnumColumn):
-    """A column that represents the 'Feature_Type' MAF column"""
+class FeatureType(NullableEmptyStringIsNone, EnumColumn):
+    """A column that represents the 'Feature_Type' MAF column, with the empty
+    string treated as a null value."""
     @classmethod
     def __enum_class__(cls):
         return FeatureTypeEnum
