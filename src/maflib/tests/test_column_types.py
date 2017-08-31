@@ -41,10 +41,13 @@ class TestRequireNullValue(TestCase):
 class TestNullableStringColumn(TestCase):
     def test_valid(self):
         self.is_column_is_valid(NullableStringColumn.build("key", "Foo"), "Foo", [None])
+        self.is_column_is_valid(NullableStringColumn.build("key", ""), None,
+                                [None])
 
     def test_invalid(self):
         self.is_column_invalid(NullableStringColumn.build("key", "Foo"), 2, "'2' was not a string")
-
+        self.is_column_invalid(StringColumn.build("key", "Foo"), None,
+                                   "'None' was not a string")
 
 class TestStringColumn(TestCase):
     def test_valid(self):
@@ -53,6 +56,8 @@ class TestStringColumn(TestCase):
     def test_invalid(self):
         self.is_column_invalid(StringColumn.build("key", "Foo"), 2, "'2' was not a string")
         self.is_column_invalid(StringColumn.build("key", ""), "", StringColumn.EmptyStringMessage)
+        self.is_column_invalid(StringColumn.build("key", "Foo"), None,
+                               "'None' was not a string")
 
 
 class TestStringIntegerOrFloatColumn(TestCase):
