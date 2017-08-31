@@ -27,16 +27,20 @@ class MafScheme(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, column_dict=None):
+    def __init__(self, column_dict=None, column_desc=None):
         """Create a new MafScheme.  If a ``column_dict`` is supplied,
         use that one, otherwise, use the one from ``__column_dict__``."""
-        self.__column_dict = self.__column_dict__() \
-            if column_dict is None else column_dict
+        if column_dict is None:
+            column_dict = self.__column_dict__()
+        if column_desc is None:
+            column_desc = self.__column_desc__()
         self.__column_name_to_column_class = \
-            OrderedDict((name, cls) for name, cls in self.__column_dict.items())
+            OrderedDict((name, cls) for name, cls in column_dict.items())
         self.__column_name_to_column_index = \
             OrderedDict((name, i) for i, (name, _) in
-                        enumerate(self.__column_dict.items()))
+                        enumerate(column_dict.items()))
+        self.__column_name_to_column_desc = \
+            OrderedDict((name, desc) for name, desc in column_desc.items())
 
     def column_class(self, name):
         """Get the class for the column with the given name"""
@@ -46,9 +50,17 @@ class MafScheme(object):
         """Get the zero-based index for the column with the given name"""
         return self.__column_name_to_column_index.get(name, None)
 
+    def column_description(self, name):
+        """Get the description of the column with the given name"""
+        return self.__column_name_to_column_desc.get(name, None)
+
     def column_names(self):
         """Get names of the columns in order of column index"""
         return list(self.__column_name_to_column_class.keys())
+
+    def column_descriptions(self):
+        """Get description of the columns in order of column index"""
+        return list(self.__column_name_to_column_desc.keys())
 
     @classmethod
     def is_basic(cls):
@@ -81,6 +93,14 @@ class MafScheme(object):
         :return: A mapping between column name and class for the column type.
         """
 
+    @classmethod
+    def __column_desc__(cls):
+        """
+        :return: A mapping between column name and column description.
+        """
+        return OrderedDict((name, "No description for column '%s'" % name)
+                           for name in cls.__column_dict__().keys())
+
     def __str__(self):
         return self.version()
 
@@ -98,7 +118,11 @@ class NoRestrictionsScheme(MafScheme):
     def __init__(self, column_names):
         column_dict = OrderedDict((name, MafColumnRecord)
                                   for name in column_names)
-        super(NoRestrictionsScheme, self).__init__(column_dict=column_dict)
+        column_desc = OrderedDict((name, "") for name in column_names)
+        super(NoRestrictionsScheme, self).__init__(
+            column_dict=column_dict,
+            column_desc=column_desc
+        )
 
     @classmethod
     def version(cls):
@@ -111,4 +135,9 @@ class NoRestrictionsScheme(MafScheme):
     @classmethod
     def __column_dict__(cls):
         raise ValueError("__column_dict__ may not be called on "
+                         "NoRestrictionsScheme")
+
+    @classmethod
+    def __column_desc__(cls):
+        raise ValueError("__column_desc__ may not be called on "
                          "NoRestrictionsScheme")

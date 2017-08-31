@@ -9,6 +9,11 @@ from maflib.tests.testutils import GdcV1_0_0_BasicScheme, \
 
 class TestMafScheme(unittest.TestCase):
     class TestScheme(MafScheme):
+        _Columns = [
+            MafHeaderVersionRecord("test-scheme"),
+            MafHeaderRecord("key1", "value1")
+        ]
+
         @classmethod
         def version(cls):
             return "test-scheme"
@@ -19,11 +24,15 @@ class TestMafScheme(unittest.TestCase):
 
         @classmethod
         def __column_dict__(cls):
-            columns = [
-                MafHeaderVersionRecord(TestMafScheme.TestScheme.version()),
-                MafHeaderRecord("key1", "value1")
-            ]
-            return OrderedDict([(column.key, column.__class__) for column in columns])
+            return OrderedDict([(column.key, column.__class__) for column in
+                                TestMafScheme.TestScheme._Columns])
+
+        @classmethod
+        def __column_desc__(cls):
+            return OrderedDict([(column.key, str(column.__class__))
+                                for column in
+                                TestMafScheme.TestScheme._Columns])
+
 
     def test_version(self):
         self.assertEqual(TestMafScheme.TestScheme().version(), "test-scheme")
@@ -41,9 +50,22 @@ class TestMafScheme(unittest.TestCase):
         self.assertEqual(scheme.column_index("key1"), 1)
         self.assertEqual(scheme.column_index("key2"), None)
 
+    def test_column_description(self):
+        scheme = TestMafScheme.TestScheme()
+        self.assertEqual(scheme.column_description(MafHeader.VersionKey),
+                         str(MafHeaderVersionRecord))
+        self.assertEqual(scheme.column_description("key1"),
+                         str(MafHeaderRecord))
+        self.assertEqual(scheme.column_description("key2"), None)
+
     def test_column_names(self):
         scheme = TestMafScheme.TestScheme()
         self.assertListEqual(scheme.column_names(), [MafHeader.VersionKey, "key1"])
+
+    def test_column_descriptions(self):
+        scheme = TestMafScheme.TestScheme()
+        self.assertListEqual(scheme.column_descriptions(),
+                             [MafHeader.VersionKey, "key1"])
 
     def test_str(self):
         scheme = TestMafScheme.TestScheme()

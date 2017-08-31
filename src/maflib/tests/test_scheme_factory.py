@@ -3,10 +3,10 @@ import unittest
 from collections import OrderedDict
 
 from maflib.column_types import IntegerColumn, RequireNullValue
-from maflib.scheme_factory import combine_column_dicts, get_column_types, \
+from maflib.scheme_factory import combine_columns, get_column_types, \
     build_scheme_class, build_schemes, validate_schemes, SchemeDatum, \
     get_built_in_filenames, load_all_scheme_data, load_all_schemes, \
-    find_scheme_class
+    find_scheme_class, scheme_to_columns, _Column
 from maflib.schemes import MafScheme, NoRestrictionsScheme
 from maflib.tests.testutils import tmp_file
 
@@ -30,6 +30,14 @@ class TestSchemeFactory(unittest.TestCase):
                                 ("Column2", IntegerColumn),
                                 ("Column3", IntegerColumn)])
 
+        @classmethod
+        def __column_desc__(cls):
+            column_desc = \
+                super(TestSchemeFactory.TestBaseScheme, cls).__column_desc__()
+            column_desc["Column1"] = "A description"
+            return column_desc
+
+
     class TestExtendedScheme(TestBaseScheme):
         @classmethod
         def annotation_spec(cls):
@@ -37,14 +45,19 @@ class TestSchemeFactory(unittest.TestCase):
 
 
     datum1 = SchemeDatum(version="v1", annotation="v1", extends=None,
-                         columns=[(k, cls.__name__) for k, cls in \
+                         columns=[_Column(name=k, cls=cls, desc="")
+                                  for k, cls in
                                   TestBaseScheme.__column_dict__().items()],
                          filtered = None)
     datum2 = SchemeDatum(version="v1", annotation="v1-protected", extends="v1",
-                         columns=[("Column4", "IntegerColumn")],
+                         columns=[_Column(name="Column4",
+                                          cls=IntegerColumn,
+                                          desc="")],
                          filtered = None)
     datum3 = SchemeDatum(version="v1", annotation="v1-public", extends="v1",
-                         columns=[("Column2", "RequireNullValue")],
+                         columns=[_Column(name="Column2",
+                                          cls=RequireNullValue,
+                                          desc="")],
                          filtered = ["Column3"])
 
     datum_cycle1 = SchemeDatum(version="v1", annotation="v1-public",
@@ -56,42 +69,61 @@ class TestSchemeFactory(unittest.TestCase):
                                columns=[("Column1", "IntegerColumn")],
                                filtered=None)
 
-    def test_combine_column_dicts(self):
-        base_dict = self.TestBaseScheme.__column_dict__()
-        extra_dict = {
-            "Column2": RequireNullValue,
-            "Column4": IntegerColumn
-        }
+    def test_combine_columns(self):
+        base_columns = scheme_to_columns(scheme=self.TestBaseScheme())
+        extra_columns = [
+            _Column(name="Column2", cls=RequireNullValue, desc="c2"),
+            _Column(name="Column4", cls=IntegerColumn, desc="c4")
+        ]
         filtered = ["Column3"]
 
         # combine two dicts, add type to one column, and add a new column
-        dict = combine_column_dicts(
-            base_dict=base_dict,
-            extra_dict=extra_dict,
+        columns = combine_columns(
+            base_columns=base_columns,
+            extra_columns=extra_columns,
             filtered=None
         )
-        self.assertTrue(len(dict), 4)
-        self.assertListEqual(list(dict.keys()),
+        self.assertTrue(len(columns), 4)
+        self.assertListEqual(list([c.name for c in columns]),
                              ["Column1", "Column2", "Column3", "Column4"])
+        self.assertListEqual(list([c.desc for c in columns]),
+                             ["A description", "c2",
+                              "No description for column 'Column3'", "c4"])
 
         # filter a dict
-        dict = combine_column_dicts(
-            base_dict=base_dict,
-            extra_dict=None,
+        columns = combine_columns(
+            base_columns=base_columns,
+            extra_columns=None,
             filtered=filtered
         )
-        self.assertTrue(len(dict), 2)
-        self.assertListEqual(list(dict.keys()), ["Column1", "Column2"])
-
+        self.assertTrue(len(columns), 2)
+        self.assertListEqual(list([c.name for c in columns]),
+                             ["Column1", "Column2"])
+        self.assertListEqual(list([c.desc for c in columns]),
+                             ["A description",
+                              "No description for column 'Column2'"])
         # combine and filter
-        dict = combine_column_dicts(
-            base_dict=base_dict,
-            extra_dict=extra_dict,
+        columns = combine_columns(
+            base_columns=base_columns,
+            extra_columns=extra_columns,
             filtered=filtered
         )
-        self.assertTrue(len(dict), 3)
-        self.assertListEqual(list(dict.keys()),
+        self.assertTrue(len(columns), 3)
+        self.assertListEqual(list([c.name for c in columns]),
                                   ["Column1", "Column2", "Column4"])
+        self.assertListEqual(list([c.desc for c in columns]),
+                             ["A description",
+                              "c2",
+                              "c4"])
+
+        # filtered missing from base
+        with self.assertRaises(ValueError):
+            columns = combine_columns(
+                base_columns=base_columns,
+                extra_columns=None,
+                filtered=["Column5"]
+            )
+
 
     def test_build_scheme_class(self):
         # no columns
@@ -101,8 +133,7 @@ class TestSchemeFactory(unittest.TestCase):
                             columns=None,
                             filtered=None)
         scheme_cls = build_scheme_class(datum=datum,
-                                        base_scheme=None,
-                                        column_types=TestSchemeFactory.column_types)
+                                        base_scheme=None)
         self.assertIsNotNone(scheme_cls)
         scheme = scheme_cls()
         self.assertEqual(scheme.version(), "version")
@@ -113,24 +144,25 @@ class TestSchemeFactory(unittest.TestCase):
         datum = SchemeDatum(version="version",
                             annotation="annotation",
                             extends=None,
-                            columns=[("Column1", "IntegerColumn")],
+                            columns=[_Column(name="Column1",
+                                             cls=IntegerColumn,
+                                             desc="")],
                             filtered=None)
         scheme_cls = build_scheme_class(datum=datum,
-                                        base_scheme=None,
-                                        column_types=TestSchemeFactory.column_types)
+                                        base_scheme=None)
         self.assertIsNotNone(scheme_cls)
         scheme = scheme_cls()
         self.assertEqual(scheme.version(), "version")
         self.assertEqual(scheme.annotation_spec(), "annotation")
         self.assertListEqual(scheme.column_names(), ["Column1"])
-        self.assertEqual(scheme.column_class("Column1").__class__,
-                         IntegerColumn.__class__)
+        self.assertEqual(scheme.column_class("Column1"),
+                         IntegerColumn)
         self.assertEqual(scheme.column_class("Column1"), IntegerColumn)
 
         # requires column2 to be null, removes column3, and adds column4
         columns = [
-            ("Column2", "RequireNullValue"),
-            ("Column4", "IntegerColumn")
+            _Column(name="Column2", cls=RequireNullValue, desc=""),
+            _Column(name="Column4", cls=IntegerColumn, desc="")
         ]
         base_scheme = TestSchemeFactory.TestBaseScheme()
         datum = SchemeDatum(version="version",
@@ -139,39 +171,26 @@ class TestSchemeFactory(unittest.TestCase):
                             columns=columns,
                             filtered=["Column3"])
         scheme_cls = build_scheme_class(datum=datum,
-                                        base_scheme=base_scheme,
-                                        column_types=TestSchemeFactory.column_types)
+                                        base_scheme=base_scheme)
         scheme = scheme_cls()
         self.assertEqual(scheme.version(), "version")
         self.assertEqual(scheme.annotation_spec(), "annotation")
         self.assertListEqual(scheme.column_names(), ["Column1", "Column2",
                                                      "Column4"])
-        self.assertEqual(scheme.column_class("Column1").__class__,
-                         IntegerColumn.__class__)
-        self.assertEqual(scheme.column_class("Column2").__class__,
-                         IntegerColumn.__class__)
-        self.assertEqual(scheme.column_class("Column4").__class__,
-                         IntegerColumn.__class__)
-
-        # column type not found
-        # a single column
-        datum = SchemeDatum(version="version",
-                            annotation="annotation",
-                            extends=None,
-                            columns=[("Column1", "FooBar")],
-                            filtered=None)
-        with self.assertRaises(ValueError):
-            build_scheme_class(
-                datum=datum,
-                base_scheme=None,
-                column_types=TestSchemeFactory.column_types)
+        self.assertEqual(scheme.column_class("Column1"),
+                         IntegerColumn)
+        self.assertTrue(issubclass(scheme.column_class("Column2"),
+                                   IntegerColumn))
+        self.assertTrue(issubclass(scheme.column_class("Column2"),
+                                   RequireNullValue))
+        self.assertEqual(scheme.column_class("Column4"),
+                         IntegerColumn)
 
     def test_build_schemes(self):
         data = [TestSchemeFactory.datum1, TestSchemeFactory.datum2,
                 TestSchemeFactory.datum3]
 
-        schemes = build_schemes(data=data,
-                                column_types=TestSchemeFactory.column_types)
+        schemes = build_schemes(data=data)
         versions = [s.version() for s in schemes.values()]
         annotations = [s.annotation_spec() for s in schemes.values()]
         self.assertTrue(len(schemes), 3)
@@ -179,16 +198,10 @@ class TestSchemeFactory(unittest.TestCase):
         self.assertListEqual(annotations, ["v1", "v1-protected", "v1-public"])
         validate_schemes(schemes=schemes.values())
 
-        # no column types
-        with self.assertRaises(ValueError):
-            build_schemes(data=[TestSchemeFactory.datum1],
-                          column_types=[])
-
         # two schemes that depend on each other
         data = [TestSchemeFactory.datum_cycle1, TestSchemeFactory.datum_cycle2]
         with self.assertRaises(ValueError):
-            build_schemes(data=data,
-                          column_types=TestSchemeFactory.column_types)
+            build_schemes(data=data)
 
     def test_validate_schemes(self):
         # one scheme
@@ -209,7 +222,8 @@ class TestSchemeFactory(unittest.TestCase):
     def test_load_all_scheme_data(self):
         # silly test to make sure we can load ll the built-in scheme data
         filenames = get_built_in_filenames()
-        data = load_all_scheme_data(filenames)
+        data = load_all_scheme_data(filenames,
+                                    column_types=TestSchemeFactory.column_types)
         self.assertTrue(len(data) > 1)
 
         # test malformed JSON
@@ -218,6 +232,11 @@ class TestSchemeFactory(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_all_schemes([fn])
         os.remove(fn)
+
+        # no column types, so we can't find the column
+        with self.assertRaises(ValueError) as e:
+            data = load_all_scheme_data(filenames, column_types=[])
+            self.assertTrue("Could not find a column type with name" in str(e))
 
     def test_load_all_schemes(self):
         # silly test to make sure we can load all the built-in schemes
