@@ -4,6 +4,7 @@ import unittest
 
 from maflib.header import *
 from maflib.reader import MafReader
+from maflib.sort_order import Coordinate
 from maflib.schemes import *
 from maflib.tests.testutils import tmp_file, GdcV1_0_0_PublicScheme, \
     GdcV1_0_0_ProtectedScheme, GdcV1_0_0_BasicScheme
@@ -106,31 +107,46 @@ class TestMafHeader(unittest.TestCase):
 
     __version_line = "%s%s %s" % (MafHeader.HeaderLineStartSymbol, MafHeader.VersionKey, Version)
     __annotation_line = "%s%s %s" % (MafHeader.HeaderLineStartSymbol, MafHeader.AnnotationSpecKey, AnnotationSpec)
+    __sort_order_line = "%s%s %s" % (MafHeader.HeaderLineStartSymbol, MafHeader.SortOrderKey, Coordinate.name())
+
 
     def test_from_line_reader_ok(self):
-        fh, fn = tmp_file([TestMafHeader.__version_line, TestMafHeader.__annotation_line, "#key1 value1", "#key2 value2"])
+        fh, fn = tmp_file([TestMafHeader.__version_line,
+                           TestMafHeader.__annotation_line,
+                           TestMafHeader.__sort_order_line,
+                           "#key1 value1",
+                           "#key2 value2"])
         line_reader = LineReader(fh)
         header = MafHeader.from_line_reader(line_reader=line_reader, validation_stringency=ValidationStringency.Silent)
         fh.close()
 
         self.assertTrue(len(header.validation_errors) == 0)
-        self.assertTrue(len(header) == 4)
+        self.assertTrue(len(header) == 5)
         self.assertEqual(list(header.keys()),
-                         [MafHeader.VersionKey,  MafHeader.AnnotationSpecKey,
-                          "key1", "key2"])
+                         [MafHeader.VersionKey,
+                          MafHeader.AnnotationSpecKey,
+                          MafHeader.SortOrderKey,
+                          "key1",
+                          "key2"])
         self.assertEqual([str(record.value) for record in header.values()],
-                         [TestMafHeader.Version, TestMafHeader.AnnotationSpec, "value1", "value2"])
+                         [TestMafHeader.Version,
+                          TestMafHeader.AnnotationSpec,
+                          Coordinate.name(),
+                          "value1",
+                          "value2"])
         self.assertEqual(header.version(), TestMafHeader.Version)
         os.remove(fn)
 
     def test_from_defaults(self):
         header = MafHeader.from_defaults(
             version=TestMafHeader.Scheme.version(),
-             annotation=TestMafHeader.Scheme.annotation_spec()
+            annotation=TestMafHeader.Scheme.annotation_spec(),
+            sort_order=Coordinate()
         )
         self.assertIsNotNone(header.scheme())
         self.assertIsNotNone(header.scheme().version())
         self.assertIsNotNone(header.scheme().annotation_spec())
+        self.assertIsNotNone(header.sort_order())
 
     def test_from_lines_duplicate_keys(self):
         lines = [TestMafHeader.__version_line, TestMafHeader.__annotation_line, "#dupkey value", "#dupkey value"]
@@ -215,6 +231,34 @@ class TestMafHeader(unittest.TestCase):
         self.assertEqual(header.annotation(), scheme.annotation_spec())
         self.assertEqual(header.scheme().version(), scheme.version())
         self.assertEqual(header.scheme().annotation_spec(), scheme.annotation_spec())
+
+    # TODO: should we require a sort order in the header?
+    #def test_from_lines_missing_sort_order(self):
+    #   pass
+
+    def test_from_lines_unsupported_sort_order(self):
+        lines = [TestMafHeader.__version_line,
+                 TestMafHeader.__annotation_line,
+                 "%s%s %s" % (MafHeader.HeaderLineStartSymbol,
+                              MafHeader.SortOrderKey,
+                              "not-a-sort-order")]
+        header = MafHeader.from_lines(lines=lines, validation_stringency=ValidationStringency.Silent)
+
+        self.assertTrue(len(header.validation_errors) == 1)
+        self.assertEqual(header.validation_errors[0].tpe, MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER)
+        self.assertIsNone(header.sort_order())
+
+    def test_from_lines_supported_sort_order(self):
+        for so in sort_order.SortOrder.all():
+            lines = [TestMafHeader.__version_line,
+                     TestMafHeader.__annotation_line,
+                     "%s%s %s" % (MafHeader.HeaderLineStartSymbol,
+                                  MafHeader.SortOrderKey,
+                                  so.name())]
+            header = MafHeader.from_lines(lines=lines, validation_stringency=ValidationStringency.Silent)
+
+            self.assertTrue(len(header.validation_errors) == 0)
+            self.assertEqual(header.sort_order().name(), so.name())
 
     def test_from_lines_strict_raises_on_error(self):
         """
