@@ -58,12 +58,20 @@ class RequireNullValue(MafColumnRecord):
         return "'%s' was not a null value" % str(self.value)
 
 
-class NullableStringColumn(NullableEmptyStringIsNone, MafCustomColumnRecord):
-    """ A column where the value must be a string, with its null value being
-    an empty string"""
+class _BuildStringColumn(object):
+    """Mix this in to require a string as the value"""
     @classmethod
     def __build__(cls, value):
+        if not isinstance(value, basestring):
+            raise ValueError("'%s' was not a string (was %s)"
+                             % (str(value), str(value.__class__)))
         return str(value)
+
+
+class NullableStringColumn(NullableEmptyStringIsNone, _BuildStringColumn,
+                           MafCustomColumnRecord):
+    """ A column where the value must be a string, with its null value being
+    an empty string"""
 
     def __validate__(self):
         if not isinstance(self.value, str):
@@ -315,16 +323,12 @@ class SequenceOfIntegers(NullableEmptyStringIsEmptyList,
         return IntegerColumn
 
 
-class NullableDnaString(MafCustomColumnRecord):
+class NullableDnaString(_BuildStringColumn, MafCustomColumnRecord):
     """A column that represents a string of DNA bases, or an empty string
     treated as the null value"""
     @classmethod
     def __nullable_dict__(cls):
         return {"": None}
-
-    @classmethod
-    def __build__(cls, value):
-        return str(value)
 
     def __validate__(self):
         if not isinstance(self.value, str):
@@ -343,10 +347,6 @@ class DnaString(NullableDnaString):
     @classmethod
     def __nullable_dict__(cls):
         return None
-
-    @classmethod
-    def __build__(cls, value):
-        return str(value)
 
     def __validate__(self):
         msg = super(DnaString, self).__validate__()
