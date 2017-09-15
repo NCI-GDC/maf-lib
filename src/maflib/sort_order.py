@@ -4,6 +4,7 @@ import abc
 from functools import total_ordering
 
 from maflib.util import abstractclassmethod
+from maflib.locatable import Locatable
 
 
 class SortOrder(object):
@@ -29,7 +30,10 @@ class SortOrder(object):
     def all(cls):
         """Returns the known sort order classes."""
         return [
-            BarcodeAndCoordinate
+            Unknown,
+            Unsorted,
+            BarcodeAndCoordinate,
+            Coordinate
         ]
 
     @classmethod
@@ -43,6 +47,9 @@ class SortOrder(object):
             raise ValueError("Could not find sort order '%s', options: %s"
                              % (sort_order_name, sort_orders))
         return sort_order
+
+    def __str__(self):
+        return self.name()
 
 
 @total_ordering
@@ -72,47 +79,129 @@ class SortOrderKey(object):
         return (this > that) - (this < that)
 
 
-class _BarcodesAndCoordinateKey(SortOrderKey):
-    """A little class that aids in comparing records based on tumor barcode,
-    matched normal barcode, chromosome, start position, and end position"""
+class Unknown(SortOrder):
+    """Defines a sort order """
+
+    def __init__(self, *args, **kwargs):
+        super(Unknown, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def name(cls):
+        """Returns the order's name."""
+        return "Unknown"
+
+    def sort_key(self):
+        """Returns the sort key, which is not implemented as sorting is not 
+        valid for the Unknown sort order."""
+        raise Exception("Sorting not supported for Unknown order.")
+
+
+class Unsorted(SortOrder):
+    """Defines a sort order based on the chromosome, start position, and end 
+    position, in that order."""
+
+    def __init__(self, *args, **kwargs):
+        super(Unsorted, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def name(cls):
+        """Returns the order's name."""
+        return "Unsorted"
+
+    def sort_key(self):
+        """Returns the sort key, which is not implemented as sorting is not 
+        valid for the Unsorted sort order."""
+        raise Exception("Sorting not supported for Unsorted order.")
+
+
+class _CoordinateKey(SortOrderKey, Locatable):
+    """A little class that aids in comparing records based on chromosome, 
+    start position, and end position"""
     def __init__(self, record, contigs):
-        self.tumor_barcode = record.value("Tumor_Sample_Barcode")
-        self.normal_barcode = record.value("Matched_Norm_Sample_Barcode")
-        self.chromosome = record.value("Chromosome")
+        if not issubclass(record.__class__, Locatable):
+            raise ValueError("Record of type '%s' is not a subclass of "
+                            "'Locatable'" % record.__class__.__name__)
+        chromosome = record.chromosome
         if contigs:
             try:
-                self.chromosome = contigs.index(self.chromosome)
+                chromosome = contigs.index(chromosome)
             except ValueError:
                 raise ValueError(
                     "Could not find contig '%s' in list of contigs: %s"
-                    % (self.chromosome, ", ".join(contigs))
+                    % (chromosome, ", ".join(contigs))
                 )
-        self.start = record.value("Start_Position")
-        self.end = record.value("End_Position")
+        Locatable.__init__(self, chromosome, record.start, record.end)
 
     def __cmp__(self, other):
-        diff = self.compare(self.tumor_barcode, other.tumor_barcode)
-        if diff == 0:
-            diff = self.compare(self.normal_barcode, other.normal_barcode)
-        if diff == 0:
-            diff = self.compare(self.chromosome, other.chromosome)
+        diff = self.compare(self.chromosome, other.chromosome)
         if diff == 0:
             diff = self.compare(self.start, other.start)
         if diff == 0:
             diff = self.compare(self.end, other.end)
         return diff
 
+    def __str__(self):
+        return "\t".join(str(s) for s in [self.chromosome, self.start,
+                                         self.end])
 
-class BarcodeAndCoordinate(SortOrder):
-    """Defines a sort order based on the tumor barcode, matched normal
-    barcode, chromosome, start position, and end position, in that order."""
+
+class Coordinate(SortOrder):
+    """Defines a sort order based on the chromosome, start position, and end 
+    position, in that order."""
 
     def __init__(self, fasta_index=None, *args, **kwargs):
+        """        
+        :param fasta_index: the path to the FASTA index for defining 
+        ordering across chromosomes.
+        """
         self._contigs = None
         if fasta_index:
             handle = open(fasta_index, "r")
-            self._contigs = [line.rstrip("\r\n").split("\t")[0] for line in handle]
+            self._contigs = \
+                [line.rstrip("\r\n").split("\t")[0] for line in handle]
             handle.close()
+        super(Coordinate, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def name(cls):
+        """Returns the order's name."""
+        return "Coordinate"
+
+    def sort_key(self):
+        """Function to generate the sort key for sorting records into this
+        ordering"""
+        def key(record):
+            """Gets the key"""
+            return _CoordinateKey(record=record, contigs=self._contigs)
+        return key
+
+
+class _BarcodesAndCoordinateKey(_CoordinateKey):
+    """A little class that aids in comparing records based on tumor barcode,
+    matched normal barcode, chromosome, start position, and end position"""
+    def __init__(self, record, contigs):
+        self.tumor_barcode = record.value("Tumor_Sample_Barcode")
+        self.normal_barcode = record.value("Matched_Norm_Sample_Barcode")
+        super(_BarcodesAndCoordinateKey, self).__init__(record, contigs)
+
+    def __cmp__(self, other):
+        diff = self.compare(self.tumor_barcode, other.tumor_barcode)
+        if diff == 0:
+            diff = self.compare(self.normal_barcode, other.normal_barcode)
+        if diff == 0:
+            diff = super(_BarcodesAndCoordinateKey, self).__cmp__(other)
+        return diff
+
+    def __str__(self):
+        return "\t".join([self.tumor_barcode, self.normal_barcode,
+                          super(_BarcodesAndCoordinateKey, self).__str__()])
+
+
+class BarcodeAndCoordinate(Coordinate):
+    """Defines a sort order based on the tumor barcode, matched normal
+    barcode, chromosome, start position, and end position, in that order."""
+
+    def __init__(self, *args, **kwargs):
         super(BarcodeAndCoordinate, self).__init__(*args, **kwargs)
 
     @classmethod

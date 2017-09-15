@@ -106,6 +106,8 @@ class MafValidationErrorType(Enum):
         "The header has no annotation spec"
     HEADER_UNSUPPORTED_ANNOTATION_SPEC = \
         "The header has an unsupported annotation specification"
+    HEADER_UNSUPPORTED_SORT_ORDER = \
+        "The header has an unsupported sort order"
     HEADER_MISMATCH_SCHEME = \
         "The header's scheme mismatches the current scheme"
     HEADER_MISSING_COLUMN_NAMES = \

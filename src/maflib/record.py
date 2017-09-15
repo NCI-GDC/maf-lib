@@ -10,9 +10,9 @@ from maflib.column import MafColumnRecord
 from maflib.logger import Logger
 from maflib.validation import ValidationStringency, MafValidationError, \
     MafValidationErrorType
+from maflib.locatable import LocatableByAllele
 
-
-class MafRecord(MutableMapping):
+class MafRecord(MutableMapping, LocatableByAllele):
     """
     A MAF record, representing one line in a MAF file, storing annotations for
     a single mutation.
@@ -192,6 +192,31 @@ class MafRecord(MutableMapping):
         records = [str(record) for record in self.__columns_list]
         return MafRecord.ColumnSeparator.join(records)
 
+    @property
+    def chromosome(self):
+        """Returns the chromosome name"""
+        return self["Chromosome"].value
+
+    @property
+    def start(self):
+        """Returns the start position"""
+        return self["Start_Position"].value
+
+    @property
+    def end(self):
+        """Returns the end position"""
+        return self["End_Position"].value
+
+    @property
+    def ref(self):
+        """Returns the reference allele"""
+        return self["Reference_Allele"].value
+
+    @property
+    def alts(self):
+        """Returns a list of valid alternate alleles"""
+        return [self["Tumor_Seq_Allele2"].value]
+
     def add(self, column):
         """Add the column to the record"""
         return self.__iadd__(column)
@@ -275,7 +300,7 @@ class MafRecord(MutableMapping):
                 assert column_index == column.column_index
 
         # TODO: validate cross-column constraints (ex. Mutation_Status)
-        # TODO: should we validate against a scheme?
+        # TODO: validate that chromosome/start/end are defined
 
         # process validation errors
         MafValidationError.process_validation_errors(

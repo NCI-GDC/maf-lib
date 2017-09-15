@@ -41,6 +41,7 @@ The library includes but is not limited to the following modules:
 | `maflib.sort_order` | a module containing the available sort orders to order records in a MAF file. |
 | `maflib.sorter` | a module containing an implementation of a disk-backed sorting system. |
 | `maflib.validation` | a module for the underlying validation of values stored in MAF files. |
+| `maflib.locatable` | a module containing interfaces for "locatable" MAF records, namely those that have a genomic span |
 
 The GDC has specific "schemes" that determine the number of columns, their names, and their expected values.
 Pre-defined schemes can be found in the `src/maflib/resources` directory.

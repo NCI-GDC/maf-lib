@@ -7,6 +7,7 @@ from maflib.schemes import MafScheme
 from maflib.sort_order import BarcodeAndCoordinate
 from maflib.sorter import MafSorterCodec, Sorter, MafSorter
 from maflib.tests.testutils import tmp_file
+from maflib.locatable import Locatable
 
 
 class DummyScheme(MafScheme):
@@ -27,7 +28,7 @@ class DummyScheme(MafScheme):
                             ("End_Position", IntegerColumn)])
 
 
-class DummyRecord(object):
+class DummyRecord(Locatable):
     def __init__(self, tumor_barcode, normal_barcode, chr, start, end):
         self._dict = OrderedDict()
         self._dict["Tumor_Sample_Barcode"] = tumor_barcode
@@ -35,6 +36,7 @@ class DummyRecord(object):
         self._dict["Chromosome"] = chr
         self._dict["Start_Position"] = start
         self._dict["End_Position"] = end
+        super(DummyRecord, self).__init__(chr, start, end)
 
     def value(self, key):
         return self._dict[key]

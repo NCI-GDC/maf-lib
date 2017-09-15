@@ -10,6 +10,8 @@
                                  pragma
 * MafHeaderAnnotationSpecRecord  specialized container for storing the
                                  "annotation.spec" pragma.
+* MafHeaderSortOrderRecord       specialized container for storing the
+                                 "sort.order" pragma.
 """
 
 from collections import MutableMapping, OrderedDict
@@ -18,9 +20,9 @@ from copy import deepcopy
 from maflib.logger import Logger
 from maflib.scheme_factory import all_schemes
 from maflib.scheme_factory import find_scheme
+import maflib.sort_order as sort_order
 from maflib.validation import MafValidationError, MafValidationErrorType, \
     ValidationStringency
-
 
 class MafHeader(MutableMapping):
     """
@@ -41,9 +43,13 @@ class MafHeader(MutableMapping):
 
     AnnotationSpecKey = "annotation.spec"
 
+    SortOrderKey = "sort.order"
+
     SupportedVersions = [s.version() for s in all_schemes()]
 
     SupportedAnnotationSpecs = [s.annotation_spec() for s in all_schemes()]
+
+    SupportedSortOrders = [so.name() for so in sort_order.SortOrder.all()]
 
     HeaderLineStartSymbol = "#"
 
@@ -82,6 +88,13 @@ class MafHeader(MutableMapping):
         """Gets the annotation specification or `None` if not present"""
         if MafHeader.AnnotationSpecKey in self.__records:
             return self.__records[MafHeader.AnnotationSpecKey].value
+        else:
+            return None
+
+    def sort_order(self):
+        """Gets the sort order or `None` if not present"""
+        if MafHeader.SortOrderKey in self.__records:
+            return self.__records[MafHeader.SortOrderKey].value
         else:
             return None
 
@@ -242,7 +255,7 @@ class MafHeader(MutableMapping):
                               logger=logger)
 
     @classmethod
-    def from_reader(cls, reader, version=None, annotation=None):
+    def from_reader(cls, reader, version=None, annotation=None, sort_order=None):
         header = deepcopy(reader.header())
         if version:
             header[MafHeader.VersionKey] = \
@@ -250,10 +263,13 @@ class MafHeader(MutableMapping):
         if annotation:
             header[MafHeader.AnnotationSpecKey] = \
                 MafHeaderAnnotationSpecRecord(value=annotation)
+        if sort_order:
+            header[MafHeader.SortOrderKey] = \
+                MafHeaderSortOrderRecord(value=sort_order)
         return header
 
     @classmethod
-    def from_defaults(cls,  version=None, annotation=None):
+    def from_defaults(cls,  version=None, annotation=None, sort_order=None):
         header = MafHeader()
         if version:
             header[MafHeader.VersionKey] = \
@@ -261,6 +277,9 @@ class MafHeader(MutableMapping):
         if annotation:
             header[MafHeader.AnnotationSpecKey] = \
                 MafHeaderAnnotationSpecRecord(value=annotation)
+        if sort_order:
+            header[MafHeader.SortOrderKey] = \
+                MafHeaderSortOrderRecord(value=sort_order)
         return header
 
     @classmethod
@@ -353,6 +372,14 @@ class MafHeaderRecord(object):
                     record = MafHeaderVersionRecord(value=value)
                 elif key == MafHeader.AnnotationSpecKey:
                     record = MafHeaderAnnotationSpecRecord(value=value)
+                elif key == MafHeader.SortOrderKey:
+                    try:
+                        record = MafHeaderSortOrderRecord(value=value)
+                    except:
+                        error = MafValidationError(
+                            MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER,
+                            "Sort order '%s' was not recognized" % value,
+                            line_number=line_number)
                 else:
                     record = MafHeaderRecord(key=key, value=value)
         return record, error
@@ -370,3 +397,19 @@ class MafHeaderAnnotationSpecRecord(MafHeaderRecord):
     def __init__(self, value):
         super(MafHeaderAnnotationSpecRecord, self).__init__(
             key=MafHeader.AnnotationSpecKey, value=value)
+
+
+class MafHeaderSortOrderRecord(MafHeaderRecord):
+    """A marker MAF header record for storing the sort order"""
+    def __init__(self, value):
+        """:param: value: a string representing the name of the sort order, 
+        or an instance of SortOrder. """
+        if isinstance(value, str):
+            value = next((so() for so in sort_order.SortOrder.all()
+                          if so.name() ==value), sort_order.Unknown)
+        if not issubclass(value.__class__, sort_order.SortOrder):
+            # TODO: warn? log? return None? validation error?
+            raise Exception("Value of type '%s' is not a subclass of "
+                            "'SortOrder'" % value.__class__.__name__)
+        super(MafHeaderSortOrderRecord, self).__init__(
+            key=MafHeader.SortOrderKey, value=value)
