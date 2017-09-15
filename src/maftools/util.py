@@ -71,7 +71,9 @@ def writer_from_reader(reader, options):
     out_header = MafHeader.from_reader(
         reader=reader,
         version=options.version,
-        annotation=options.annotation
+        annotation=options.annotation,
+        sort_order=options.sort_order \
+            if hasattr(options, 'sort_order') else None
     )
 
     if options.output:

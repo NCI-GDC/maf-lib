@@ -4,7 +4,7 @@ from enum import Enum, unique
 
 from maflib.logger import Logger
 from maflib.reader import MafReader
-from maflib.sort_order import SortOrder, BarcodeAndCoordinate
+from maflib.sort_order import SortOrder, BarcodesAndCoordinate
 from maflib.sorter import MafSorter
 from maftools.subcommand import Subcommand
 from maftools.util import writer_from_reader
@@ -28,7 +28,7 @@ class Sort(Subcommand):
                                help="The output file, otherwise output will be"
                                     " to standard output.")
         subparser.add_argument('-s', '--sort-order',
-                               default=BarcodeAndCoordinate.name(),
+                               default=BarcodesAndCoordinate.name(),
                                choices=sort_orders,
                                help="The sort order to choose.  "
                                     "Choices: %s" % ", ".join(sort_orders))
@@ -73,6 +73,7 @@ class Sort(Subcommand):
             logger.info("Sorted %d records" % n)
 
         # read from the sorter
+        n = 0
         sorter.close()
         for record in sorter:
             writer += record
