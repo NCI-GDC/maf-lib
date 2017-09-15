@@ -234,6 +234,7 @@ class MafRecord(MutableMapping):
             self.validation_errors.append(error)
 
         # Validate the # of columns against the given scheme
+
         if scheme and len(scheme) != len(self):
             add_errors(MafValidationError(
                 MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS,
@@ -343,8 +344,8 @@ class MafRecord(MutableMapping):
                                              column_index=column_index)
                 else:
                     try:
-                        scheme_column_class = scheme.column_class(
-                            name=column_name)
+                        scheme_column_class = \
+                            scheme.column_class(name=column_name)
                         column = scheme_column_class.build(
                             name=column_name,
                             value=column_value,

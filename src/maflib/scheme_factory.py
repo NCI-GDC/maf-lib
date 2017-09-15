@@ -16,89 +16,118 @@ SchemeDatum = namedtuple("SchemeDatum", ["version",
                                          "columns",
                                          "filtered"])
 
+_Column = namedtuple("_Column", ["name", "cls", "desc"])
 
-def combine_column_dicts(base_dict,
-                         extra_dict=None,
-                         filtered=None):
+
+def scheme_to_columns(scheme):
+    """Creates a list of columns of type `_Column` from a scheme."""
+    columns = list()
+    names = scheme.column_names()
+    for i in range(len(names)):
+        name = names[i]
+        column = _Column(
+            name=name,
+            cls=scheme.column_class(name),
+            desc=scheme.column_description(name)
+        )
+        columns.append(column)
+    return columns
+
+
+def combine_columns(base_columns,
+                    extra_columns=None,
+                    filtered=None):
     """ Combines columns when building a scheme.
 
-    The `base_dict` and `extra_dict` should be ordered dictionaries from
-    column name (`str`) to the class for the column type.
+    The `base_columns` and `extra_columns` should be a list of columns (of 
+    type `_Column`).
 
-    Any columns in `extra_dict` that are also in `base_dict` will have the
-    column type from `extra_dict` mixed into `base_dict`.  New columns from
-    `extra_dict` will be appended.
+    Any columns in `extra_columns` that are also in `base_columns` will have 
+    the column class from `extra_columns` mixed into `base_columns`.  New 
+    columns from `extra_columns` will be appended.  The description will be 
+    kept from `extra_columns`.
 
-    `filtered_column_name_set` can be used to _remove_ any columns from
-    either the `base_dict` or the `extra_dict` after they are combined.
+    `filtered` can be used to _remove_ any columns from either the 
+    `base_columns` or the `extra_columns` after they are combined.
     """
-    column_dict = OrderedDict(base_dict)
 
-    if extra_dict:
+    columns = OrderedDict((c.name, c) for c in base_columns)
+
+    if extra_columns:
         # add any additional types to the base columns
-        for column_name in extra_dict:
-            if column_name in column_dict:
-                column_dict[column_name] = \
-                    extend_class(column_dict[column_name],
-                                 extra_dict[column_name])
+        for extra_column in extra_columns:
+            name = extra_column.name
+            if name in columns:
+                cls = extend_class(columns[name].cls, extra_column.cls)
+                desc = extra_column.desc
+                columns[name] = _Column(name=name, cls=cls, desc=desc)
 
         # add the extra_columns
-        column_dict.update([(k, v) for k, v in extra_dict.items()
-                            if k not in column_dict])
+        columns.update([(c.name, c) for c in extra_columns
+                        if c.name not in columns])
 
     if filtered is not None:
-        new_columns = OrderedDict()
-        for k, value in column_dict.items():
-            if k not in filtered:
-                new_columns[k] = value
-        column_dict = new_columns
-        # TODO: detect if somethign in filtered was not present in the dict
+        missing_filtered = [f for f in filtered if not f in columns]
+        if missing_filtered:
+            raise ValueError("Filtered columns not found in the scheme it "
+                             "extends: %s" % ", ".join(missing_filtered))
+        filtered_columns = OrderedDict()
+        for name, column in columns.items():
+            if name not in filtered:
+                filtered_columns[name] = column
+        columns = filtered_columns
+    return columns.values()
 
-    return column_dict
 
 
-def build_scheme_class(datum, base_scheme, column_types):
+def build_scheme_class(datum, base_scheme):
     """
     :param datum: a scheme datum class
     :param base_scheme: the base scheme, or None if no base scheme
-    :param column_types: a tuple of (name, class) for all known column types
     :return: a new MafScheme
     """
 
-    # create a column_dictionary
-    column_dict = OrderedDict()
-    if datum.columns:
-        for column_name, column_cls_name in datum.columns:
-            cls = next((cls for cls_name, cls in column_types
-                        if cls_name == column_cls_name), None)
-            if not cls:
-                raise ValueError("Could not find a column type with name "
-                                 "'%s' for column '%s'"
-                                 % (column_cls_name,
-                                    column_name))
-            column_dict[str(column_name)] = cls
+    columns = datum.columns if datum.columns else list()
 
     # extend the base scheme if necessary
     if base_scheme:
-        column_dict = combine_column_dicts(
-            base_dict=base_scheme.__column_dict__(),
-            extra_dict=column_dict,
+        base_columns = list()
+        for name, cls in base_scheme.__column_dict__().items():
+            base_column = _Column(
+                name=name,
+                cls=cls,
+                desc=base_scheme.__column_desc__()[name]
+            )
+            base_columns.append(base_column)
+        columns = combine_columns(
+            base_columns=base_columns,
+            extra_columns=columns,
             filtered=datum.filtered
         )
+    else:
+        columns = datum.columns
 
     name = "_".join([x.capitalize()
                      for x in re.split(r"[-.]", datum.annotation)])
+
+    if columns:
+        column_dict = OrderedDict((c.name, c.cls) for c in columns)
+        column_desc = OrderedDict((c.name, c.desc) for c in columns)
+    else:
+        column_dict = OrderedDict()
+        column_desc = OrderedDict()
 
     # now create the scheme
     tpe = type(str(name), (MafScheme,), {})
     setattr(tpe, "version", classmethod(lambda cls: datum.version))
     setattr(tpe, "annotation_spec", classmethod(lambda cls: datum.annotation))
     setattr(tpe, "__column_dict__", classmethod(lambda cls: column_dict))
+    setattr(tpe, "__column_desc__", classmethod(lambda cls: column_desc))
 
     return tpe
 
 
-def build_schemes(data, column_types):
+def build_schemes(data):
     """
     Builds the schemes represented by the list of ``SchemeDatum``s.
     :return: a mapping from the scheme annotation to the scheme
@@ -115,8 +144,7 @@ def build_schemes(data, column_types):
             raise ValueError("Could not find a scheme to build.  Schemes "
                              "remaining annotations were: %s" % annotations)
         scheme_cls = build_scheme_class(datum=datum,
-                                        base_scheme=schemes.get(datum.extends),
-                                        column_types=column_types)
+                                        base_scheme=schemes.get(datum.extends))
         schemes[scheme_cls.annotation_spec()] = scheme_cls
         del data[datum_index]
     return schemes
@@ -152,10 +180,11 @@ def get_built_in_filenames(filename=None):
     return glob.glob(os.path.join(path, "*json"))
 
 
-def load_all_scheme_data(filenames):
+def load_all_scheme_data(filenames, column_types):
     """
     Load all the scheme data from the json file names
     :param filenames: a list of filenames for the json schemes
+    :param column_types: a tuple of (name, class) for all known column types
     :return: a list of ``SchemeDatum`` objects
     """
     def else_none(value):
@@ -166,8 +195,30 @@ def load_all_scheme_data(filenames):
             try:
                 json_data = json.load(handle)
                 handle.close()
-                columns = [(str(column[0]), str(column[1]))
-                           for column in json_data["columns"]]
+                columns = list()
+                for column in json_data["columns"]:
+                    if len(column) < 2 or len(column) > 3:
+                        raise ValueError("Column did not have two or three "
+                                         "elements: '%s'" % str(column))
+
+                    column_name = str(column[0])
+                    column_cls = str(column[1])
+                    column_desc = str(column[2]) if len(column) > 2 else ""
+
+
+                    cls = next((cls for cls_name, cls in column_types
+                                if cls_name == column_cls), None)
+                    if not cls:
+                        raise ValueError(
+                            "Could not find a column type with name "
+                            "'%s' for column '%s'"
+                            % (column_cls, column.name))
+
+                    columns.append(_Column(
+                        name=column_name,
+                        cls=cls,
+                        desc=column_desc
+                    ))
                 datum = SchemeDatum(
                     version=json_data["version"],
                     annotation=json_data["annotation-spec"],
@@ -224,10 +275,10 @@ def load_all_schemes(extra_filenames=None):
         filenames = filenames + extra_filenames
 
     # Read in all the scheme data, but don't build them yet
-    data = load_all_scheme_data(filenames=filenames)
+    data = load_all_scheme_data(filenames=filenames, column_types=column_types)
 
     # Build the schemes
-    schemes = build_schemes(data=data, column_types=column_types)
+    schemes = build_schemes(data=data)
 
     # Gather all the schemes
     # NB: could sort by version an annotation

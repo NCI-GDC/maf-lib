@@ -25,8 +25,7 @@ def get_column_types():
     def predicate(obj):
         """A predicate to get all classes that are subclasses of
         MafColumnRecord"""
-        return inspect.isclass(obj) and issubclass(obj,
-                                                   MafColumnRecord)
+        return inspect.isclass(obj) and issubclass(obj, MafColumnRecord)
         # Get all available column types
 
     return inspect.getmembers(sys.modules["maflib.column_types"],
