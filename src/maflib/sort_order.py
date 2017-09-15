@@ -32,7 +32,7 @@ class SortOrder(object):
         return [
             Unknown,
             Unsorted,
-            BarcodeAndCoordinate,
+            BarcodesAndCoordinate,
             Coordinate
         ]
 
@@ -197,12 +197,12 @@ class _BarcodesAndCoordinateKey(_CoordinateKey):
                           super(_BarcodesAndCoordinateKey, self).__str__()])
 
 
-class BarcodeAndCoordinate(Coordinate):
+class BarcodesAndCoordinate(Coordinate):
     """Defines a sort order based on the tumor barcode, matched normal
     barcode, chromosome, start position, and end position, in that order."""
 
     def __init__(self, *args, **kwargs):
-        super(BarcodeAndCoordinate, self).__init__(*args, **kwargs)
+        super(BarcodesAndCoordinate, self).__init__(*args, **kwargs)
 
     @classmethod
     def name(cls):

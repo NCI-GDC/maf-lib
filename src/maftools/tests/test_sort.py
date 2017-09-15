@@ -12,7 +12,8 @@ from maftools.tests import TestMaf
 from maftools.tests.testutils import test_main
 from maflib.header import MafHeader
 from maflib.record import MafRecord
-from maflib.scheme_factory import all_schemes, find_scheme
+from maflib.scheme_factory import find_scheme
+from maflib.sort_order import BarcodesAndCoordinate
 
 class TestSort(TestCase):
     def read_test_maf(self):
@@ -74,10 +75,24 @@ class TestSort(TestCase):
         out_lines, stdout, stderr = test_main(subcommand="sort",
                                               lines=lines,
                                               subcommand_args=subcommand_args)
+
+        # Check that we have the same # of records
+        out_records = [line for line in out_lines \
+                       if not line.startswith("#") and not line.startswith("Hugo_Symbol")]
+        self.assertEqual(len(out_records), len(records))
+
+        # Check that we added the sort pragma
+        sortOrderLine = "%s%s %s" % (
+            MafHeader.HeaderLineStartSymbol,
+            MafHeader.SortOrderKey,
+            BarcodesAndCoordinate.name()
+        )
+        self.assertTrue(sortOrderLine in out_lines)
+
         scheme = find_scheme(version=GdcV1_0_0_PublicScheme.version(),
                              annotation=GdcV1_0_0_PublicScheme.annotation_spec())
         # we should see chr13 before chr1
-        self.assertEqual(len(out_lines), len(lines))
+        self.assertEqual(len(out_lines)-1, len(lines)) # added the pragma
         found_chr1 = False
         for line in out_lines:
             if line.startswith(MafHeader.HeaderLineStartSymbol):
@@ -91,9 +106,6 @@ class TestSort(TestCase):
         fd.close()
         os.remove(fn)
 
-    #
-    # def test_with_barcode_and_coordinate_sort_order(self):
-
     def test_end_to_end(self):
         lines, header, records = self.read_test_maf()
 
@@ -104,8 +116,22 @@ class TestSort(TestCase):
         out_lines, stdout, stderr = test_main(subcommand="sort",
                                               lines=input_lines,
                                               subcommand_args=subcommand_args)
-        # NB: assumes the input is sorted already!
-        self.assertListEqual(out_lines, lines)
+        out_records = [line for line in out_lines if not line.startswith("#")]
+
+        # Check that we have the same # of records
+        out_records = [line for line in out_lines \
+                       if not line.startswith("#") and not line.startswith("Hugo_Symbol")]
+        self.assertEqual(len(out_records), len(records))
+
+        # Check that we added the sort pragma
+        sortOrderLine = "%s%s %s" % (
+            MafHeader.HeaderLineStartSymbol,
+            MafHeader.SortOrderKey,
+            BarcodesAndCoordinate.name()
+        )
+        self.assertTrue(sortOrderLine in out_lines)
+
+        self.assertEqual(len(out_lines)-1, len(lines)) # added the pragma
 
 if __name__ == '__main__':
     unittest.main()

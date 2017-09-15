@@ -7,8 +7,8 @@ from maflib.locatable import Locatable
 
 class TestSortOrder(unittest.TestCase):
     def test_find(self):
-        self.assertEqual(SortOrder.find(BarcodeAndCoordinate.name()),
-                         BarcodeAndCoordinate)
+        self.assertEqual(SortOrder.find(BarcodesAndCoordinate.name()),
+                         BarcodesAndCoordinate)
         with self.assertRaises(ValueError):
             SortOrder.find("no-name")
 
@@ -40,7 +40,7 @@ class TestSortOrderKey(unittest.TestCase):
 
 class TestBarcodeAndCoordinateKey(unittest.TestCase):
 
-    TestSortOrder = BarcodeAndCoordinate()
+    TestSortOrder = BarcodesAndCoordinate()
 
     class DummyRecord(Locatable):
         def __init__(self, tumor_barcode, normal_barcode, chr, start, end):
@@ -110,7 +110,7 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
                  ]
         fd, fn = tmp_file(lines=lines)
 
-        sort_order = BarcodeAndCoordinate(fasta_index=fn)
+        sort_order = BarcodesAndCoordinate(fasta_index=fn)
         sort_key = sort_order.sort_key()
 
         r1 = TestBarcodeAndCoordinateKey.DummyRecord("A", "B", "chr1", 1, 2)
@@ -128,12 +128,12 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
         os.remove(fn)
 
     def test_str(self):
-        self.assertEqual(BarcodeAndCoordinate.name(),
-                         str(BarcodeAndCoordinate()))
+        self.assertEqual(BarcodesAndCoordinate.name(),
+                         str(BarcodesAndCoordinate()))
 
     def test_key_str(self):
         r1 = TestBarcodeAndCoordinateKey.DummyRecord("A", "B", "C", 1, 2)
-        sort_key = BarcodeAndCoordinate().sort_key()
+        sort_key = BarcodesAndCoordinate().sort_key()
         self.assertEqual(str(sort_key(r1)), "A\tB\tC\t1\t2")
 
 

@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from maflib.column_types import StringColumn, IntegerColumn
 from maflib.schemes import MafScheme
-from maflib.sort_order import BarcodeAndCoordinate
+from maflib.sort_order import BarcodesAndCoordinate
 from maflib.sorter import MafSorterCodec, Sorter, MafSorter
 from maflib.tests.testutils import tmp_file
 from maflib.locatable import Locatable
@@ -77,7 +77,7 @@ class TestSorter(unittest.TestCase):
     def codec(self): return MafSorterCodec(scheme=DummyScheme())
 
     def test_empty(self):
-        sorter = Sorter(100, self.codec(), BarcodeAndCoordinate().sort_key())
+        sorter = Sorter(100, self.codec(), BarcodesAndCoordinate().sort_key())
         records = [r for r in sorter]
         sorter.close()
         self.assertEqual(len(records), 0)
@@ -86,7 +86,7 @@ class TestSorter(unittest.TestCase):
         max_objects_in_ram = 100
         num_records = max_objects_in_ram - 1
         sorter = Sorter(max_objects_in_ram, self.codec(),
-                        BarcodeAndCoordinate().sort_key(),
+                        BarcodesAndCoordinate().sort_key(),
                         always_spill=False)
 
         # add them in reverse order
@@ -105,7 +105,7 @@ class TestSorter(unittest.TestCase):
         max_objects_in_ram = 100
         num_records = max_objects_in_ram * 10
         sorter = Sorter(max_objects_in_ram, self.codec(),
-                        BarcodeAndCoordinate().sort_key(),
+                        BarcodesAndCoordinate().sort_key(),
                         always_spill=True)
 
         # add them in reverse order
@@ -158,13 +158,13 @@ class TestMafSorter(unittest.TestCase):
                                  str(records[i].value( "End_Position")))
 
     def test_sorter_default(self):
-        sorter = MafSorter(sort_order_name=BarcodeAndCoordinate.name(),
+        sorter = MafSorter(sort_order_name=BarcodesAndCoordinate.name(),
                            max_objects_in_ram=100)
         self.__test_sorter(sorter=sorter)
 
     def test_sorter_with_scheme(self):
         scheme = DummyScheme()
-        sorter = MafSorter(sort_order_name=BarcodeAndCoordinate.name(),
+        sorter = MafSorter(sort_order_name=BarcodesAndCoordinate.name(),
                            scheme=scheme,
                            max_objects_in_ram=100)
         self.__test_sorter(sorter=sorter, with_scheme=True)
@@ -183,7 +183,7 @@ class TestMafSorter(unittest.TestCase):
                  ]
         fd, fn = tmp_file(lines=lines)
 
-        sorter = MafSorter(sort_order_name=BarcodeAndCoordinate.name(),
+        sorter = MafSorter(sort_order_name=BarcodesAndCoordinate.name(),
                            max_objects_in_ram=100,
                            fasta_index=fn)
 
