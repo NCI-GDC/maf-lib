@@ -129,7 +129,6 @@ class SequencerEnum(MafEnum):
 @unique
 class FeatureTypeEnum(MafEnum):
     """Enumeration for the MAF 'Feature_Type' column value"""
-    Blank = ""
     Transcript = "Transcript"
     RegulatoryFeature = "RegulatoryFeature"
     MotifFeature = "MotifFeature"
