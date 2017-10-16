@@ -74,7 +74,6 @@ class Sort(Subcommand):
 
         # read from the sorter
         n = 0
-        sorter.close()
         for record in sorter:
             writer += record
             n = n + 1
@@ -82,7 +81,8 @@ class Sort(Subcommand):
                 logger.info("Wrote %d records" % n)
         if options.output and (n == 0 or n % Sort.print_every_n_records != 0):
             logger.info("Wrote %d records" % n)
-
+            
+        sorter.close()
         reader.close()
         writer.close()
 
