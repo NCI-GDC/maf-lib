@@ -11,7 +11,7 @@ iterator.
 """
 
 from maflib.util import PeekableIterator
-from maflib.sort_order import BarcodeAndCoordinate, Coordinate
+from maflib.sort_order import BarcodesAndCoordinate, Coordinate
 from enum import Enum, unique
 
 
@@ -51,7 +51,7 @@ class LocatableOverlapIterator(object):
 
         self._by_barcodes = by_barcodes
         if self._by_barcodes:
-            self._sort_order = BarcodeAndCoordinate(fasta_index=fasta_index)
+            self._sort_order = BarcodesAndCoordinate(fasta_index=fasta_index)
             self._overlap_f = self.__overlaps_with_barcode
         else:
             self._sort_order = Coordinate(fasta_index=fasta_index)
