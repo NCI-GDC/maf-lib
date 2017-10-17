@@ -9,7 +9,7 @@ from maflib.tests.testutils import tmp_file
 from maflib.util import captured_output
 from maftools.__main__ import main
 from maftools.tests import TestMaf
-from maftools.tests.testutils import test_main
+from maftools.tests.utils import run_main
 from maflib.header import MafHeader
 from maflib.record import MafRecord
 from maflib.scheme_factory import find_scheme
@@ -72,7 +72,7 @@ class TestSort(TestCase):
         lines, header, records = self.read_test_maf()
         subcommand_args = ["--version", GdcV1_0_0_PublicScheme.version(),
                            "--annotation", GdcV1_0_0_PublicScheme.annotation_spec()]
-        out_lines, stdout, stderr = test_main(subcommand="sort",
+        out_lines, stdout, stderr = run_main(subcommand="sort",
                                               lines=lines,
                                               subcommand_args=subcommand_args)
 
@@ -113,7 +113,7 @@ class TestSort(TestCase):
         input_lines = header + list(reversed(records))
         subcommand_args = ["--version", GdcV1_0_0_PublicScheme.version(),
                            "--annotation", GdcV1_0_0_PublicScheme.annotation_spec()]
-        out_lines, stdout, stderr = test_main(subcommand="sort",
+        out_lines, stdout, stderr = run_main(subcommand="sort",
                                               lines=input_lines,
                                               subcommand_args=subcommand_args)
         out_records = [line for line in out_lines if not line.startswith("#")]

@@ -7,7 +7,7 @@ from maflib.schemes import MafScheme
 from maflib.validation import MafValidationErrorType
 
 
-class TestScheme(MafScheme):
+class _TestScheme(MafScheme):
     @classmethod
     def version(cls):
         return "test-version"
@@ -75,7 +75,7 @@ class TestMafColumnRecord(unittest.TestCase):
         self.assertEqual(str(column), "None")
 
     def test_build_with_scheme(self):
-        scheme = TestScheme()
+        scheme = _TestScheme()
 
         # column found in the scheme, column index inferred
         column = MafColumnRecord.build(name="float",
@@ -143,7 +143,7 @@ class TestMafCustomColumnRecord(unittest.TestCase):
         self.assertIn("invalid", errors[0].message)
 
     def test_validate_with_scheme(self):
-        scheme = TestScheme()
+        scheme = _TestScheme()
 
         # FAIL: the column has the wrong name
         column = TestMafCustomColumnRecord.ValidColumn.build("noop", "value", 0)
@@ -178,7 +178,7 @@ class TestMafCustomColumnRecord(unittest.TestCase):
         self.assertEqual(len(column.validate(scheme=None)), 0)
 
     def test_build_with_scheme(self):
-        scheme = TestScheme()
+        scheme = _TestScheme()
 
         # column found in the scheme, column index inferred
         column = MafCustomColumnRecord.build(name="float",

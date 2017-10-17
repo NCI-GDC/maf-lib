@@ -132,7 +132,7 @@ def build_schemes(data):
     Builds the schemes represented by the list of ``SchemeDatum``s.
     :return: a mapping from the scheme annotation to the scheme
     """
-    schemes = {}  # annotation -> scheme
+    schemes = OrderedDict()  # annotation -> scheme
     while data:
         # find a scheme data that either doesn't extend any other scheme, or
         # whose base scheme it extends we have already built

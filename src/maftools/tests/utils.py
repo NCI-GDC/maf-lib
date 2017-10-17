@@ -6,10 +6,10 @@ from maflib.util import captured_output
 from maftools.__main__ import main
 
 
-def test_main(subcommand, lines,
-              main_args = None,
-              subcommand_args = None,
-              to_stdout=False):
+def run_main(subcommand, lines,
+             main_args = None,
+             subcommand_args = None,
+             to_stdout=False):
     in_fh, in_fn = tmp_file(lines=lines)
     in_fh.close()
 
