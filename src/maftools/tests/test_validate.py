@@ -9,7 +9,7 @@ from maflib.util import captured_output
 from maflib.validation import MafValidationErrorType
 from maftools.__main__ import main
 from maftools.tests import TestMaf
-from maftools.tests.testutils import test_main
+from maftools.tests.utils import run_main
 
 
 class TestValidate(TestCase):
@@ -18,7 +18,7 @@ class TestValidate(TestCase):
                      lines,
                      subcommand_args=None,
                      to_stdout=False):
-        return test_main(subcommand="validate",
+        return run_main(subcommand="validate",
                          lines=lines,
                          subcommand_args=subcommand_args,
                          to_stdout=to_stdout)

@@ -6,7 +6,7 @@ from maflib.tests.testutils import read_lines
 from maflib.util import captured_output
 from maftools.__main__ import main
 from maftools.tests import TestMaf
-from maftools.tests.testutils import test_main
+from maftools.tests.utils import run_main
 
 
 class TestView(TestCase):
@@ -20,7 +20,7 @@ class TestView(TestCase):
         lines = read_lines(TestMaf)
         subcommand_args = ["--version", GdcV1_0_0_PublicScheme.version(),
                            "--annotation", GdcV1_0_0_PublicScheme.annotation_spec()]
-        out_lines, stdout, stderr = test_main(subcommand="view",
+        out_lines, stdout, stderr = run_main(subcommand="view",
                                               lines=lines,
                                               subcommand_args=subcommand_args)
         self.assertListEqual(out_lines, lines)
