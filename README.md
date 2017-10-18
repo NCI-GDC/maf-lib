@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/NCI-GDC/maf-lib.svg?token=K8GQK5cmtkEVi41o3Kbx&branch=feat/travis-ci)](https://travis-ci.com/NCI-GDC/maf-lib)
+[![Code Coverage](https://codecov.io/gh/NCI-GDC/maf-lib/branch/master/graph/badge.svg?token=Zr7KTdJ23J)](https://codecov.io/gh/NCI-GDC/maf-lib)
 [![Language](https://img.shields.io/badge/language-python-brightgreen.svg)](http://www.python.org/)
 
 # MAF-LIB: the Mutation Annotation Format Library
