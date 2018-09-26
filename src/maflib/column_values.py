@@ -111,7 +111,9 @@ class ValidationStatusEnum(MafEnum):
 class SequencerEnum(MafEnum):
     """Enumeration for the MAF 'Sequencer' column value"""
     ABIThirtySevenThirty = "ABI 3730xl"
-    ABOLiDFourSystem = "AB SOLiD 4 System"
+    ABSOLiDFourSystem = "AB SOLiD 4 System"
+    ABSOLiDTwoSystem = "AB SOLiD 2 System"
+    ABSOLiDThreeSystem = "AB SOLiD 3 System"
     CompleteGenomics = "Complete Genomics"
     FourFiveFour = "454"
     FourFiveFourFLXTitanium = "454 GS FLX Titanium"
@@ -130,6 +132,7 @@ class SequencerEnum(MafEnum):
     IonTorrentProton = "Ion Torrent Proton"
     PacBioRS = "PacBio RS"
     SOLID = "SOLID"
+    Other = "Other"
 
 
 @unique

@@ -407,14 +407,14 @@ class TestPickColumn(TestCase):
 class TestSequenceOfSequencers(TestCase):
     def test_valid(self):
         self.is_column_is_valid(SequenceOfSequencers.build("key", "Illumina HiSeq"), [SequencerEnum.IlluminaHiSeq], SequenceOfSequencers.__nullable_values__())
-        self.is_column_is_valid(SequenceOfSequencers.build("key", "AB SOLiD 4 System"), [SequencerEnum.ABOLiDFourSystem], SequenceOfSequencers.__nullable_values__())
+        self.is_column_is_valid(SequenceOfSequencers.build("key", "AB SOLiD 4 System"), [SequencerEnum.ABSOLiDFourSystem], SequenceOfSequencers.__nullable_values__())
         sequencer_string = ";".join([
             "Illumina HiSeq",
             "AB SOLiD 4 System"
         ])
         sequencers = [
             SequencerEnum.IlluminaHiSeq,
-            SequencerEnum.ABOLiDFourSystem
+            SequencerEnum.ABSOLiDFourSystem
         ]
         self.is_column_is_valid(SequenceOfSequencers.build("key", sequencer_string), sequencers, SequenceOfSequencers.__nullable_values__())
 
