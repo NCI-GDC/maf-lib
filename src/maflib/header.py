@@ -47,6 +47,8 @@ class MafHeader(MutableMapping):
 
     SortOrderKey = "sort.order"
 
+    ContigKey = "contigs"
+
     SupportedVersions = [s.version() for s in all_schemes()]
 
     SupportedAnnotationSpecs = [s.annotation_spec() for s in all_schemes()]
@@ -90,6 +92,13 @@ class MafHeader(MutableMapping):
         """Gets the annotation specification or `None` if not present"""
         if MafHeader.AnnotationSpecKey in self.__records:
             return self.__records[MafHeader.AnnotationSpecKey].value
+        else:
+            return None
+
+    def contigs(self):
+        """Gets the contig list or `None` if not present"""
+        if MafHeader.ContigKey in self.__records:
+            return self.__records[MafHeader.ContigKey].value
         else:
             return None
 
@@ -231,6 +240,16 @@ class MafHeader(MutableMapping):
                 else:
                     header[record.key] = record
 
+        if header.contigs():
+            if header.sort_order() and issubclass(
+                header.sort_order().__class__, sort_order.Coordinate
+            ):
+                sokey = header[MafHeader.SortOrderKey].value.name()
+                header[MafHeader.SortOrderKey] = MafHeaderSortOrderRecord(
+                    value=sokey,
+                    contigs=header.contigs()
+                )
+                
         header.validate(logger=logger, reset_errors=False)
 
         return header
@@ -257,7 +276,8 @@ class MafHeader(MutableMapping):
                               logger=logger)
 
     @classmethod
-    def from_reader(cls, reader, version=None, annotation=None, sort_order=None):
+    def from_reader(cls, reader, version=None, annotation=None, sort_order=None, 
+                    fasta_index=None, contigs=None):
         header = deepcopy(reader.header())
         if version:
             header[MafHeader.VersionKey] = \
@@ -265,13 +285,36 @@ class MafHeader(MutableMapping):
         if annotation:
             header[MafHeader.AnnotationSpecKey] = \
                 MafHeaderAnnotationSpecRecord(value=annotation)
+        if fasta_index:
+            handle = open(fasta_index, "r")
+            contigs = \
+                [line.rstrip("\r\n").split("\t")[0] for line in handle]
+            handle.close()
+            header[MafHeader.ContigKey] = \
+                MafHeaderContigRecord(value=contigs)
+        elif contigs:
+            assert isinstance(contigs, list), \
+                "contigs must be a list, but {0} found".format(type(contigs))
+            header[MafHeader.ContigKey] = \
+                MafHeaderContigRecord(value=contigs)
         if sort_order:
             header[MafHeader.SortOrderKey] = \
-                MafHeaderSortOrderRecord(value=sort_order)
+                MafHeaderSortOrderRecord(
+                    value=sort_order, 
+                    fasta_index=fasta_index, 
+                    contigs=contigs)
+            if not contigs and \
+                hasattr(header[MafHeader.SortOrderKey].value, "_contigs") and \
+                getattr(header[MafHeader.SortOrderKey].value, "_contigs"): 
+                header[MafHeader.ContigKey] = \
+                    MafHeaderContigRecord(
+                        value=header[MafHeader.SortOrderKey].value._contigs
+                    )
         return header
 
     @classmethod
-    def from_defaults(cls,  version=None, annotation=None, sort_order=None):
+    def from_defaults(cls,  version=None, annotation=None, sort_order=None,
+                      fasta_index=None, contigs=None):
         header = MafHeader()
         if version:
             header[MafHeader.VersionKey] = \
@@ -279,9 +322,31 @@ class MafHeader(MutableMapping):
         if annotation:
             header[MafHeader.AnnotationSpecKey] = \
                 MafHeaderAnnotationSpecRecord(value=annotation)
+        if fasta_index:
+            handle = open(fasta_index, "r")
+            _contigs = \
+                [line.rstrip("\r\n").split("\t")[0] for line in handle]
+            handle.close()
+            header[MafHeader.ContigKey] = \
+                MafHeaderContigRecord(value=_contigs)
+        elif contigs:
+            assert isinstance(contigs, list), \
+                "contigs must be a list, but {0} found".format(type(contigs))
+            header[MafHeader.ContigKey] = \
+                MafHeaderContigRecord(value=contigs)
         if sort_order:
             header[MafHeader.SortOrderKey] = \
-                MafHeaderSortOrderRecord(value=sort_order)
+                MafHeaderSortOrderRecord(
+                    value=sort_order, 
+                    fasta_index=fasta_index, 
+                    contigs=contigs)
+            if not contigs and \
+                hasattr(header[MafHeader.SortOrderKey].value, "_contigs") and \
+                getattr(header[MafHeader.SortOrderKey].value, "_contigs"):
+                header[MafHeader.ContigKey] = \
+                    MafHeaderContigRecord(
+                        value=header[MafHeader.SortOrderKey].value._contigs
+                    )
         return header
 
     @classmethod
@@ -382,6 +447,8 @@ class MafHeaderRecord(object):
                             MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER,
                             "Sort order '%s' was not recognized" % value,
                             line_number=line_number)
+                elif key == MafHeader.ContigKey:
+                    record = MafHeaderContigRecord(value=value)
                 else:
                     record = MafHeaderRecord(key=key, value=value)
         return record, error
@@ -403,7 +470,7 @@ class MafHeaderAnnotationSpecRecord(MafHeaderRecord):
 
 class MafHeaderSortOrderRecord(MafHeaderRecord):
     """A marker MAF header record for storing the sort order"""
-    def __init__(self, value):
+    def __init__(self, value, fasta_index=None, contigs=None):
         """:param: value: a string representing the name of the sort order, 
         or an instance of SortOrder. """
         if isinstance(value, str):
@@ -413,5 +480,25 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
             # TODO: warn? log? return None? validation error?
             raise Exception("Value of type '%s' is not a subclass of "
                             "'SortOrder'" % value.__class__.__name__)
+        if (fasta_index or contigs) and issubclass(value.__class__, sort_order.Coordinate):
+            value = value.__class__(fasta_index=fasta_index, contigs=contigs) 
+               
         super(MafHeaderSortOrderRecord, self).__init__(
             key=MafHeader.SortOrderKey, value=value)
+
+class MafHeaderContigRecord(MafHeaderRecord):
+    """A marker MAF header record for storing a list of contigs in the 
+    order for sorting"""
+    def __init__(self, value):
+        """:param: value: a comma separate string or a list of 
+        chromosome names"""
+        if isinstance(value, str):
+            value = value.split(',') 
+        super(MafHeaderContigRecord, self).__init__(
+            key=MafHeader.ContigKey, value=value)
+
+    def __str__(self):
+        """gets the text representation of this header record"""
+        return "%s%s %s" % (MafHeader.HeaderLineStartSymbol,
+                            self._key,
+                            ",".join(self._value))
