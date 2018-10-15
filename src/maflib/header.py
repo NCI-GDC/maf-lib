@@ -304,6 +304,7 @@ class MafHeader(MutableMapping):
                     fasta_index=fasta_index, 
                     contigs=contigs)
             if not contigs and \
+                hasattr(header[MafHeader.SortOrderKey].value, "_contigs") and \
                 getattr(header[MafHeader.SortOrderKey].value, "_contigs"): 
                 header[MafHeader.ContigKey] = \
                     MafHeaderContigRecord(
@@ -340,7 +341,8 @@ class MafHeader(MutableMapping):
                     fasta_index=fasta_index, 
                     contigs=contigs)
             if not contigs and \
-                getattr(header[MafHeader.SortOrderKey].value, "_contigs"): 
+                hasattr(header[MafHeader.SortOrderKey].value, "_contigs") and \
+                getattr(header[MafHeader.SortOrderKey].value, "_contigs"):
                 header[MafHeader.ContigKey] = \
                     MafHeaderContigRecord(
                         value=header[MafHeader.SortOrderKey].value._contigs
