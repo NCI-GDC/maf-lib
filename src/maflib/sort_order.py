@@ -157,10 +157,13 @@ class Coordinate(SortOrder):
     """Defines a sort order based on the chromosome, start position, and end 
     position, in that order."""
 
-    def __init__(self, fasta_index=None, *args, **kwargs):
-        """        
+    def __init__(self, fasta_index=None, contigs=None, *args, **kwargs):
+        """
+        provide either fasta_index or contigs
+
         :param fasta_index: the path to the FASTA index for defining 
         ordering across chromosomes.
+        :param contigs: list of contigs for ordering
         """
         self._contigs = None
         if fasta_index:
@@ -168,6 +171,10 @@ class Coordinate(SortOrder):
             self._contigs = \
                 [line.rstrip("\r\n").split("\t")[0] for line in handle]
             handle.close()
+        elif contigs:
+            assert isinstance(contigs, list), \
+                "contigs must be a list, but {0} found".format(type(contigs))
+            self._contigs = contigs[:]
         super(Coordinate, self).__init__(*args, **kwargs)
 
     @classmethod

@@ -14,3 +14,6 @@ sdist
 .idea
 *.htmlcov
 *.coverage
+
+# Environments
+venv/
