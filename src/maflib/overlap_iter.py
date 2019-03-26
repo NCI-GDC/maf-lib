@@ -40,18 +40,25 @@ class LocatableOverlapIterator(object):
     def __init__(self,
                  iters,
                  fasta_index=None,
-                 by_barcodes=True):
+                 contigs=None,
+                 by_barcodes=True,
+                 peekable_iterator_class=PeekableIterator):
         """
         :param iters: the list of iterators.
         :param fasta_index: the path to the FASTA index for defining 
         ordering across chromosomes.
+        :param contigs: the list of contigs to use for sorting instead of
+        parsing from FASTA index.
         :param by_barcodes: True to require the same tumor and matched 
         normal barcodes for returned locatables, False otherwise
+        :param peekable_iterator_class: PeekableIterator class to use when
+        traversing individual MAFs. This allows developers to add in custom
+        filters and custom handling of MAFs.
         """
 
         self._by_barcodes = by_barcodes
         if self._by_barcodes:
-            self._sort_order = BarcodesAndCoordinate(fasta_index=fasta_index)
+            self._sort_order = BarcodesAndCoordinate(fasta_index=fasta_index, contigs=contigs)
             self._overlap_f = self.__overlaps_with_barcode
         else:
             self._sort_order = Coordinate(fasta_index=fasta_index)
@@ -60,7 +67,7 @@ class LocatableOverlapIterator(object):
         # Trust, but verify
         _iters = [_SortOrderEnforcingIterator(_iter, self._sort_order)
                   for _iter in iters]
-        self._iters = [PeekableIterator(_iter) for _iter in _iters]
+        self._iters = [peekable_iterator_class(_iter) for _iter in _iters]
 
         self._sort_key = self._sort_order.sort_key()
 
@@ -173,6 +180,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
     def __init__(self,
                  iters,
                  fasta_index=None,
+                 contigs=None,
                  by_barcodes=True,
                  overlap_type=AlleleOverlapType.Equality):
         """
@@ -181,7 +189,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
         ordering across chromosomes.
         """
         super(LocatableByAlleleOverlapIterator, self).__init__(
-            iters, fasta_index, by_barcodes
+            iters, fasta_index, contigs, by_barcodes
         )
         self._compare_alts = AlleleOverlapType.compare_by(overlap_type)
 
