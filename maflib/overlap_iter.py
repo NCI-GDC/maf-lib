@@ -1,12 +1,12 @@
-"""This module contains an implementation of a locatables overlapping 
+"""This module contains an implementation of a locatables overlapping
 iterator.
 
-* LocatableOverlapIterator  allows for jointly iterating over multiple 
-    iterators and returning the set of locatables that 
+* LocatableOverlapIterator  allows for jointly iterating over multiple
+    iterators and returning the set of locatables that
     overlap between them.
 * LocatableByAlleleOverlapIterator Extends `LocatableOverlapIterator` to return
-    only those loctables who have the same reference allele as a locatable 
-    from the **first** iterator, as well as the given relationship between 
+    only those loctables who have the same reference allele as a locatable
+    from the **first** iterator, as well as the given relationship between
     the alternate alleles (i.e. equality, intersects, subset).
 """
 
@@ -18,15 +18,15 @@ from maflib.util import PeekableIterator
 
 class LocatableOverlapIterator(object):
     """ An iterator over overlapping locatables across multiple `Locatable`s.
-    One or more iterators should be given.  The records in each iterator are 
-    assumed to be sorted by coordinate order (see 
-    `maflib.sort_order.Coordinate`), which will be verified during 
-    iteration. 
-    
+    One or more iterators should be given.  The records in each iterator are
+    assumed to be sorted by coordinate order (see
+    `maflib.sort_order.Coordinate`), which will be verified during
+    iteration.
+
     A list of lists is returned each iteration, with one list of locatables per
-    input iterators.  A list of locatables per iterator is returned, since we 
-    have multiple locatables in one iterator overlapping a locatables in the 
-    other.  For example, consider the following intervals representing 
+    input iterators.  A list of locatables per iterator is returned, since we
+    have multiple locatables in one iterator overlapping a locatables in the
+    other.  For example, consider the following intervals representing
     locatables on one chromosome:
         iter#1: [1,10], [15,15], [30,40]
         iter#2: [5,25], [50,60]
@@ -34,7 +34,7 @@ class LocatableOverlapIterator(object):
         next#1: [ [[1,10], [15,15]], [[5,25]] ]
         next#2: [ [30,40], [] ]
         next#3: [ [], [[50, 60]] ]
-    This scenario happens most frequently with locatables representing MNPs, 
+    This scenario happens most frequently with locatables representing MNPs,
     indels, and SVs.
     """
 
@@ -48,11 +48,11 @@ class LocatableOverlapIterator(object):
     ):
         """
         :param iters: the list of iterators.
-        :param fasta_index: the path to the FASTA index for defining 
+        :param fasta_index: the path to the FASTA index for defining
         ordering across chromosomes.
         :param contigs: the list of contigs to use for sorting instead of
         parsing from FASTA index.
-        :param by_barcodes: True to require the same tumor and matched 
+        :param by_barcodes: True to require the same tumor and matched
         normal barcodes for returned locatables, False otherwise
         :param peekable_iterator_class: PeekableIterator class to use when
         traversing individual MAFs. This allows developers to add in custom
@@ -143,7 +143,7 @@ class LocatableOverlapIterator(object):
 
 @unique
 class AlleleOverlapType(Enum):
-    """Enumeration for how to compare sets of alternate alleles.  
+    """Enumeration for how to compare sets of alternate alleles.
     1. `Equality` requires that both sets are identical.
     2. `Intersects` requires that the two sets share at least one member.
     3. `Subset` requires that the second set is wholly contained in the first.
@@ -185,7 +185,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
     """
     Extends `LocatableOverlapIterator` to return only those loctables who have
     the same reference allele as a locatable from the **first** iterator, as
-    well as the given relationship between the alternate alleles (i.e. 
+    well as the given relationship between the alternate alleles (i.e.
     equality, intersects, subset).
     """
 
@@ -199,7 +199,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
     ):
         """
         :param iters: the list of iterators.
-        :param fasta_index: the path to the FASTA index for defining 
+        :param fasta_index: the path to the FASTA index for defining
         ordering across chromosomes.
         """
         super(LocatableByAlleleOverlapIterator, self).__init__(

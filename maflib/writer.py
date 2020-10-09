@@ -49,7 +49,7 @@ class MafWriter(object):
             self._set_checker_and_sorter()
 
     def _set_checker_and_sorter(self):
-        """Set the sort order checker and sorter.  Must be called **after** 
+        """Set the sort order checker and sorter.  Must be called **after**
         the scheme has been set."""
         if self._assume_sorted or not self._header.sort_order().sort_key():
             self._checker = SortOrderChecker(self._header.sort_order())
@@ -97,7 +97,7 @@ class MafWriter(object):
         return self.__iadd__(record)
 
     def close(self):
-        """Closes the underlying file handle, and writes the records if the 
+        """Closes the underlying file handle, and writes the records if the
         output was to be sorted."""
         if self._sorter:
             for rec in self._sorter:

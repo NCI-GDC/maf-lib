@@ -119,8 +119,8 @@ class MafColumnRecord(object):
     @classmethod
     def build(cls, name, value, column_index=None, description=None, scheme=None):
         """
-        If ``scheme`` is given, then the the appropriate column type will be 
-        built by matching the provided name with the column name in the 
+        If ``scheme`` is given, then the the appropriate column type will be
+        built by matching the provided name with the column name in the
         scheme.  Otherwise, a column of type ``MafColumnRecord`` will be
         returned.
         :return: builds a ``MafColumnRecords`` from the given string.  Raises a
@@ -133,7 +133,7 @@ class MafColumnRecord(object):
                     "Column with name '%s' not found in scheme '%s'"
                     % (name, str(scheme))
                 )
-            elif not column_index is None and column_index != scheme_column_index:
+            elif column_index is not None and column_index is not scheme_column_index:
                 raise ValueError(
                     "Mismatch column index: found '%s', expected '%s'"
                     % (str(column_index), str(scheme_column_index))
@@ -210,7 +210,7 @@ class MafColumnRecord(object):
             key = next(iter(possible_keys), None)
 
             # did we find a key for the given null value?
-            if not key is None:
+            if key is not None:
                 # always prefer the empty string
                 if "" in possible_keys:
                     return ""
@@ -247,8 +247,8 @@ class MafCustomColumnRecord(MafColumnRecord):
     def build_nullable(cls, name, column_index=None, description=None, scheme=None):
         """
         This method should not be overridden by sub-classes.
-        
-        The class should have at least one nullable key and value, from which 
+
+        The class should have at least one nullable key and value, from which
         the column is built.
         """
         if not cls.is_nullable():

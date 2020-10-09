@@ -35,15 +35,15 @@ def scheme_to_columns(scheme):
 def combine_columns(base_columns, extra_columns=None, filtered=None):
     """ Combines columns when building a scheme.
 
-    The `base_columns` and `extra_columns` should be a list of columns (of 
+    The `base_columns` and `extra_columns` should be a list of columns (of
     type `_Column`).
 
-    Any columns in `extra_columns` that are also in `base_columns` will have 
-    the column class from `extra_columns` mixed into `base_columns`.  New 
-    columns from `extra_columns` will be appended.  The description will be 
+    Any columns in `extra_columns` that are also in `base_columns` will have
+    the column class from `extra_columns` mixed into `base_columns`.  New
+    columns from `extra_columns` will be appended.  The description will be
     kept from `extra_columns`.
 
-    `filtered` can be used to _remove_ any columns from either the 
+    `filtered` can be used to _remove_ any columns from either the
     `base_columns` or the `extra_columns` after they are combined.
     """
 
@@ -62,7 +62,7 @@ def combine_columns(base_columns, extra_columns=None, filtered=None):
         columns.update([(c.name, c) for c in extra_columns if c.name not in columns])
 
     if filtered is not None:
-        missing_filtered = [f for f in filtered if not f in columns]
+        missing_filtered = [f for f in filtered if f not in columns]
         if missing_filtered:
             raise ValueError(
                 "Filtered columns not found in the scheme it "
@@ -242,22 +242,23 @@ def load_all_scheme_data(filenames, column_types):
 
 
 def scheme_sort_key(scheme):
-    """Sort key for sorting schemes.  Sorts by version and then annotation 
+    """Sort key for sorting schemes.  Sorts by version and then annotation
     spec.  Extracts, major, minor, and patch versions."""
 
     def extract_version_string(str, which_name):
-        """Extracts the version string.  Expects one of the two following 
+        """Extracts the version string.  Expects one of the two following
         patterns:
         1. "gdc-[0-9]+\.[0-9]+\.[0-9]"
         2. "gdc-[0-9]+\.[0-9]+\.[0-9]-[a-z]+"
         """
         if not str.startswith("gdc-"):
             return [-1, -1, -1, str]
-        str = str[len("gdc-") :]
+        str = str[len("gdc-"):]
         last = ""
         if "-" in str:
             index = str.index("-")
-            last = str[index + 1 :]
+            l_index = index + 1
+            last = str[l_index:]
             str = str[:index]
         return list(map(int, str.split("."))) + [last]
 

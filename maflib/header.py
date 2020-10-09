@@ -465,7 +465,7 @@ class MafHeaderRecord(object):
                 elif key == MafHeader.SortOrderKey:
                     try:
                         record = MafHeaderSortOrderRecord(value=value)
-                    except:
+                    except Exception:
                         error = MafValidationError(
                             MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER,
                             "Sort order '%s' was not recognized" % value,
@@ -500,7 +500,7 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
     """A marker MAF header record for storing the sort order"""
 
     def __init__(self, value, fasta_index=None, contigs=None):
-        """:param: value: a string representing the name of the sort order, 
+        """:param: value: a string representing the name of the sort order,
         or an instance of SortOrder. """
         if isinstance(value, str):
             value = next(
@@ -524,11 +524,11 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
 
 
 class MafHeaderContigRecord(MafHeaderRecord):
-    """A marker MAF header record for storing a list of contigs in the 
+    """A marker MAF header record for storing a list of contigs in the
     order for sorting"""
 
     def __init__(self, value):
-        """:param: value: a comma separate string or a list of 
+        """:param: value: a comma separate string or a list of
         chromosome names"""
         if isinstance(value, str):
             value = value.split(',')

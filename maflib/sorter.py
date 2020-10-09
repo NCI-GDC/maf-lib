@@ -160,7 +160,8 @@ class MafSorterCodec(SorterCodec):
 
     def decode(self, data, start, length):
         """Decodes the data and re-parses the text, returning a MafRecord"""
-        line = data[start : (start + length)].decode('utf-8')
+        end = start + length
+        line = data[start:end].decode('utf-8')
         return MafRecord.from_line(
             line=line,
             column_names=self._column_names,

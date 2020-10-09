@@ -116,8 +116,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         If an `MafColumnRecord`, then the `MafColumnRecord` should have the same
         `key` as the provided column. 3. If `None`, then `None` will always be
         returned. 4. Otherwise, it should be the column name, and be the same as
-        the `key` in the provided column. 
-        
+        the `key` in the provided column.
         :param column: an instance of `MafColumnRecord`. """
         if not isinstance(column, MafColumnRecord):
             raise TypeError(

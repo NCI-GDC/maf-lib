@@ -88,7 +88,7 @@ class PeekableIterator(object):
         self._peek = next(self._iter, None)
 
     def peek(self):
-        """Returns the next element without consuming it, or None 
+        """Returns the next element without consuming it, or None
         if there are no more elements."""
         return self._peek
 

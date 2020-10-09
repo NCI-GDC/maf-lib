@@ -96,13 +96,13 @@ class Unknown(SortOrder):
         return "Unknown"
 
     def sort_key(self):
-        """Returns the sort key, which is not implemented as sorting is not 
+        """Returns the sort key, which is not implemented as sorting is not
         valid for the Unknown sort order."""
         raise NotImplementedError("Sorting not supported for Unknown order.")
 
 
 class Unsorted(SortOrder):
-    """Defines a sort order based on the chromosome, start position, and end 
+    """Defines a sort order based on the chromosome, start position, and end
     position, in that order."""
 
     def __init__(self, *args, **kwargs):
@@ -114,13 +114,13 @@ class Unsorted(SortOrder):
         return "Unsorted"
 
     def sort_key(self):
-        """Returns the sort key, which is not implemented as sorting is not 
+        """Returns the sort key, which is not implemented as sorting is not
         valid for the Unsorted sort order."""
         raise NotImplementedError("Sorting not supported for Unsorted order.")
 
 
 class _CoordinateKey(SortOrderKey, Locatable):
-    """A little class that aids in comparing records based on chromosome, 
+    """A little class that aids in comparing records based on chromosome,
     start position, and end position"""
 
     def __init__(self, record, contigs):
@@ -153,14 +153,14 @@ class _CoordinateKey(SortOrderKey, Locatable):
 
 
 class Coordinate(SortOrder):
-    """Defines a sort order based on the chromosome, start position, and end 
+    """Defines a sort order based on the chromosome, start position, and end
     position, in that order."""
 
     def __init__(self, fasta_index=None, contigs=None, *args, **kwargs):
         """
         provide either fasta_index or contigs
 
-        :param fasta_index: the path to the FASTA index for defining 
+        :param fasta_index: the path to the FASTA index for defining
         ordering across chromosomes.
         :param contigs: list of contigs for ordering
         """
