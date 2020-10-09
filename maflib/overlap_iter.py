@@ -10,9 +10,10 @@ iterator.
     the alternate alleles (i.e. equality, intersects, subset).
 """
 
-from maflib.util import PeekableIterator
-from maflib.sort_order import BarcodesAndCoordinate, Coordinate
 from enum import Enum, unique
+
+from maflib.sort_order import BarcodesAndCoordinate, Coordinate
+from maflib.util import PeekableIterator
 
 
 class LocatableOverlapIterator(object):
@@ -37,12 +38,14 @@ class LocatableOverlapIterator(object):
     indels, and SVs.
     """
 
-    def __init__(self,
-                 iters,
-                 fasta_index=None,
-                 contigs=None,
-                 by_barcodes=True,
-                 peekable_iterator_class=PeekableIterator):
+    def __init__(
+        self,
+        iters,
+        fasta_index=None,
+        contigs=None,
+        by_barcodes=True,
+        peekable_iterator_class=PeekableIterator,
+    ):
         """
         :param iters: the list of iterators.
         :param fasta_index: the path to the FASTA index for defining 
@@ -58,31 +61,38 @@ class LocatableOverlapIterator(object):
 
         self._by_barcodes = by_barcodes
         if self._by_barcodes:
-            self._sort_order = BarcodesAndCoordinate(fasta_index=fasta_index, contigs=contigs)
+            self._sort_order = BarcodesAndCoordinate(
+                fasta_index=fasta_index, contigs=contigs
+            )
             self._overlap_f = self.__overlaps_with_barcode
         else:
             self._sort_order = Coordinate(fasta_index=fasta_index)
             self._overlap_f = self.__overlaps
 
         # Trust, but verify
-        _iters = [_SortOrderEnforcingIterator(_iter, self._sort_order)
-                  for _iter in iters]
+        _iters = [
+            _SortOrderEnforcingIterator(_iter, self._sort_order) for _iter in iters
+        ]
         self._iters = [peekable_iterator_class(_iter) for _iter in _iters]
 
         self._sort_key = self._sort_order.sort_key()
 
     @classmethod
     def __overlaps_with_barcode(cls, min_key, cur_key):
-        return (min_key.tumor_barcode == cur_key.tumor_barcode
-                and min_key.normal_barcode == cur_key.normal_barcode
-                and cls.__overlaps(min_key, cur_key))
+        return (
+            min_key.tumor_barcode == cur_key.tumor_barcode
+            and min_key.normal_barcode == cur_key.normal_barcode
+            and cls.__overlaps(min_key, cur_key)
+        )
 
     @classmethod
     def __overlaps(cls, min_key, cur_key):
         # NB: we assume that min_key.start <= cur_key.start
         # NB: ignores tumor and normal barcode
-        return (min_key.chromosome == cur_key.chromosome
-                and min_key.start <= cur_key.start <= min_key.end)
+        return (
+            min_key.chromosome == cur_key.chromosome
+            and min_key.start <= cur_key.start <= min_key.end
+        )
 
     def __iter__(self):
         return self
@@ -138,6 +148,7 @@ class AlleleOverlapType(Enum):
     2. `Intersects` requires that the two sets share at least one member.
     3. `Subset` requires that the second set is wholly contained in the first.
     """
+
     Equality = 0
     Intersects = 1
     Subset = 2
@@ -177,12 +188,15 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
     well as the given relationship between the alternate alleles (i.e. 
     equality, intersects, subset).
     """
-    def __init__(self,
-                 iters,
-                 fasta_index=None,
-                 contigs=None,
-                 by_barcodes=True,
-                 overlap_type=AlleleOverlapType.Equality):
+
+    def __init__(
+        self,
+        iters,
+        fasta_index=None,
+        contigs=None,
+        by_barcodes=True,
+        overlap_type=AlleleOverlapType.Equality,
+    ):
         """
         :param iters: the list of iterators.
         :param fasta_index: the path to the FASTA index for defining 
@@ -198,8 +212,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
 
     def __should_add(self, items, other):
         for item in items:
-            if item.ref == other.ref and \
-                    self._compare_alts(item.alts, other.alts):
+            if item.ref == other.ref and self._compare_alts(item.alts, other.alts):
                 return True
         return False
 
@@ -208,8 +221,7 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
             # ensure that we have a locatable in the first iterator
             iters = super(LocatableByAlleleOverlapIterator, self).__next__()
             while not iters[0]:
-                iters = \
-                    super(LocatableByAlleleOverlapIterator, self).__next__()
+                iters = super(LocatableByAlleleOverlapIterator, self).__next__()
 
             # partition the locatables within the first iterator
             _iter = iters[0]
@@ -265,8 +277,9 @@ class _SortOrderEnforcingIterator(object):
             rec_key = self._sort_f(rec)
             last_rec_key = self._sort_f(self._last_rec)
             if rec_key < last_rec_key:
-                raise Exception("Records out of order\n%s\n%s" %
-                                (str(self._last_rec), str(rec)))
+                raise Exception(
+                    "Records out of order\n%s\n%s" % (str(self._last_rec), str(rec))
+                )
 
         self._last_rec = rec
         return rec

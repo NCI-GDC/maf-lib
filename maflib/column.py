@@ -9,7 +9,7 @@
 import abc
 
 from maflib.util import abstractclassmethod
-from maflib.validation import MafValidationErrorType, MafValidationError
+from maflib.validation import MafValidationError, MafValidationErrorType
 
 
 class MafColumnRecord(object):
@@ -22,6 +22,7 @@ class MafColumnRecord(object):
     :func:``~maflib.column.MafColumnRecord.__nullable_dict__`` method to give
     the values that should be treated as null.
     """
+
     def __init__(self, key, value, column_index=None, description=None):
         """
         :param key: the name of the column
@@ -39,11 +40,11 @@ class MafColumnRecord(object):
         if self.is_nullable():
             for key in self.__nullable_keys__():
                 if not isinstance(key, str):
-                    raise ValueError("Nullable key '%s' was not a 'str' but"
-                                     " instead '%s' (%s)" % (
-                                     str(key),
-                                     key.__class__.__name__,
-                                     self.__class__.__name__))
+                    raise ValueError(
+                        "Nullable key '%s' was not a 'str' but"
+                        " instead '%s' (%s)"
+                        % (str(key), key.__class__.__name__, self.__class__.__name__)
+                    )
 
     def validate(self, reset_errors=True, scheme=None, line_number=None):
         """
@@ -56,6 +57,7 @@ class MafColumnRecord(object):
             self.validation_errors = list()
 
         if scheme:
+
             def add_errors(error):
                 """Adds an error"""
                 self.validation_errors.append(error)
@@ -64,31 +66,43 @@ class MafColumnRecord(object):
             scheme_column_class = scheme.column_class(name=self.key)
 
             if scheme_column_index is None:
-                add_errors(MafValidationError(
-                    MafValidationErrorType.SCHEME_MISMATCHING_COLUMN_NAMES,
-                    "No column '%s' present in the scheme '%s'"
-                    % (self.key, scheme.version()),
-                    line_number=line_number
-                ))
-            elif self.column_index is not None and scheme_column_index != \
-                    self.column_index:
-                add_errors(MafValidationError(
-                    MafValidationErrorType.RECORD_COLUMN_OUT_OF_ORDER,
-                    "Column with name '%s' was found in the %dth column"
-                    ", but expected the %dth column with scheme "
-                    "'%s''" % (self.key, self.column_index,
-                               scheme_column_index, scheme.version()),
-                    line_number=line_number
-                ))
+                add_errors(
+                    MafValidationError(
+                        MafValidationErrorType.SCHEME_MISMATCHING_COLUMN_NAMES,
+                        "No column '%s' present in the scheme '%s'"
+                        % (self.key, scheme.version()),
+                        line_number=line_number,
+                    )
+                )
+            elif (
+                self.column_index is not None
+                and scheme_column_index != self.column_index
+            ):
+                add_errors(
+                    MafValidationError(
+                        MafValidationErrorType.RECORD_COLUMN_OUT_OF_ORDER,
+                        "Column with name '%s' was found in the %dth column"
+                        ", but expected the %dth column with scheme "
+                        "'%s''"
+                        % (
+                            self.key,
+                            self.column_index,
+                            scheme_column_index,
+                            scheme.version(),
+                        ),
+                        line_number=line_number,
+                    )
+                )
             elif not isinstance(self, scheme_column_class):
-                add_errors(MafValidationError(
-                    MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT,
-                    "Column with name '%s' is in the wrong format. "
-                    "Found '%s' expected '%s'" %
-                    (self.key, str(self.__class__),
-                     str(scheme_column_class)),
-                    line_number=line_number
-                ))
+                add_errors(
+                    MafValidationError(
+                        MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT,
+                        "Column with name '%s' is in the wrong format. "
+                        "Found '%s' expected '%s'"
+                        % (self.key, str(self.__class__), str(scheme_column_class)),
+                        line_number=line_number,
+                    )
+                )
 
         return self.validation_errors
 
@@ -103,8 +117,7 @@ class MafColumnRecord(object):
             return self.value in values
 
     @classmethod
-    def build(cls, name, value, column_index=None, description=None,
-              scheme=None):
+    def build(cls, name, value, column_index=None, description=None, scheme=None):
         """
         If ``scheme`` is given, then the the appropriate column type will be 
         built by matching the provided name with the column name in the 
@@ -117,29 +130,27 @@ class MafColumnRecord(object):
             scheme_column_index = scheme.column_index(name=name)
             if scheme_column_index is None:
                 raise KeyError(
-                    "Column with name '%s' not found in scheme '%s'" %
-                    (name, str(scheme))
+                    "Column with name '%s' not found in scheme '%s'"
+                    % (name, str(scheme))
                 )
-            elif not column_index is None \
-                    and column_index != scheme_column_index:
+            elif not column_index is None and column_index != scheme_column_index:
                 raise ValueError(
-                    "Mismatch column index: found '%s', expected '%s'" %
-                    (str(column_index), str(scheme_column_index))
+                    "Mismatch column index: found '%s', expected '%s'"
+                    % (str(column_index), str(scheme_column_index))
                 )
             # NB: do not pass the scheme!
-            return scheme.column_class(name=name) \
-                .build(
+            return scheme.column_class(name=name).build(
                 name=name,
                 value=value,
                 column_index=scheme_column_index,
-                description=description
+                description=description,
             )
         else:
             return MafColumnRecord(
                 key=name,
                 value=value,
                 column_index=column_index,
-                description=description
+                description=description,
             )
 
     @classmethod
@@ -166,8 +177,11 @@ class MafColumnRecord(object):
         :return: a list of values that should be treated as "null", ``None``
         otherwise.
         """
-        return list(cls.__nullable_dict__().values()) \
-            if cls.__nullable_dict__() is not None else None
+        return (
+            list(cls.__nullable_dict__().values())
+            if cls.__nullable_dict__() is not None
+            else None
+        )
 
     @classmethod
     def __nullable_keys__(cls):
@@ -176,8 +190,11 @@ class MafColumnRecord(object):
         :return: a list of values that should be treated as "null", ``None``
         otherwise.
         """
-        return list(cls.__nullable_dict__().keys()) \
-            if cls.__nullable_dict__() is not None else None
+        return (
+            list(cls.__nullable_dict__().keys())
+            if cls.__nullable_dict__() is not None
+            else None
+        )
 
     def __str__(self):
         """Delegates the conversion to a string for non-null values to
@@ -186,8 +203,9 @@ class MafColumnRecord(object):
         # check to see if the value is a "nullable value"
         nullable_dict = self.__nullable_dict__()
         if nullable_dict is not None:
-            possible_keys = [key for key, value in nullable_dict.items()
-                               if value == self.value]
+            possible_keys = [
+                key for key, value in nullable_dict.items() if value == self.value
+            ]
 
             key = next(iter(possible_keys), None)
 
@@ -226,8 +244,7 @@ class MafCustomColumnRecord(MafColumnRecord):
         """
 
     @classmethod
-    def build_nullable(cls, name, column_index=None, description=None,
-              scheme=None):
+    def build_nullable(cls, name, column_index=None, description=None, scheme=None):
         """
         This method should not be overridden by sub-classes.
         
@@ -235,16 +252,21 @@ class MafCustomColumnRecord(MafColumnRecord):
         the column is built.
         """
         if not cls.is_nullable():
-            raise ValueError("Column name '%s' is not nullable, "
-                             "but build_nullable was called ('%s')" %
-                             (name, cls.__name__))
-        key = cls.__nullable_keys__()[0] # get the first one
-        return cls.build(name=name, value=key, column_index=column_index,
-                  description=description, scheme=scheme)
+            raise ValueError(
+                "Column name '%s' is not nullable, "
+                "but build_nullable was called ('%s')" % (name, cls.__name__)
+            )
+        key = cls.__nullable_keys__()[0]  # get the first one
+        return cls.build(
+            name=name,
+            value=key,
+            column_index=column_index,
+            description=description,
+            scheme=scheme,
+        )
 
     @classmethod
-    def build(cls, name, value, column_index=None, description=None,
-              scheme=None):
+    def build(cls, name, value, column_index=None, description=None, scheme=None):
         """
         This method should not be overridden by sub-classes.
 
@@ -260,7 +282,7 @@ class MafCustomColumnRecord(MafColumnRecord):
                 value=value,
                 column_index=column_index,
                 description=description,
-                scheme=scheme
+                scheme=scheme,
             )
         nullable_dict = cls.__nullable_dict__()
         if nullable_dict is not None and value in nullable_dict:
@@ -271,7 +293,7 @@ class MafCustomColumnRecord(MafColumnRecord):
             key=name,
             value=built_value,
             column_index=column_index,
-            description=description
+            description=description,
         )
 
     def __validate__(self):
@@ -303,9 +325,11 @@ class MafCustomColumnRecord(MafColumnRecord):
             error = MafValidationError(
                 MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT,
                 "%s in column with name '%s'" % (msg, self.key),
-                line_number=line_number)
+                line_number=line_number,
+            )
             self.validation_errors.append(error)
         return super(MafCustomColumnRecord, self).validate(
             reset_errors=False,  # we reset above!
-            scheme=scheme, line_number=line_number)
-
+            scheme=scheme,
+            line_number=line_number,
+        )

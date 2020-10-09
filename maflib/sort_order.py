@@ -3,8 +3,8 @@
 import abc
 from functools import total_ordering
 
-from maflib.util import abstractclassmethod
 from maflib.locatable import Locatable
+from maflib.util import abstractclassmethod
 
 
 class SortOrder(object):
@@ -29,23 +29,21 @@ class SortOrder(object):
     @classmethod
     def all(cls):
         """Returns the known sort order classes."""
-        return [
-            Unknown,
-            Unsorted,
-            BarcodesAndCoordinate,
-            Coordinate
-        ]
+        return [Unknown, Unsorted, BarcodesAndCoordinate, Coordinate]
 
     @classmethod
     def find(cls, sort_order_name):
         """Returns the sort order class by name.  Throws an exception if
         none was found"""
-        sort_order = next(iter([so for so in SortOrder.all()
-                                if so.name() == sort_order_name]), None)
+        sort_order = next(
+            iter([so for so in SortOrder.all() if so.name() == sort_order_name]), None
+        )
         if not sort_order:
             sort_orders = ", ".join([s.name() for s in SortOrder.all()])
-            raise ValueError("Could not find sort order '%s', options: %s"
-                             % (sort_order_name, sort_orders))
+            raise ValueError(
+                "Could not find sort order '%s', options: %s"
+                % (sort_order_name, sort_orders)
+            )
         return sort_order
 
     def __str__(self):
@@ -127,8 +125,10 @@ class _CoordinateKey(SortOrderKey, Locatable):
 
     def __init__(self, record, contigs):
         if not issubclass(record.__class__, Locatable):
-            raise ValueError("Record of type '%s' is not a subclass of "
-                             "'Locatable'" % record.__class__.__name__)
+            raise ValueError(
+                "Record of type '%s' is not a subclass of "
+                "'Locatable'" % record.__class__.__name__
+            )
         chromosome = record.chromosome
         if contigs:
             try:
@@ -149,8 +149,7 @@ class _CoordinateKey(SortOrderKey, Locatable):
         return diff
 
     def __str__(self):
-        return "\t".join(
-            str(s) for s in [self.chromosome, self.start, self.end])
+        return "\t".join(str(s) for s in [self.chromosome, self.start, self.end])
 
 
 class Coordinate(SortOrder):
@@ -168,12 +167,12 @@ class Coordinate(SortOrder):
         self._contigs = None
         if fasta_index:
             handle = open(fasta_index, "r")
-            self._contigs = \
-                [line.rstrip("\r\n").split("\t")[0] for line in handle]
+            self._contigs = [line.rstrip("\r\n").split("\t")[0] for line in handle]
             handle.close()
         elif contigs:
-            assert isinstance(contigs, list), \
-                "contigs must be a list, but {0} found".format(type(contigs))
+            assert isinstance(
+                contigs, list
+            ), "contigs must be a list, but {0} found".format(type(contigs))
             self._contigs = contigs[:]
         super(Coordinate, self).__init__(*args, **kwargs)
 
@@ -185,15 +184,18 @@ class Coordinate(SortOrder):
     def sort_key(self):
         """Function to generate the sort key for sorting records into this
         ordering"""
+
         def key(record):
             """Gets the key"""
             return _CoordinateKey(record=record, contigs=self._contigs)
+
         return key
 
 
 class _BarcodesAndCoordinateKey(_CoordinateKey):
     """A little class that aids in comparing records based on tumor barcode,
     matched normal barcode, chromosome, start position, and end position"""
+
     def __init__(self, record, contigs):
         self.tumor_barcode = record.value("Tumor_Sample_Barcode")
         self.normal_barcode = record.value("Matched_Norm_Sample_Barcode")
@@ -208,8 +210,13 @@ class _BarcodesAndCoordinateKey(_CoordinateKey):
         return diff
 
     def __str__(self):
-        return "\t".join([self.tumor_barcode, self.normal_barcode,
-                          super(_BarcodesAndCoordinateKey, self).__str__()])
+        return "\t".join(
+            [
+                self.tumor_barcode,
+                self.normal_barcode,
+                super(_BarcodesAndCoordinateKey, self).__str__(),
+            ]
+        )
 
 
 class BarcodesAndCoordinate(Coordinate):
@@ -227,10 +234,11 @@ class BarcodesAndCoordinate(Coordinate):
     def sort_key(self):
         """Function to generate the sort key for sorting records into this
         ordering"""
+
         def key(record):
             """Gets the key"""
-            return _BarcodesAndCoordinateKey(record=record,
-                                             contigs=self._contigs)
+            return _BarcodesAndCoordinateKey(record=record, contigs=self._contigs)
+
         return key
 
 
@@ -255,8 +263,9 @@ class SortOrderChecker(object):
             rec_key = self._sort_f(rec)
             last_rec_key = self._sort_f(self._last_rec)
             if rec_key < last_rec_key:
-                raise ValueError("Records out of order\n%s\n%s" %
-                                 (str(self._last_rec), str(rec)))
+                raise ValueError(
+                    "Records out of order\n%s\n%s" % (str(self._last_rec), str(rec))
+                )
         self._last_rec = rec
         return self
 

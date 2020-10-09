@@ -26,8 +26,9 @@ class Sorter(object):
      being sorted.  The total ordering defines the sort order.
     """
 
-    def __init__(self, max_objects_in_ram, codec, key_func, tmp_dir=None,
-                 always_spill=True):
+    def __init__(
+        self, max_objects_in_ram, codec, key_func, tmp_dir=None, always_spill=True
+    ):
         """
         Initializes a sorter object.
         :param max_objects_in_ram:  the maximum # of objects in ram
@@ -66,8 +67,9 @@ class Sorter(object):
         """:return an iterator over the sorted records"""
         if self._paths or self._always_spill:
             self.__spill()
-            m_iter = _MergingIterator(paths=self._paths, codec=self._codec,
-                                      key_func=self._key_func)
+            m_iter = _MergingIterator(
+                paths=self._paths, codec=self._codec, key_func=self._key_func
+            )
             for record in m_iter:
                 yield record
         else:
@@ -78,13 +80,15 @@ class Sorter(object):
                 entry = self._stash[idx]
                 data = entry.data
                 return self._codec.decode(data, 0, len(data))
+
             for i in range(self._objects_in_memory):
                 yield decode(i)
 
     def __sort_stash(self):
         """Sorts the current objects in memory"""
-        self._stash[:self._objects_in_memory] = \
-            sorted(self._stash[:self._objects_in_memory])
+        self._stash[: self._objects_in_memory] = sorted(
+            self._stash[: self._objects_in_memory]
+        )
 
     def __spill(self):
         """Spills all the objects to disk"""
@@ -135,8 +139,12 @@ class SorterCodec(object):
 class MafSorterCodec(SorterCodec):
     """Simple codec for encoding and decoding MafRecords"""
 
-    def __init__(self, column_names=None, scheme=None,
-                 validation_stringency=ValidationStringency.Strict):
+    def __init__(
+        self,
+        column_names=None,
+        scheme=None,
+        validation_stringency=ValidationStringency.Strict,
+    ):
         # NB: if neither column_names nor scheme are given, then encode must be
         # called once before decode, and then the column names from the first
         # record are used.
@@ -152,19 +160,26 @@ class MafSorterCodec(SorterCodec):
 
     def decode(self, data, start, length):
         """Decodes the data and re-parses the text, returning a MafRecord"""
-        line = data[start:(start + length)].decode('utf-8')
+        line = data[start : (start + length)].decode('utf-8')
         return MafRecord.from_line(
             line=line,
             column_names=self._column_names,
             scheme=self._scheme,
-            validation_stringency=self.validation_stringency)
+            validation_stringency=self.validation_stringency,
+        )
 
 
 class MafSorter(Sorter):
     """A sorter for MafRecords"""
 
-    def __init__(self, sort_order_name, scheme=None, max_objects_in_ram=10000,
-                 *so_args, **so_kwargs):
+    def __init__(
+        self,
+        sort_order_name,
+        scheme=None,
+        max_objects_in_ram=10000,
+        *so_args,
+        **so_kwargs,
+    ):
         """
         Construct a sorter for MafRecords
         :param sort_order_name: the canonical name of the sort order
@@ -179,13 +194,14 @@ class MafSorter(Sorter):
         super(MafSorter, self).__init__(
             max_objects_in_ram=max_objects_in_ram,
             codec=MafSorterCodec(scheme=scheme),
-            key_func=sort_order.sort_key()
+            key_func=sort_order.sort_key(),
         )
 
 
 class _SortEntry(object):
     """A specialized tuple that contains a key used to compare entries, and a
     serialized version of the object being sorted."""
+
     def __init__(self, key, data):
         """
         :param key: the key used to determine the order of the objects being

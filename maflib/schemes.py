@@ -34,13 +34,15 @@ class MafScheme(object):
             column_dict = self.__column_dict__()
         if column_desc is None:
             column_desc = self.__column_desc__()
-        self.__column_name_to_column_class = \
-            OrderedDict((name, cls) for name, cls in column_dict.items())
-        self.__column_name_to_column_index = \
-            OrderedDict((name, i) for i, (name, _) in
-                        enumerate(column_dict.items()))
-        self.__column_name_to_column_desc = \
-            OrderedDict((name, desc) for name, desc in column_desc.items())
+        self.__column_name_to_column_class = OrderedDict(
+            (name, cls) for name, cls in column_dict.items()
+        )
+        self.__column_name_to_column_index = OrderedDict(
+            (name, i) for i, (name, _) in enumerate(column_dict.items())
+        )
+        self.__column_name_to_column_desc = OrderedDict(
+            (name, desc) for name, desc in column_desc.items()
+        )
 
     def column_class(self, name):
         """Get the class for the column with the given name"""
@@ -98,8 +100,10 @@ class MafScheme(object):
         """
         :return: A mapping between column name and column description.
         """
-        return OrderedDict((name, "No description for column '%s'" % name)
-                           for name in cls.__column_dict__().keys())
+        return OrderedDict(
+            (name, "No description for column '%s'" % name)
+            for name in cls.__column_dict__().keys()
+        )
 
     def __str__(self):
         return self.version()
@@ -116,12 +120,10 @@ class NoRestrictionsScheme(MafScheme):
     list of column names should be ge given when constructed."""
 
     def __init__(self, column_names):
-        column_dict = OrderedDict((name, MafColumnRecord)
-                                  for name in column_names)
+        column_dict = OrderedDict((name, MafColumnRecord) for name in column_names)
         column_desc = OrderedDict((name, "") for name in column_names)
         super(NoRestrictionsScheme, self).__init__(
-            column_dict=column_dict,
-            column_desc=column_desc
+            column_dict=column_dict, column_desc=column_desc
         )
 
     @classmethod
@@ -134,10 +136,8 @@ class NoRestrictionsScheme(MafScheme):
 
     @classmethod
     def __column_dict__(cls):
-        raise ValueError("__column_dict__ may not be called on "
-                         "NoRestrictionsScheme")
+        raise ValueError("__column_dict__ may not be called on " "NoRestrictionsScheme")
 
     @classmethod
     def __column_desc__(cls):
-        raise ValueError("__column_desc__ may not be called on "
-                         "NoRestrictionsScheme")
+        raise ValueError("__column_desc__ may not be called on " "NoRestrictionsScheme")

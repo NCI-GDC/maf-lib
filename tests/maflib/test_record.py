@@ -1,13 +1,12 @@
 import unittest
 from collections import OrderedDict
 
-from maflib.column_types import StringColumn, FloatColumn
+from maflib.column_types import FloatColumn, StringColumn
 from maflib.record import *
 from maflib.schemes import MafScheme
 
 
 class TestMafRecord(unittest.TestCase):
-
     class TestScheme(MafScheme):
         @classmethod
         def version(cls):
@@ -19,10 +18,9 @@ class TestMafRecord(unittest.TestCase):
 
         @classmethod
         def __column_dict__(cls):
-            return OrderedDict([("str1", StringColumn),
-                               ("float", FloatColumn),
-                               ("str2", StringColumn)])
-
+            return OrderedDict(
+                [("str1", StringColumn), ("float", FloatColumn), ("str2", StringColumn)]
+            )
 
     def test_empty_record(self):
         record = MafRecord()
@@ -79,8 +77,12 @@ class TestMafRecord(unittest.TestCase):
         del record["key"]
         validation_errors = record.validate()
         self.assertEqual(len(validation_errors), 1)
-        self.assertEqual(validation_errors[0].tpe, MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE)
-        self.assertEqual(len(record), 2)  # NB: the first column is None, the second is `column2`
+        self.assertEqual(
+            validation_errors[0].tpe, MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE
+        )
+        self.assertEqual(
+            len(record), 2
+        )  # NB: the first column is None, the second is `column2`
         self.assertEqual(record["key2"], column2)
         self.assertIsNone(record[0])
         with self.assertRaises(KeyError):
@@ -127,9 +129,11 @@ class TestMafRecord(unittest.TestCase):
             record["key%d" % i] = MafColumnRecord("key%d" % i, "value%d" % i)
         self.assertEqual(len(record), 10)
         self.assertEqual(len(record.validate()), 0)
-        self.assertListEqual(list(record.keys()),
-                             ["key%d" % i for i in range(0, 10)])
-        self.assertListEqual([column.value for column in record.values()], ["value%d" % i for i in range(0, 10)])
+        self.assertListEqual(list(record.keys()), ["key%d" % i for i in range(0, 10)])
+        self.assertListEqual(
+            [column.value for column in record.values()],
+            ["value%d" % i for i in range(0, 10)],
+        )
 
         # delete in the reverse order
         keys = list(record.keys())
@@ -143,26 +147,38 @@ class TestMafRecord(unittest.TestCase):
             self.assertFalse(column in record)
             self.assertEqual(len(record), i)
             self.assertEqual(len(record.validate()), 0)
-            self.assertListEqual(list(record.keys()),
-                                 ["key%d" % j for j in range(0, i)])
-            self.assertListEqual([column.value for column in record.values()], ["value%d" % j for j in range(0, i)])
+            self.assertListEqual(
+                list(record.keys()), ["key%d" % j for j in range(0, i)]
+            )
+            self.assertListEqual(
+                [column.value for column in record.values()],
+                ["value%d" % j for j in range(0, i)],
+            )
 
     def test_setitem_and_delitem_every_other(self):
         record = MafRecord()
 
         # add every other
         for i in range(0, 10, 2):
-            record["key%d" % i] = MafColumnRecord("key%d" % i, "value%d" % i, column_index=i)
+            record["key%d" % i] = MafColumnRecord(
+                "key%d" % i, "value%d" % i, column_index=i
+            )
         self.assertEqual(len(record), 9)
         validation_errors = record.validate()
         self.assertEqual(len(validation_errors), 4)
-        self.assertListEqual([error.tpe for error in validation_errors],
-                             [MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE] * 4  # records 1, 3, 5, 7
-                             )
-        self.assertListEqual(list(record.keys()),
-                             ["key%d" % i if (i % 2 == 0) else None for i in range(0, 9)])
-        self.assertListEqual(record.column_values(),
-                             ["value%d" % i if (i % 2 == 0) else None for i in range(0, 9)])
+        self.assertListEqual(
+            [error.tpe for error in validation_errors],
+            [MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE]
+            * 4,  # records 1, 3, 5, 7
+        )
+        self.assertListEqual(
+            list(record.keys()),
+            ["key%d" % i if (i % 2 == 0) else None for i in range(0, 9)],
+        )
+        self.assertListEqual(
+            record.column_values(),
+            ["value%d" % i if (i % 2 == 0) else None for i in range(0, 9)],
+        )
 
     def test_getitem_with_column_index_out_of_range(self):
         record = MafRecord()
@@ -255,7 +271,9 @@ class TestMafRecord(unittest.TestCase):
         del record[1]
         record.validate()
         self.assertEqual(len(record), 5)
-        self.assertEqual(len(record.validation_errors), 3)  # three missing columns: 1, 2, & 3
+        self.assertEqual(
+            len(record.validation_errors), 3
+        )  # three missing columns: 1, 2, & 3
         types = list(set([error.tpe for error in record.validation_errors]))
         self.assertEqual(len(types), 1)  # only one error
         self.assertEqual(types[0], MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE)
@@ -293,7 +311,9 @@ class TestMafRecord(unittest.TestCase):
         record.add(MafColumnRecord("key1", "value1"))
         record.add(MafColumnRecord("key2", "value2"))
         self.assertEqual(len(record.validate()), 0)
-        self.assertEqual(str(record), MafRecord.ColumnSeparator.join(["value1", "value2"]))
+        self.assertEqual(
+            str(record), MafRecord.ColumnSeparator.join(["value1", "value2"])
+        )
 
     def test_column_values(self):
         record = MafRecord()
@@ -303,24 +323,33 @@ class TestMafRecord(unittest.TestCase):
         self.assertListEqual(record.column_values(), ["value1", "value2"])
 
     def test_from_line_mismatch_number_of_columns(self):
-        record = MafRecord.from_line(line=MafRecord.ColumnSeparator.join(["value1", "value2", "value3"]),
-                                     column_names=["key1", "key2"],
-                                     validation_stringency=ValidationStringency.Silent)
+        record = MafRecord.from_line(
+            line=MafRecord.ColumnSeparator.join(["value1", "value2", "value3"]),
+            column_names=["key1", "key2"],
+            validation_stringency=ValidationStringency.Silent,
+        )
         self.assertEqual(len(record), 0)
         self.assertEqual(len(record.validation_errors), 1)
-        self.assertEqual(record.validation_errors[0].tpe, MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS)
+        self.assertEqual(
+            record.validation_errors[0].tpe,
+            MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS,
+        )
 
     def test_from_line_neither_column_names_nor_scheme(self):
         with self.assertRaises(ValueError):
-             MafRecord.from_line(line=MafRecord.ColumnSeparator.join(["value1", "value2", "value3"]),
-                                         validation_stringency=ValidationStringency.Silent)
+            MafRecord.from_line(
+                line=MafRecord.ColumnSeparator.join(["value1", "value2", "value3"]),
+                validation_stringency=ValidationStringency.Silent,
+            )
 
     def test_from_line_valid(self):
         column_names = ["key1", "key2", "key3"]
         values = ["value1", "value2", "value3"]
-        record = MafRecord.from_line(line=MafRecord.ColumnSeparator.join(values),
-                                     column_names=column_names,
-                                     validation_stringency=ValidationStringency.Silent)
+        record = MafRecord.from_line(
+            line=MafRecord.ColumnSeparator.join(values),
+            column_names=column_names,
+            validation_stringency=ValidationStringency.Silent,
+        )
         self.assertEqual(len(record), 3)
         self.assertEqual(len(record.validation_errors), 0)
         self.assertListEqual(list(record.keys()), column_names)
@@ -330,74 +359,88 @@ class TestMafRecord(unittest.TestCase):
         scheme = TestMafRecord.TestScheme()
         column_names = ["str2", "float", "str1"]
         values = ["string2", "3.14", "string1"]
-        record = MafRecord.from_line(line=MafRecord.ColumnSeparator.join(values),
-                                     column_names=column_names,
-                                     scheme=scheme,
-                                     validation_stringency=ValidationStringency.Silent)
+        record = MafRecord.from_line(
+            line=MafRecord.ColumnSeparator.join(values),
+            column_names=column_names,
+            scheme=scheme,
+            validation_stringency=ValidationStringency.Silent,
+        )
         self.assertEqual(len(record), 2)
         self.assertListEqual(record.column_values(), [None, 3.14])
         self.assertEqual(len(record.validation_errors), 3)
-        self.assertListEqual([e.tpe for e in record.validation_errors],
-                             [
-                                 MafValidationErrorType.RECORD_COLUMN_OUT_OF_ORDER,
-                                 MafValidationErrorType.RECORD_COLUMN_OUT_OF_ORDER,
-                                 MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE
-                             ])
+        self.assertListEqual(
+            [e.tpe for e in record.validation_errors],
+            [
+                MafValidationErrorType.RECORD_COLUMN_OUT_OF_ORDER,
+                MafValidationErrorType.RECORD_COLUMN_OUT_OF_ORDER,
+                MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE,
+            ],
+        )
 
     def test_from_line_with_scheme_failed_to_build(self):
         scheme = TestMafRecord.TestScheme()
         values = ["string1", "string2", "string3"]
-        record = MafRecord.from_line(line=MafRecord.ColumnSeparator.join(values),
-                                     scheme=scheme,
-                                     validation_stringency=ValidationStringency.Silent)
+        record = MafRecord.from_line(
+            line=MafRecord.ColumnSeparator.join(values),
+            scheme=scheme,
+            validation_stringency=ValidationStringency.Silent,
+        )
         self.assertEqual(len(record), 3)
         self.assertListEqual(record.column_values(), ["string1", None, "string3"])
         self.assertEqual(len(record.validation_errors), 2)
-        self.assertListEqual([e.tpe for e in record.validation_errors],
-                             [
-                                 MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
-                                 MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE
-                             ])
-
+        self.assertListEqual(
+            [e.tpe for e in record.validation_errors],
+            [
+                MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
+                MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE,
+            ],
+        )
 
     def test_from_line_with_scheme_invalid_column_name(self):
         scheme = TestMafRecord.TestScheme()
         column_names = ["no-name", "float", "str2"]
         values = ["string1", "3.14", "string3"]
-        record = MafRecord.from_line(line=MafRecord.ColumnSeparator.join(values),
-                                     column_names=column_names,
-                                     scheme=scheme,
-                                     validation_stringency=ValidationStringency.Silent)
+        record = MafRecord.from_line(
+            line=MafRecord.ColumnSeparator.join(values),
+            column_names=column_names,
+            scheme=scheme,
+            validation_stringency=ValidationStringency.Silent,
+        )
         self.assertEqual(len(record), 3)
         self.assertListEqual(record.column_values(), [None, 3.14, "string3"])
         self.assertEqual(len(record.validation_errors), 2)
-        self.assertListEqual([e.tpe for e in record.validation_errors],
-                             [
-                                 MafValidationErrorType.SCHEME_MISMATCHING_COLUMN_NAMES,
-                                 MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE,
-                             ])
+        self.assertListEqual(
+            [e.tpe for e in record.validation_errors],
+            [
+                MafValidationErrorType.SCHEME_MISMATCHING_COLUMN_NAMES,
+                MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE,
+            ],
+        )
 
     def test_with_scheme_diff_num_columns(self):
         scheme = TestMafRecord.TestScheme()
         record = MafRecord()
         column_names = scheme.column_names()
-        column_names = column_names[:len(column_names)-1]
+        column_names = column_names[: len(column_names) - 1]
         column_values = ["string1", "3.14"]
 
         for column_index, column_name in enumerate(column_names):
             column_class = scheme.column_class(column_name)
-            column = column_class.build(name=column_name,
-                                        value=column_values[column_index],
-                                        column_index=column_index)
+            column = column_class.build(
+                name=column_name,
+                value=column_values[column_index],
+                column_index=column_index,
+            )
             record[column_name] = column
         record.validate(scheme=scheme)
         self.assertEqual(len(scheme.column_names()), 3)
         self.assertEqual(len(record), 2)
         self.assertEqual(len(record.validation_errors), 1)
-        self.assertListEqual([e.tpe for e in record.validation_errors],
-                             [
-                                 MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS
-                             ])
+        self.assertListEqual(
+            [e.tpe for e in record.validation_errors],
+            [MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS],
+        )
+
 
 # TODO: test MafRecord.from_line without column_names
 

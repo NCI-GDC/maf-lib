@@ -6,7 +6,6 @@ from maflib.util import *
 
 
 class TestLineReader(unittest.TestCase):
-
     def test_empty_file(self):
         fh, fn = tmp_file(lines=[])
         reader = LineReader(fh=fh)
@@ -40,7 +39,7 @@ class TestLineReader(unittest.TestCase):
             self.assertEqual(line, lines[i])
             self.assertEqual(line_number, reader.line_number())
             if line_number < len(lines):
-                self.assertEqual(reader.peek_line(), lines[i+1])
+                self.assertEqual(reader.peek_line(), lines[i + 1])
             num_lines += 1
         self.assertEqual(num_lines, len(lines))
         reader.close()
@@ -48,13 +47,9 @@ class TestLineReader(unittest.TestCase):
 
 
 class TestPeekableIterator(unittest.TestCase):
-
     def test_simple_iteration(self):
         items = [i for i in range(10)]
-        self.assertListEqual(
-            items,
-            [item for item in PeekableIterator(iter(items))]
-        )
+        self.assertListEqual(items, [item for item in PeekableIterator(iter(items))])
 
     def test_peek(self):
         items = PeekableIterator(iter([i for i in range(10)]))
@@ -63,7 +58,7 @@ class TestPeekableIterator(unittest.TestCase):
             if i == 9:
                 self.assertEqual(items.peek(), None)
             else:
-                self.assertEqual(items.peek(), i+1)
+                self.assertEqual(items.peek(), i + 1)
 
 
 class TestMisc(unittest.TestCase):

@@ -25,26 +25,27 @@ class MafWriter(object):
         self._sorter = None
         self._checker = None
 
-        self.validation_stringency = ValidationStringency.Silent \
-            if (validation_stringency is None) else validation_stringency
+        self.validation_stringency = (
+            ValidationStringency.Silent
+            if (validation_stringency is None)
+            else validation_stringency
+        )
 
         # validate the header
         self._header.validate(
-            validation_stringency=self.validation_stringency,
-            logger=self._logger
+            validation_stringency=self.validation_stringency, logger=self._logger
         )
 
         # write the header
         if len(self._header) > 0:
             self._handle.write(str(self._header) + "\n")
 
-
         # write the column names if we have a scheme
         self._scheme = self._header.scheme()
         if self._scheme:
             self._handle.write(
-                MafRecord.ColumnSeparator.join(self._scheme.column_names())
-                + "\n")
+                MafRecord.ColumnSeparator.join(self._scheme.column_names()) + "\n"
+            )
             self._set_checker_and_sorter()
 
     def _set_checker_and_sorter(self):
@@ -56,8 +57,7 @@ class MafWriter(object):
         else:
             self._checker = None
             self._sorter = MafSorter(
-                sort_order_name=self._header.sort_order().name(),
-                scheme=self._scheme
+                sort_order_name=self._header.sort_order().name(), scheme=self._scheme
             )
 
     def header(self):
@@ -72,8 +72,8 @@ class MafWriter(object):
             column_names = [str(key) for key in record.keys()]
             self._scheme = NoRestrictionsScheme(column_names=column_names)
             self._handle.write(
-                MafRecord.ColumnSeparator.join(self._scheme.column_names())
-                + "\n")
+                MafRecord.ColumnSeparator.join(self._scheme.column_names()) + "\n"
+            )
             self._set_checker_and_sorter()
 
         # validate the record
@@ -81,7 +81,7 @@ class MafWriter(object):
             validation_stringency=self.validation_stringency,
             logger=self._logger,
             reset_errors=True,
-            scheme=self._scheme
+            scheme=self._scheme,
         )
 
         # either write it directly, or add it to the sorter
@@ -106,25 +106,17 @@ class MafWriter(object):
         self._handle.close()
 
     @classmethod
-    def from_fd(cls,
-                desc,
-                header,
-                validation_stringency=None,
-                assume_sorted=True):
+    def from_fd(cls, desc, header, validation_stringency=None, assume_sorted=True):
         """Create a MafWriter from the given file handle."""
         return MafWriter(
             handle=desc,
             header=header,
             validation_stringency=validation_stringency,
-            assume_sorted=assume_sorted
+            assume_sorted=assume_sorted,
         )
 
     @classmethod
-    def from_path(cls,
-                  path,
-                  header,
-                  validation_stringency=None,
-                  assume_sorted=True):
+    def from_path(cls, path, header, validation_stringency=None, assume_sorted=True):
         """Create a MafWriter from the given path ."""
         if path.endswith(".gz"):
             handle = gzip.open(path, "wt")
@@ -134,5 +126,5 @@ class MafWriter(object):
             desc=handle,
             header=header,
             validation_stringency=validation_stringency,
-            assume_sorted=assume_sorted
+            assume_sorted=assume_sorted,
         )

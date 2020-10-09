@@ -20,6 +20,7 @@ def tmp_file(lines):
     fh.close()
     return [open(fn, "r"), fn]
 
+
 def read_lines(path):
     if path.endswith(".gz"):
         fh = gzip.open(path, "rt")
@@ -37,9 +38,10 @@ class TestCase(unittest.TestCase):
             self.assertIn(member, container)
 
 
-GdcV1_0_0_BasicScheme = find_scheme_class(version="gdc-1.0.0",
-                                          annotation="gdc-1.0.0")
-GdcV1_0_0_ProtectedScheme = find_scheme_class(version="gdc-1.0.0",
-                                              annotation="gdc-1.0.0-protected")
-GdcV1_0_0_PublicScheme = find_scheme_class(version="gdc-1.0.0",
-                                           annotation="gdc-1.0.0-public")
+GdcV1_0_0_BasicScheme = find_scheme_class(version="gdc-1.0.0", annotation="gdc-1.0.0")
+GdcV1_0_0_ProtectedScheme = find_scheme_class(
+    version="gdc-1.0.0", annotation="gdc-1.0.0-protected"
+)
+GdcV1_0_0_PublicScheme = find_scheme_class(
+    version="gdc-1.0.0", annotation="gdc-1.0.0-public"
+)

@@ -8,6 +8,7 @@ from enum import Enum, unique
 class MafEnum(Enum):
     """An enumeration that whose string representation is its value as a
     string"""
+
     def __str__(self):
         return str(self.value)
 
@@ -16,6 +17,7 @@ class MafEnum(Enum):
 class NullableYesOrNoEnum(MafEnum):
     """Enumeration for "Yes" or "No" column values, with Null being
     non-value"""
+
     Null = ""
     No = "0"
     Yes = "1"
@@ -24,6 +26,7 @@ class NullableYesOrNoEnum(MafEnum):
 @unique
 class NullableYOrNEnum(MafEnum):
     """Enumeration for "Y" or "N" column values, with Null being non-value"""
+
     Null = ""
     No = "Y"
     Yes = "N"
@@ -32,6 +35,7 @@ class NullableYOrNEnum(MafEnum):
 @unique
 class PickEnum(MafEnum):
     """Enumeration for the MAF 'Pick' column value"""
+
     Null = ""
     Yes = "1"
 
@@ -39,6 +43,7 @@ class PickEnum(MafEnum):
 @unique
 class StrandEnum(MafEnum):
     """Enumeration for the MAF 'Strand' column value"""
+
     Plus = '+'
     Minus = '-'
 
@@ -46,6 +51,7 @@ class StrandEnum(MafEnum):
 @unique
 class VariantClassificationEnum(MafEnum):
     """Enumeration for the MAF 'Variant_Classification' column value"""
+
     FrameShiftDeletion = "Frame_Shift_Del"
     FrameShiftInsertion = "Frame_Shift_Ins"
     InFrameInsertion = "In_Frame_Ins"
@@ -70,6 +76,7 @@ class VariantClassificationEnum(MafEnum):
 @unique
 class VariantTypeEnum(MafEnum):
     """Enumeration for the MAF 'Variant_Type' column value"""
+
     SNP = "SNP"
     DNP = "DNP"
     TNP = "TNP"
@@ -82,6 +89,7 @@ class VariantTypeEnum(MafEnum):
 @unique
 class VerificationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Verification_Status' column value"""
+
     Verified = "Verified"
     Unknown = "Unknown"
 
@@ -89,6 +97,7 @@ class VerificationStatusEnum(MafEnum):
 @unique
 class MutationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Mutation_Status' column value"""
+
     NoStatus = "None"
     Germline = "Germline"
     Somatic = "Somatic"
@@ -101,6 +110,7 @@ class MutationStatusEnum(MafEnum):
 @unique
 class ValidationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Validation_Status' column value"""
+
     Untested = "Untested"
     Inconclusive = "Inconclusive"
     Valid = "Valid"
@@ -110,6 +120,7 @@ class ValidationStatusEnum(MafEnum):
 @unique
 class SequencerEnum(MafEnum):
     """Enumeration for the MAF 'Sequencer' column value"""
+
     ABIThirtySevenThirty = "ABI 3730xl"
     ABSOLiDFourSystem = "AB SOLiD 4 System"
     ABSOLiDTwoSystem = "AB SOLiD 2 System"
@@ -138,6 +149,7 @@ class SequencerEnum(MafEnum):
 @unique
 class FeatureTypeEnum(MafEnum):
     """Enumeration for the MAF 'Feature_Type' column value"""
+
     Transcript = "Transcript"
     RegulatoryFeature = "RegulatoryFeature"
     MotifFeature = "MotifFeature"
@@ -146,6 +158,7 @@ class FeatureTypeEnum(MafEnum):
 @unique
 class ImpactEnum(MafEnum):
     """Enumeration for the MAF 'Impact' column value"""
+
     Modifier = "MODIFIER"
     Low = "LOW"
     Moderate = "MODERATE"
@@ -155,6 +168,7 @@ class ImpactEnum(MafEnum):
 @unique
 class MC3OverlapEnum(MafEnum):
     """Enumeration for the MAF 'MC3_Overlap' column value"""
+
     Unknown = "Unknown"
     _True = "True"
     _False = "False"
@@ -163,6 +177,7 @@ class MC3OverlapEnum(MafEnum):
 @unique
 class GdcValidationStatusEnum(MafEnum):
     """Enumeration for the MAF 'GDC_Validation_Status' column value"""
+
     Unknown = "Unknown"
     Valid = "Valid"
     Invalid = "Invalid"

@@ -10,8 +10,11 @@ from maflib.logger import Logger
 from maflib.record import MafRecord
 from maflib.schemes import NoRestrictionsScheme
 from maflib.sort_order import SortOrderEnforcingIterator
-from maflib.validation import ValidationStringency, MafValidationError, \
-    MafValidationErrorType
+from maflib.validation import (
+    MafValidationError,
+    MafValidationErrorType,
+    ValidationStringency,
+)
 
 
 class MafReader(object):
@@ -22,10 +25,7 @@ class MafReader(object):
     lines) one-by-one.
     """
 
-    def __init__(self, lines,
-                 closeable=None,
-                 validation_stringency=None,
-                 scheme=None):
+    def __init__(self, lines, closeable=None, validation_stringency=None, scheme=None):
         """ Initializes a MAF reader and reads in the header and column
         definitions.
 
@@ -44,9 +44,11 @@ class MafReader(object):
         """
         self.__iter = iter(lines)
         self.__closeable = closeable
-        self.validation_stringency = \
-            ValidationStringency.Silent if (validation_stringency is None) \
-                else validation_stringency
+        self.validation_stringency = (
+            ValidationStringency.Silent
+            if (validation_stringency is None)
+            else validation_stringency
+        )
         self.__logger = Logger.get_logger(self.__class__.__name__)
         self.validation_errors = list()
 
@@ -60,15 +62,15 @@ class MafReader(object):
         header_lines = list()
         while True:
             self.__next_line__()
-            if self.__next_line is not None \
-                    and self.__next_line.startswith(MafHeader.HeaderLineStartSymbol):
+            if self.__next_line is not None and self.__next_line.startswith(
+                MafHeader.HeaderLineStartSymbol
+            ):
                 header_lines.append(self.__next_line)
             else:
                 break
-        self.__header = \
-            MafHeader.from_lines(
-                lines=header_lines,
-                validation_stringency=self.validation_stringency)
+        self.__header = MafHeader.from_lines(
+            lines=header_lines, validation_stringency=self.validation_stringency
+        )
 
         for error in self.__header.validation_errors:
             add_error(error)
@@ -88,36 +90,43 @@ class MafReader(object):
             # match the column names against the scheme
             scheme_column_names = self.__scheme.column_names()
             if len(column_names) != len(scheme_column_names):
-                add_error(MafValidationError(
-                    MafValidationErrorType.SCHEME_MISMATCHING_NUMBER_OF_COLUMN_NAMES,
-                    "Found '%d' columns but expected '%d'" %
-                    (len(column_names), len(scheme_column_names)),
-                    line_number=self.__line_number - 1
-                ))
+                add_error(
+                    MafValidationError(
+                        MafValidationErrorType.SCHEME_MISMATCHING_NUMBER_OF_COLUMN_NAMES,
+                        "Found '%d' columns but expected '%d'"
+                        % (len(column_names), len(scheme_column_names)),
+                        line_number=self.__line_number - 1,
+                    )
+                )
             else:
-                for i, (column_name, scheme_column_name) in \
-                        enumerate(zip(column_names, scheme_column_names)):
+                for i, (column_name, scheme_column_name) in enumerate(
+                    zip(column_names, scheme_column_names)
+                ):
                     if column_name != scheme_column_name:
-                        add_error(MafValidationError(
-                            MafValidationErrorType.SCHEME_MISMATCHING_COLUMN_NAMES,
-                            "Found column with name '%s' but expected '%s' for "
-                            "the '%d'th column" %
-                            (column_name, scheme_column_name, i + 1),
-                            line_number=self.__line_number - 1
-                        ))
+                        add_error(
+                            MafValidationError(
+                                MafValidationErrorType.SCHEME_MISMATCHING_COLUMN_NAMES,
+                                "Found column with name '%s' but expected '%s' for "
+                                "the '%d'th column"
+                                % (column_name, scheme_column_name, i + 1),
+                                line_number=self.__line_number - 1,
+                            )
+                        )
         else:
-            add_error(MafValidationError(
-                MafValidationErrorType.HEADER_MISSING_COLUMN_NAMES,
-                "Found no column names",
-                line_number=self.__line_number+1
-            ))
+            add_error(
+                MafValidationError(
+                    MafValidationErrorType.HEADER_MISSING_COLUMN_NAMES,
+                    "Found no column names",
+                    line_number=self.__line_number + 1,
+                )
+            )
 
         # process validation errors so far
         MafValidationError.process_validation_errors(
             validation_errors=self.validation_errors,
             validation_stringency=self.validation_stringency,
             name=self.__class__.__name__,
-            logger=self.__logger
+            logger=self.__logger,
         )
 
     def __update_scheme__(self, scheme=None, column_names=None):
@@ -129,26 +138,30 @@ class MafReader(object):
         # Set the scheme if given, but check that they match, otherwise,
         # add an error
         if scheme is not None:
-            if self.__scheme is not None \
-                    and scheme.version() != self.__scheme.version():
-                add_error(MafValidationError(
-                    MafValidationErrorType.HEADER_MISMATCH_SCHEME,
-                    "Version in the header '%s' did not match the expected "
-                    "version '%s'" %
-                    (self.__scheme.version(), scheme.version())
-                ))
+            if (
+                self.__scheme is not None
+                and scheme.version() != self.__scheme.version()
+            ):
+                add_error(
+                    MafValidationError(
+                        MafValidationErrorType.HEADER_MISMATCH_SCHEME,
+                        "Version in the header '%s' did not match the expected "
+                        "version '%s'" % (self.__scheme.version(), scheme.version()),
+                    )
+                )
             self.__scheme = scheme
 
         # If there are column names, and either there is no scheme or the scheme
         # is the "no restrictions anything goes" scheme, then use the "no
         # restrictions" scheme with the given column names.
-        if column_names is not None and \
-                (self.__scheme is None or isinstance(self.__scheme,
-                                                     NoRestrictionsScheme)):
+        if column_names is not None and (
+            self.__scheme is None or isinstance(self.__scheme, NoRestrictionsScheme)
+        ):
             if self.validation_stringency is not ValidationStringency.Silent:
                 self.__logger.warn(
                     "No matching scheme was found in the header, defaulting "
-                    "to the least restrictive scheme.")
+                    "to the least restrictive scheme."
+                )
             self.__scheme = NoRestrictionsScheme(column_names=column_names)
 
     def __next_line__(self):
@@ -169,8 +182,8 @@ class MafReader(object):
 
     def __iter__(self):
         return SortOrderEnforcingIterator(
-            _iter=self,
-            sort_order=self.header().sort_order())
+            _iter=self, sort_order=self.header().sort_order()
+        )
 
     def next(self):
         return self.__next__()
@@ -185,7 +198,7 @@ class MafReader(object):
             line=self.__next_line,
             scheme=self.__scheme,  # always use the scheme
             line_number=self.__line_number,
-            validation_stringency=self.validation_stringency
+            validation_stringency=self.validation_stringency,
         )
 
         for error in record.validation_errors:
@@ -207,6 +220,9 @@ class MafReader(object):
         else:
             handle = open(path, "r")
         lines = (line.rstrip("\r\n") for line in handle)
-        return cls(lines=lines, closeable=handle,
-                   validation_stringency=validation_stringency,
-                   scheme=scheme)
+        return cls(
+            lines=lines,
+            closeable=handle,
+            validation_stringency=validation_stringency,
+            scheme=scheme,
+        )

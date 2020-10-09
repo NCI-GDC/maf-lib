@@ -3,15 +3,18 @@ from collections import OrderedDict
 
 from maflib.header import MafHeader, MafHeaderRecord, MafHeaderVersionRecord
 from maflib.schemes import MafScheme, NoRestrictionsScheme
-from maflib.tests.testutils import GdcV1_0_0_BasicScheme, \
-    GdcV1_0_0_ProtectedScheme, GdcV1_0_0_PublicScheme
+from maflib.tests.testutils import (
+    GdcV1_0_0_BasicScheme,
+    GdcV1_0_0_ProtectedScheme,
+    GdcV1_0_0_PublicScheme,
+)
 
 
 class TestMafScheme(unittest.TestCase):
     class TestScheme(MafScheme):
         _Columns = [
             MafHeaderVersionRecord("test-scheme"),
-            MafHeaderRecord("key1", "value1")
+            MafHeaderRecord("key1", "value1"),
         ]
 
         @classmethod
@@ -24,22 +27,30 @@ class TestMafScheme(unittest.TestCase):
 
         @classmethod
         def __column_dict__(cls):
-            return OrderedDict([(column.key, column.__class__) for column in
-                                TestMafScheme.TestScheme._Columns])
+            return OrderedDict(
+                [
+                    (column.key, column.__class__)
+                    for column in TestMafScheme.TestScheme._Columns
+                ]
+            )
 
         @classmethod
         def __column_desc__(cls):
-            return OrderedDict([(column.key, str(column.__class__))
-                                for column in
-                                TestMafScheme.TestScheme._Columns])
-
+            return OrderedDict(
+                [
+                    (column.key, str(column.__class__))
+                    for column in TestMafScheme.TestScheme._Columns
+                ]
+            )
 
     def test_version(self):
         self.assertEqual(TestMafScheme.TestScheme().version(), "test-scheme")
 
     def test_column_class(self):
         scheme = TestMafScheme.TestScheme()
-        self.assertEqual(scheme.column_class(MafHeader.VersionKey), MafHeaderVersionRecord)
+        self.assertEqual(
+            scheme.column_class(MafHeader.VersionKey), MafHeaderVersionRecord
+        )
         self.assertNotEqual(scheme.column_class("key1"), MafHeaderVersionRecord)
         self.assertEqual(scheme.column_class("key1"), MafHeaderRecord)
         self.assertEqual(scheme.column_class("key2"), None)
@@ -52,10 +63,10 @@ class TestMafScheme(unittest.TestCase):
 
     def test_column_description(self):
         scheme = TestMafScheme.TestScheme()
-        self.assertEqual(scheme.column_description(MafHeader.VersionKey),
-                         str(MafHeaderVersionRecord))
-        self.assertEqual(scheme.column_description("key1"),
-                         str(MafHeaderRecord))
+        self.assertEqual(
+            scheme.column_description(MafHeader.VersionKey), str(MafHeaderVersionRecord)
+        )
+        self.assertEqual(scheme.column_description("key1"), str(MafHeaderRecord))
         self.assertEqual(scheme.column_description("key2"), None)
 
     def test_column_names(self):
@@ -64,8 +75,9 @@ class TestMafScheme(unittest.TestCase):
 
     def test_column_descriptions(self):
         scheme = TestMafScheme.TestScheme()
-        self.assertListEqual(scheme.column_descriptions(),
-                             [MafHeader.VersionKey, "key1"])
+        self.assertListEqual(
+            scheme.column_descriptions(), [MafHeader.VersionKey, "key1"]
+        )
 
     def test_str(self):
         scheme = TestMafScheme.TestScheme()
@@ -98,7 +110,9 @@ class TestGdcV1_0_0_Scheme(unittest.TestCase):
         self.assertEqual(len(GdcV1_0_0_BasicScheme.__column_dict__()), 34)
         self.assertEqual(len(GdcV1_0_0_PublicScheme.__column_dict__()), 119)
         self.assertEqual(len(GdcV1_0_0_ProtectedScheme.__column_dict__()), 125)
-        self.assertEqual(len(TestGdcV1_0_0_Scheme.NoAnnotationSpecScheme.__column_dict__()), 0)
+        self.assertEqual(
+            len(TestGdcV1_0_0_Scheme.NoAnnotationSpecScheme.__column_dict__()), 0
+        )
 
     def test_is_basic(self):
         self.assertTrue(GdcV1_0_0_BasicScheme().is_basic())
@@ -107,14 +121,14 @@ class TestGdcV1_0_0_Scheme(unittest.TestCase):
         self.assertFalse(TestGdcV1_0_0_Scheme.NoAnnotationSpecScheme().is_basic())
 
     def test_schemes(self):
-        for scheme in [GdcV1_0_0_BasicScheme(), GdcV1_0_0_ProtectedScheme(), GdcV1_0_0_PublicScheme()]:
+        for scheme in [
+            GdcV1_0_0_BasicScheme(),
+            GdcV1_0_0_ProtectedScheme(),
+            GdcV1_0_0_PublicScheme(),
+        ]:
             # TODO: make up a valid string value for each column, and make sure it builds OK
             for name in scheme.column_names():
                 cls = scheme.column_class(name)
                 column_index = scheme.column_index(name)
-                cls.build(
-                    name=name,
-                    value="Gene",
-                    column_index=column_index
-                )
+                cls.build(name=name, value="Gene", column_index=column_index)
                 break

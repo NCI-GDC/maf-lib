@@ -2,12 +2,12 @@ import os
 import unittest
 from collections import OrderedDict
 
-from maflib.column_types import StringColumn, IntegerColumn
+from maflib.column_types import IntegerColumn, StringColumn
+from maflib.locatable import Locatable
 from maflib.schemes import MafScheme
 from maflib.sort_order import BarcodesAndCoordinate
-from maflib.sorter import MafSorterCodec, Sorter, MafSorter
+from maflib.sorter import MafSorter, MafSorterCodec, Sorter
 from maflib.tests.testutils import tmp_file
-from maflib.locatable import Locatable
 
 
 class DummyScheme(MafScheme):
@@ -21,11 +21,15 @@ class DummyScheme(MafScheme):
 
     @classmethod
     def __column_dict__(cls):
-        return OrderedDict([("Tumor_Sample_Barcode", StringColumn),
-                            ("Matched_Norm_Sample_Barcode", StringColumn),
-                            ("Chromosome", StringColumn),
-                            ("Start_Position", IntegerColumn),
-                            ("End_Position", IntegerColumn)])
+        return OrderedDict(
+            [
+                ("Tumor_Sample_Barcode", StringColumn),
+                ("Matched_Norm_Sample_Barcode", StringColumn),
+                ("Chromosome", StringColumn),
+                ("Start_Position", IntegerColumn),
+                ("End_Position", IntegerColumn),
+            ]
+        )
 
 
 class DummyRecord(Locatable):
@@ -49,7 +53,6 @@ class DummyRecord(Locatable):
 
 
 class TestMafSorterCodec(unittest.TestCase):
-
     def test_round_trip_no_column_names(self):
         codec = MafSorterCodec()
         original = DummyRecord("A", "B", "C", 1, 2)
@@ -73,8 +76,8 @@ class TestMafSorterCodec(unittest.TestCase):
 
 
 class TestSorter(unittest.TestCase):
-
-    def codec(self): return MafSorterCodec(scheme=DummyScheme())
+    def codec(self):
+        return MafSorterCodec(scheme=DummyScheme())
 
     def test_empty(self):
         sorter = Sorter(100, self.codec(), BarcodesAndCoordinate().sort_key())
@@ -85,13 +88,16 @@ class TestSorter(unittest.TestCase):
     def test_less_than_max_in_memory(self):
         max_objects_in_ram = 100
         num_records = max_objects_in_ram - 1
-        sorter = Sorter(max_objects_in_ram, self.codec(),
-                        BarcodesAndCoordinate().sort_key(),
-                        always_spill=False)
+        sorter = Sorter(
+            max_objects_in_ram,
+            self.codec(),
+            BarcodesAndCoordinate().sort_key(),
+            always_spill=False,
+        )
 
         # add them in reverse order
         for i in range(num_records):
-            record = DummyRecord("A", "B", "C", 1, num_records-i-1)
+            record = DummyRecord("A", "B", "C", 1, num_records - i - 1)
             sorter += record
         records = [r for r in sorter]
         sorter.close()
@@ -104,13 +110,16 @@ class TestSorter(unittest.TestCase):
     def test_spilling_to_disk(self):
         max_objects_in_ram = 100
         num_records = max_objects_in_ram * 10
-        sorter = Sorter(max_objects_in_ram, self.codec(),
-                        BarcodesAndCoordinate().sort_key(),
-                        always_spill=True)
+        sorter = Sorter(
+            max_objects_in_ram,
+            self.codec(),
+            BarcodesAndCoordinate().sort_key(),
+            always_spill=True,
+        )
 
         # add them in reverse order
         for i in range(num_records):
-            record = DummyRecord("A", "B", "C", 1, num_records-i-1)
+            record = DummyRecord("A", "B", "C", 1, num_records - i - 1)
             sorter += record
         records = [r for r in sorter]
         sorter.close()
@@ -122,7 +131,6 @@ class TestSorter(unittest.TestCase):
 
 
 class TestMafSorter(unittest.TestCase):
-
     def __test_sorter(self, sorter, chromosome="C", with_scheme=False):
         """
         :param sorter: the sorter to use
@@ -151,41 +159,48 @@ class TestMafSorter(unittest.TestCase):
         for i in range(num_records):
             record = sorted_records[i]
             if with_scheme:
-                self.assertEqual(record.value("End_Position"),
-                                 records[i].value("End_Position"))
+                self.assertEqual(
+                    record.value("End_Position"), records[i].value("End_Position")
+                )
             else:
-                self.assertEqual(record.value("End_Position"),
-                                 str(records[i].value( "End_Position")))
+                self.assertEqual(
+                    record.value("End_Position"), str(records[i].value("End_Position"))
+                )
 
     def test_sorter_default(self):
-        sorter = MafSorter(sort_order_name=BarcodesAndCoordinate.name(),
-                           max_objects_in_ram=100)
+        sorter = MafSorter(
+            sort_order_name=BarcodesAndCoordinate.name(), max_objects_in_ram=100
+        )
         self.__test_sorter(sorter=sorter)
 
     def test_sorter_with_scheme(self):
         scheme = DummyScheme()
-        sorter = MafSorter(sort_order_name=BarcodesAndCoordinate.name(),
-                           scheme=scheme,
-                           max_objects_in_ram=100)
+        sorter = MafSorter(
+            sort_order_name=BarcodesAndCoordinate.name(),
+            scheme=scheme,
+            max_objects_in_ram=100,
+        )
         self.__test_sorter(sorter=sorter, with_scheme=True)
 
     def test_sorter_with_sort_order_args(self):
-        lines = ["chr1\t248956422\t112\t70\t71"
-                 "chr2\t242193529\t252513167\t70\t71",
-                 "chr3\t198295559\t498166716\t70\t71",
-                 "chr4\t190214555\t699295181\t70\t71",
-                 "chr5\t181538259\t892227221\t70\t71",
-                 "chr6\t170805979\t1076358996\t70\t71",
-                 "chr7\t159345973\t1249605173\t70\t71",
-                 "chr8\t145138636\t1411227630\t70\t71",
-                 "chr9\t138394717\t1558439788\t70\t71",
-                 "chr10\t133797422\t1698811686\t70\t71"
-                 ]
+        lines = [
+            "chr1\t248956422\t112\t70\t71" "chr2\t242193529\t252513167\t70\t71",
+            "chr3\t198295559\t498166716\t70\t71",
+            "chr4\t190214555\t699295181\t70\t71",
+            "chr5\t181538259\t892227221\t70\t71",
+            "chr6\t170805979\t1076358996\t70\t71",
+            "chr7\t159345973\t1249605173\t70\t71",
+            "chr8\t145138636\t1411227630\t70\t71",
+            "chr9\t138394717\t1558439788\t70\t71",
+            "chr10\t133797422\t1698811686\t70\t71",
+        ]
         fd, fn = tmp_file(lines=lines)
 
-        sorter = MafSorter(sort_order_name=BarcodesAndCoordinate.name(),
-                           max_objects_in_ram=100,
-                           fasta_index=fn)
+        sorter = MafSorter(
+            sort_order_name=BarcodesAndCoordinate.name(),
+            max_objects_in_ram=100,
+            fasta_index=fn,
+        )
 
         self.__test_sorter(sorter=sorter, chromosome="chr5")
 
@@ -194,4 +209,3 @@ class TestMafSorter(unittest.TestCase):
 
         fd.close()
         os.remove(fn)
-

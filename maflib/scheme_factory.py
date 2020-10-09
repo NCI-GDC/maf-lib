@@ -10,11 +10,9 @@ from maflib.column_types import get_column_types
 from maflib.schemes import MafScheme, NoRestrictionsScheme
 from maflib.util import extend_class
 
-SchemeDatum = namedtuple("SchemeDatum", ["version",
-                                         "annotation",
-                                         "extends",
-                                         "columns",
-                                         "filtered"])
+SchemeDatum = namedtuple(
+    "SchemeDatum", ["version", "annotation", "extends", "columns", "filtered"]
+)
 
 _Column = namedtuple("_Column", ["name", "cls", "desc"])
 
@@ -28,15 +26,13 @@ def scheme_to_columns(scheme):
         column = _Column(
             name=name,
             cls=scheme.column_class(name),
-            desc=scheme.column_description(name)
+            desc=scheme.column_description(name),
         )
         columns.append(column)
     return columns
 
 
-def combine_columns(base_columns,
-                    extra_columns=None,
-                    filtered=None):
+def combine_columns(base_columns, extra_columns=None, filtered=None):
     """ Combines columns when building a scheme.
 
     The `base_columns` and `extra_columns` should be a list of columns (of 
@@ -63,21 +59,21 @@ def combine_columns(base_columns,
                 columns[name] = _Column(name=name, cls=cls, desc=desc)
 
         # add the extra_columns
-        columns.update([(c.name, c) for c in extra_columns
-                        if c.name not in columns])
+        columns.update([(c.name, c) for c in extra_columns if c.name not in columns])
 
     if filtered is not None:
         missing_filtered = [f for f in filtered if not f in columns]
         if missing_filtered:
-            raise ValueError("Filtered columns not found in the scheme it "
-                             "extends: %s" % ", ".join(missing_filtered))
+            raise ValueError(
+                "Filtered columns not found in the scheme it "
+                "extends: %s" % ", ".join(missing_filtered)
+            )
         filtered_columns = OrderedDict()
         for name, column in columns.items():
             if name not in filtered:
                 filtered_columns[name] = column
         columns = filtered_columns
     return columns.values()
-
 
 
 def build_scheme_class(datum, base_scheme):
@@ -94,21 +90,16 @@ def build_scheme_class(datum, base_scheme):
         base_columns = list()
         for name, cls in base_scheme.__column_dict__().items():
             base_column = _Column(
-                name=name,
-                cls=cls,
-                desc=base_scheme.__column_desc__()[name]
+                name=name, cls=cls, desc=base_scheme.__column_desc__()[name]
             )
             base_columns.append(base_column)
         columns = combine_columns(
-            base_columns=base_columns,
-            extra_columns=columns,
-            filtered=datum.filtered
+            base_columns=base_columns, extra_columns=columns, filtered=datum.filtered
         )
     else:
         columns = datum.columns
 
-    name = "_".join([x.capitalize()
-                     for x in re.split(r"[-.]", datum.annotation)])
+    name = "_".join([x.capitalize() for x in re.split(r"[-.]", datum.annotation)])
 
     if columns:
         column_dict = OrderedDict((c.name, c.cls) for c in columns)
@@ -137,14 +128,22 @@ def build_schemes(data):
         # find a scheme data that either doesn't extend any other scheme, or
         # whose base scheme it extends we have already built
         datum_index, datum = next(
-            ((i, d) for (i, d) in enumerate(data) if not d.extends or
-             d.extends in schemes), (None, None))
+            (
+                (i, d)
+                for (i, d) in enumerate(data)
+                if not d.extends or d.extends in schemes
+            ),
+            (None, None),
+        )
         if not datum:
             annotations = ", ".join([d.annotation for d in data])
-            raise ValueError("Could not find a scheme to build.  Schemes "
-                             "remaining annotations were: %s" % annotations)
-        scheme_cls = build_scheme_class(datum=datum,
-                                        base_scheme=schemes.get(datum.extends))
+            raise ValueError(
+                "Could not find a scheme to build.  Schemes "
+                "remaining annotations were: %s" % annotations
+            )
+        scheme_cls = build_scheme_class(
+            datum=datum, base_scheme=schemes.get(datum.extends)
+        )
         schemes[scheme_cls.annotation_spec()] = scheme_cls
         del data[datum_index]
     return schemes
@@ -156,16 +155,19 @@ def validate_schemes(schemes):
     """
     schemes = list(schemes)
     num_schemes = len(schemes)
-    for i in range(num_schemes-1):
+    for i in range(num_schemes - 1):
         left = schemes[i]
-        for j in range(i+1, num_schemes):
+        for j in range(i + 1, num_schemes):
             right = schemes[j]
-            if left.version() == right.version() \
-                    and left.annotation_spec() == right.annotation_spec():
-                raise ValueError("Two schemes found with version '%s' and "
-                                 "annotation specification '%s'" % (
-                                     str(left.version()),
-                                     str(left.annotation_spec())))
+            if (
+                left.version() == right.version()
+                and left.annotation_spec() == right.annotation_spec()
+            ):
+                raise ValueError(
+                    "Two schemes found with version '%s' and "
+                    "annotation specification '%s'"
+                    % (str(left.version()), str(left.annotation_spec()))
+                )
 
     return True
 
@@ -187,8 +189,10 @@ def load_all_scheme_data(filenames, column_types):
     :param column_types: a tuple of (name, class) for all known column types
     :return: a list of ``SchemeDatum`` objects
     """
+
     def else_none(value):
         return None if value == "None" else value
+
     data = []
     for filename in filenames:
         with open(filename) as handle:
@@ -198,38 +202,42 @@ def load_all_scheme_data(filenames, column_types):
                 columns = list()
                 for column in json_data["columns"]:
                     if len(column) < 2 or len(column) > 3:
-                        raise ValueError("Column did not have two or three "
-                                         "elements: '%s'" % str(column))
+                        raise ValueError(
+                            "Column did not have two or three "
+                            "elements: '%s'" % str(column)
+                        )
 
                     column_name = str(column[0])
                     column_cls = str(column[1])
                     column_desc = str(column[2]) if len(column) > 2 else ""
 
-
-                    cls = next((cls for cls_name, cls in column_types
-                                if cls_name == column_cls), None)
+                    cls = next(
+                        (
+                            cls
+                            for cls_name, cls in column_types
+                            if cls_name == column_cls
+                        ),
+                        None,
+                    )
                     if not cls:
                         raise ValueError(
                             "Could not find a column type with name "
-                            "'%s' for column '%s'"
-                            % (column_cls, column.name))
+                            "'%s' for column '%s'" % (column_cls, column.name)
+                        )
 
-                    columns.append(_Column(
-                        name=column_name,
-                        cls=cls,
-                        desc=column_desc
-                    ))
+                    columns.append(_Column(name=column_name, cls=cls, desc=column_desc))
                 datum = SchemeDatum(
                     version=json_data["version"],
                     annotation=json_data["annotation-spec"],
                     extends=else_none(json_data["extends"]),
                     columns=columns,
-                    filtered=else_none(json_data["filtered"])
+                    filtered=else_none(json_data["filtered"]),
                 )
                 data.append(datum)
             except Exception as error:
-                raise ValueError("Could not read from file '%s': %s"
-                                 % (filename, str(error)))
+                raise ValueError(
+                    "Could not read from file '%s': %s" % (filename, str(error))
+                )
     return data
 
 
@@ -245,18 +253,16 @@ def scheme_sort_key(scheme):
         """
         if not str.startswith("gdc-"):
             return [-1, -1, -1, str]
-        str = str[len("gdc-"):]
+        str = str[len("gdc-") :]
         last = ""
         if "-" in str:
             index = str.index("-")
-            last = str[index+1:]
+            last = str[index + 1 :]
             str = str[:index]
         return list(map(int, str.split("."))) + [last]
 
-    version = \
-        extract_version_string(scheme.version(), "version")
-    annotation_spec = \
-        extract_version_string(scheme.annotation_spec(), "annotation")
+    version = extract_version_string(scheme.version(), "version")
+    annotation_spec = extract_version_string(scheme.annotation_spec(), "annotation")
 
     return version + annotation_spec
 
@@ -282,8 +288,7 @@ def load_all_schemes(extra_filenames=None):
 
     # Gather all the schemes
     # NB: could sort by version an annotation
-    schemes = [NoRestrictionsScheme(column_names=list())] \
-              + list(schemes.values())
+    schemes = [NoRestrictionsScheme(column_names=list())] + list(schemes.values())
 
     # Validate that all schemes have different combinations of version
     # and annotations
@@ -293,6 +298,7 @@ def load_all_schemes(extra_filenames=None):
     schemes.sort(key=scheme_sort_key)
 
     return schemes
+
 
 __ALL_SCHEMES = []
 __LOADED_ALL_SCHEMES = False
@@ -318,14 +324,25 @@ def find_scheme_class(version=None, annotation=None):
     if not version and not annotation:
         raise ValueError("Either version or annotation must be given")
     elif not annotation:
-        return next((s for s in schemes if s.version() == version and
-                     s.annotation_spec() == version), None)
+        return next(
+            (
+                s
+                for s in schemes
+                if s.version() == version and s.annotation_spec() == version
+            ),
+            None,
+        )
     elif not version:
-        return next((s for s in schemes if s.annotation_spec() == annotation),
-                    None)
+        return next((s for s in schemes if s.annotation_spec() == annotation), None)
     else:
-        return next((s for s in schemes if s.version() == version and
-                     s.annotation_spec() == annotation), None)
+        return next(
+            (
+                s
+                for s in schemes
+                if s.version() == version and s.annotation_spec() == annotation
+            ),
+            None,
+        )
 
 
 def find_scheme(version=None, annotation=None):

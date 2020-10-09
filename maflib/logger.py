@@ -41,4 +41,5 @@ class Logger(object):
             logger.addHandler(handler)
         return logger
 
+
 Logger.setup_root_logger()

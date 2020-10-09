@@ -1,4 +1,5 @@
-from maflib.column_types import StringColumn, FloatColumn, IntegerColumn
+from maflib.column_types import FloatColumn, IntegerColumn, StringColumn
+from maflib.locatable import Locatable
 from maflib.reader import *
 from maflib.schemes import *
 from maflib.sort_order import Coordinate
@@ -6,7 +7,6 @@ from maflib.tests.testutils import *
 from maflib.util import captured_output
 from maflib.validation import MafFormatException
 from maflib.writer import *
-from maflib.locatable import Locatable
 
 
 class TestMafWriter(TestCase):
@@ -14,8 +14,16 @@ class TestMafWriter(TestCase):
     Version = Scheme.version()
     AnnotationSpec = Scheme.annotation_spec()
 
-    __version_line = "%s%s %s" % (MafHeader.HeaderLineStartSymbol, MafHeader.VersionKey, Version)
-    __annotation_line = "%s%s %s" % (MafHeader.HeaderLineStartSymbol, MafHeader.AnnotationSpecKey, AnnotationSpec)
+    __version_line = "%s%s %s" % (
+        MafHeader.HeaderLineStartSymbol,
+        MafHeader.VersionKey,
+        Version,
+    )
+    __annotation_line = "%s%s %s" % (
+        MafHeader.HeaderLineStartSymbol,
+        MafHeader.AnnotationSpecKey,
+        AnnotationSpec,
+    )
     __keys_line = MafRecord.ColumnSeparator.join(Scheme.column_names())
 
     class TestScheme(MafScheme):
@@ -29,17 +37,20 @@ class TestMafWriter(TestCase):
 
         @classmethod
         def __column_dict__(cls):
-            return OrderedDict([("str1", StringColumn),
-                                ("float", FloatColumn),
-                                ("str2", StringColumn)])
+            return OrderedDict(
+                [("str1", StringColumn), ("float", FloatColumn), ("str2", StringColumn)]
+            )
 
     def test_empty_file(self):
         fd, path = tempfile.mkstemp()
 
         # No logging to stderr/stdout
         with captured_output() as (stdout, stderr):
-            writer = MafWriter.from_path(path=path, header=MafHeader(),
-                                         validation_stringency=ValidationStringency.Silent)
+            writer = MafWriter.from_path(
+                path=path,
+                header=MafHeader(),
+                validation_stringency=ValidationStringency.Silent,
+            )
             writer.close()
             self.assertEqual(read_lines(path), [])
             self.assertEqual(str(writer.header()), "")
@@ -50,8 +61,11 @@ class TestMafWriter(TestCase):
 
         # Logging to stderr/stdout
         with captured_output() as (stdout, stderr):
-            writer = MafWriter.from_path(path=path, header=MafHeader(),
-                                         validation_stringency=ValidationStringency.Lenient)
+            writer = MafWriter.from_path(
+                path=path,
+                header=MafHeader(),
+                validation_stringency=ValidationStringency.Lenient,
+            )
             writer.close()
             self.assertEqual(read_lines(path), [])
             self.assertEqual(str(writer.header()), "")
@@ -59,37 +73,42 @@ class TestMafWriter(TestCase):
         stderr = stderr.getvalue().rstrip('\r\n').split("\n")
         self.assertListEqual(stdout, [''])
         self.assertListEqualAndIn(
-            ['HEADER_MISSING_VERSION',
-             'HEADER_MISSING_ANNOTATION_SPEC'],
-            stderr)
+            ['HEADER_MISSING_VERSION', 'HEADER_MISSING_ANNOTATION_SPEC'], stderr
+        )
 
         #  Exceptions
         with captured_output():
             with self.assertRaises(MafFormatException) as context:
-                writer = MafWriter.from_path(path=path, header=MafHeader(),
-                                             validation_stringency=ValidationStringency.Strict)
-            self.assertEqual(context.exception.tpe,
-                             MafValidationErrorType.HEADER_MISSING_VERSION)
+                writer = MafWriter.from_path(
+                    path=path,
+                    header=MafHeader(),
+                    validation_stringency=ValidationStringency.Strict,
+                )
+            self.assertEqual(
+                context.exception.tpe, MafValidationErrorType.HEADER_MISSING_VERSION
+            )
 
         os.remove(path)
 
     def test_gz_support(self):
         fd, path = tempfile.mkstemp(suffix=".gz")
 
-        lines = [TestMafWriter.__version_line,
-                 TestMafWriter.__annotation_line,
-                 "#key1 value1",
-                 "#key2 value2",
-                 TestMafWriter.__keys_line
-                 ]
+        lines = [
+            TestMafWriter.__version_line,
+            TestMafWriter.__annotation_line,
+            "#key1 value1",
+            "#key2 value2",
+            TestMafWriter.__keys_line,
+        ]
         with captured_output() as (stdout, stderr):
             header = MafHeader.from_lines(lines=lines)
             writer = MafWriter.from_path(header=header, path=path)
             writer.close()
             self.assertListEqual(read_lines(path), lines)
-            self.assertEqual(str(writer.header()) + "\n" +
-                                 TestMafWriter.__keys_line,
-                             "\n".join(lines))
+            self.assertEqual(
+                str(writer.header()) + "\n" + TestMafWriter.__keys_line,
+                "\n".join(lines),
+            )
         stdout = stdout.getvalue().rstrip('\r\n').split("\n")
         stderr = stderr.getvalue().rstrip('\r\n').split("\n")
         self.assertListEqual(stdout, [''])
@@ -99,12 +118,13 @@ class TestMafWriter(TestCase):
     def test_close(self):
         fd, path = tempfile.mkstemp()
 
-        lines = [TestMafWriter.__version_line,
-                 TestMafWriter.__annotation_line,
-                 "#key1 value1",
-                 "#key2 value2",
-                 TestMafWriter.__keys_line
-                 ]
+        lines = [
+            TestMafWriter.__version_line,
+            TestMafWriter.__annotation_line,
+            "#key1 value1",
+            "#key2 value2",
+            TestMafWriter.__keys_line,
+        ]
         header = MafHeader.from_lines(lines=lines)
         writer = MafWriter.from_path(header=header, path=path)
         writer._handle.write("LAST")  # Naughty
@@ -118,47 +138,54 @@ class TestMafWriter(TestCase):
         scheme = TestMafWriter.TestScheme()
         fd, path = tempfile.mkstemp()
 
-        header_lines = MafHeader.scheme_header_lines(scheme) \
-                       + ["#key1 value1", "#key2 value2"]
+        header_lines = MafHeader.scheme_header_lines(scheme) + [
+            "#key1 value1",
+            "#key2 value2",
+        ]
         header = MafHeader.from_lines(lines=header_lines)
         writer = MafWriter.from_path(header=header, path=path)
         values = ["string2", "3.14", "string1"]
         record_line = MafRecord.ColumnSeparator.join(values)
-        record = MafRecord.from_line(line=record_line,
-                                     scheme=scheme,
-                                     line_number=1)
+        record = MafRecord.from_line(line=record_line, scheme=scheme, line_number=1)
         writer += record
         writer.write(record)
         writer.close()
 
-        self.assertListEqual(read_lines(path),
-                             header_lines + [record_line, record_line])
+        self.assertListEqual(
+            read_lines(path), header_lines + [record_line, record_line]
+        )
 
     def test_record_validation_error(self):
         scheme = TestMafWriter.TestScheme()
         fd, path = tempfile.mkstemp()
 
         # Create the header
-        header_lines = MafHeader.scheme_header_lines(scheme) \
-                       + ["#key1 value1", "#key2 value2"] \
-                       + ["str1\tNone\tstr2"]
-        header = MafHeader.from_lines(lines=header_lines,
-                                      validation_stringency=ValidationStringency.Silent)
+        header_lines = (
+            MafHeader.scheme_header_lines(scheme)
+            + ["#key1 value1", "#key2 value2"]
+            + ["str1\tNone\tstr2"]
+        )
+        header = MafHeader.from_lines(
+            lines=header_lines, validation_stringency=ValidationStringency.Silent
+        )
 
         # Create the record
         values = ["string2", "error", "string1"]
         record_line = MafRecord.ColumnSeparator.join(values)
-        record = MafRecord.from_line(line=record_line,
-                                     scheme=scheme,
-                                     line_number=1,
-                                     validation_stringency=ValidationStringency.Silent)
+        record = MafRecord.from_line(
+            line=record_line,
+            scheme=scheme,
+            line_number=1,
+            validation_stringency=ValidationStringency.Silent,
+        )
 
         # Write the header, and the record twice
         with captured_output() as (stdout, stderr):
             writer = MafWriter.from_path(
                 header=header,
                 validation_stringency=ValidationStringency.Lenient,
-                path=path)
+                path=path,
+            )
             writer += record
             writer.write(record)
             writer.close()
@@ -171,14 +198,15 @@ class TestMafWriter(TestCase):
             "HEADER_UNSUPPORTED_VERSION",
             "HEADER_UNSUPPORTED_ANNOTATION_SPEC",
             "RECORD_COLUMN_WITH_NO_VALUE",
-            "RECORD_COLUMN_WITH_NO_VALUE"
+            "RECORD_COLUMN_WITH_NO_VALUE",
         ]
         self.assertListEqualAndIn(errors, stderr)
 
         # The second column should be None
         err_record_line = record_line.replace("error", "None")
-        self.assertListEqual(read_lines(path),
-                             header_lines + [err_record_line, err_record_line])
+        self.assertListEqual(
+            read_lines(path), header_lines + [err_record_line, err_record_line]
+        )
 
     class TestCoordinateScheme(MafScheme):
         @classmethod
@@ -191,9 +219,13 @@ class TestMafWriter(TestCase):
 
         @classmethod
         def __column_dict__(cls):
-            return OrderedDict([("Chromosome", StringColumn),
-                                ("Start_Position", IntegerColumn),
-                                ("End_Position", IntegerColumn)])
+            return OrderedDict(
+                [
+                    ("Chromosome", StringColumn),
+                    ("Start_Position", IntegerColumn),
+                    ("End_Position", IntegerColumn),
+                ]
+            )
 
     class DummyRecord(Locatable):
         def __init__(self, chr, start, end):
@@ -201,8 +233,7 @@ class TestMafWriter(TestCase):
             self._dict["Chromosome"] = chr
             self._dict["Start_Position"] = start
             self._dict["End_Position"] = end
-            super(TestMafWriter.DummyRecord, self).__init__(
-                chr, start, end)
+            super(TestMafWriter.DummyRecord, self).__init__(chr, start, end)
 
         def value(self, key):
             return self._dict[key]
@@ -221,21 +252,30 @@ class TestMafWriter(TestCase):
         fd, path = tempfile.mkstemp()
 
         # Create the header
-        header_lines = MafHeader.scheme_header_lines(scheme) \
-                       + ["#key1 value1", "#key2 value2"] \
-                        + ["%s%s %s" % (MafHeader.HeaderLineStartSymbol,
-                                        MafHeader.SortOrderKey,
-                                        Coordinate().name())] \
-                       + ["\t".join(scheme.column_names())]
-        header = MafHeader.from_lines(lines=header_lines,
-                                      validation_stringency=ValidationStringency.Silent)
+        header_lines = (
+            MafHeader.scheme_header_lines(scheme)
+            + ["#key1 value1", "#key2 value2"]
+            + [
+                "%s%s %s"
+                % (
+                    MafHeader.HeaderLineStartSymbol,
+                    MafHeader.SortOrderKey,
+                    Coordinate().name(),
+                )
+            ]
+            + ["\t".join(scheme.column_names())]
+        )
+        header = MafHeader.from_lines(
+            lines=header_lines, validation_stringency=ValidationStringency.Silent
+        )
 
         # Write the header, and the record twice
         writer = MafWriter.from_path(
             header=header,
             validation_stringency=ValidationStringency.Lenient,
             path=path,
-            assume_sorted=False)
+            assume_sorted=False,
+        )
         writer += TestMafWriter.DummyRecord("chr1", 2, 2)
         writer += TestMafWriter.DummyRecord("chr1", 3, 3)
         writer += TestMafWriter.DummyRecord("chr1", 4, 4)
@@ -248,7 +288,5 @@ class TestMafWriter(TestCase):
 
         self.assertEqual(header.sort_order().name(), Coordinate.name())
 
-        self.assertListEqual([r["Start_Position"].value for r in records],
-                             [2, 3, 4])
-        self.assertListEqual([r["End_Position"].value for r in records],
-                             [2, 3, 4])
+        self.assertListEqual([r["Start_Position"].value for r in records], [2, 3, 4])
+        self.assertListEqual([r["End_Position"].value for r in records], [2, 3, 4])

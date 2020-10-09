@@ -22,19 +22,21 @@ except NameError:
 
 def get_column_types():
     """Gets all the column types defined in maflib"""
+
     def predicate(obj):
         """A predicate to get all classes that are subclasses of
         MafColumnRecord"""
         return inspect.isclass(obj) and issubclass(obj, MafColumnRecord)
+
     # Get all available column types
-    return inspect.getmembers(sys.modules["maflib.column_types"],
-                              predicate)
+    return inspect.getmembers(sys.modules["maflib.column_types"], predicate)
 
 
 class NullableEmptyStringIsNone(object):
     """Mix this in to a MafCustomColumnRecord to make the only nullable value
     be an empty string that is treated as None
     """
+
     @classmethod
     def __nullable_dict__(cls):
         return {"": None}
@@ -44,6 +46,7 @@ class NullableEmptyStringIsEmptyList(object):
     """Mix this in to a MafCustomColumnRecord to make the only nullable value
     be an empty string that is treated as an empty list
     """
+
     @classmethod
     def __nullable_dict__(cls):
         return {"": []}
@@ -53,22 +56,26 @@ class RequireNullValue(MafColumnRecord):
     """Mix this in to a MafCustomColumnRecord so that it only validates if the
     value is a null
     """
+
     def __validate__(self):
         return "'%s' was not a null value" % str(self.value)
 
 
 class _BuildStringColumn(object):
     """Mix this in to require a string as the value"""
+
     @classmethod
     def __build__(cls, value):
         if not isinstance(value, basestring):
-            raise ValueError("'%s' was not a string (was %s)"
-                             % (str(value), str(value.__class__)))
+            raise ValueError(
+                "'%s' was not a string (was %s)" % (str(value), str(value.__class__))
+            )
         return str(value)
 
 
-class NullableStringColumn(NullableEmptyStringIsNone, _BuildStringColumn,
-                           MafCustomColumnRecord):
+class NullableStringColumn(
+    NullableEmptyStringIsNone, _BuildStringColumn, MafCustomColumnRecord
+):
     """ A column where the value must be a string, with its null value being
     an empty string"""
 
@@ -81,6 +88,7 @@ class NullableStringColumn(NullableEmptyStringIsNone, _BuildStringColumn,
 
 class StringColumn(NullableStringColumn):
     """ A column where the value must be a non-empty string"""
+
     EmptyStringMessage = "Empty string is not allowed"
 
     @classmethod
@@ -97,10 +105,13 @@ class StringColumn(NullableStringColumn):
 
 class StringIntegerOrFloatColumn(MafCustomColumnRecord):
     """A column where the value is either a string or float"""
+
     @classmethod
     def __type_error_message__(cls, value):
-        return "'%s' of type '%s' was neither an int, float, nor string" \
-               % (str(value), value.__class__.__name__)
+        return "'%s' of type '%s' was neither an int, float, nor string" % (
+            str(value),
+            value.__class__.__name__,
+        )
 
     @classmethod
     def __build__(cls, value):
@@ -123,10 +134,13 @@ class StringIntegerOrFloatColumn(MafCustomColumnRecord):
 
 class StringOrIntegerColumn(MafCustomColumnRecord):
     """A column that is a string or integer"""
+
     @classmethod
     def __type_error_message__(cls, value):
-        return "'%s' of type '%s' was neither an int nor string" \
-               % (str(value), value.__class__.__name__)
+        return "'%s' of type '%s' was neither an int nor string" % (
+            str(value),
+            value.__class__.__name__,
+        )
 
     @classmethod
     def __build__(cls, value):
@@ -145,10 +159,13 @@ class StringOrIntegerColumn(MafCustomColumnRecord):
 
 class IntegerColumn(MafCustomColumnRecord):
     """A column that is an integer"""
+
     @classmethod
     def __type_error_message__(cls, value):
-        return "'%s' of type '%s' was not an int" \
-               % (str(value), value.__class__.__name__)
+        return "'%s' of type '%s' was not an int" % (
+            str(value),
+            value.__class__.__name__,
+        )
 
     @classmethod
     def __min_value__(cls):
@@ -178,11 +195,13 @@ class IntegerColumn(MafCustomColumnRecord):
 class NullableIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
     """A column that is either an integer, or an empty string treated as the
     null value"""
+
     pass
 
 
 class ZeroBasedIntegerColumn(IntegerColumn):
     """A column that represents a zero-based integer"""
+
     @classmethod
     def __min_value__(cls):
         return 0
@@ -190,6 +209,7 @@ class ZeroBasedIntegerColumn(IntegerColumn):
 
 class OneBasedIntegerColumn(IntegerColumn):
     """A column that represents a zero-based integer"""
+
     @classmethod
     def __min_value__(cls):
         return 1
@@ -198,6 +218,7 @@ class OneBasedIntegerColumn(IntegerColumn):
 class NullableZeroBasedIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
     """A column that represents a zero-based integer, or an empty string
     treated as the null value"""
+
     @classmethod
     def __min_value__(cls):
         return 0
@@ -206,6 +227,7 @@ class NullableZeroBasedIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
 class NullableOneBasedIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
     """A column that represents a one-based integer, or an empty string
     treated as the null value"""
+
     @classmethod
     def __min_value__(cls):
         return 1
@@ -213,6 +235,7 @@ class NullableOneBasedIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
 
 class FloatColumn(MafCustomColumnRecord):
     """A column that represents a floating point number"""
+
     @classmethod
     def __build__(cls, value):
         return float(value)
@@ -227,6 +250,7 @@ class FloatColumn(MafCustomColumnRecord):
 class NullableFloatColumn(NullableEmptyStringIsNone, FloatColumn):
     """A column that is either a floating point number, or an empty string
     treated as the null value"""
+
     pass
 
 
@@ -253,8 +277,7 @@ class EnumColumn(MafCustomColumnRecord):
     def __validate__(self):
         enum_cls = self.__enum_class__()
         if not isinstance(self.value, enum_cls):
-            return "'%s' was not of type '%s'" \
-                   % (str(self.value), enum_cls.__name__)
+            return "'%s' was not of type '%s'" % (str(self.value), enum_cls.__name__)
         else:
             return None
 
@@ -265,6 +288,7 @@ class EnumColumn(MafCustomColumnRecord):
 class SequenceOfValuesColumn(MafCustomColumnRecord):
     """An abstract class whose value is a list of zero or more values defined by
     an existing column class"""
+
     @classmethod
     @abstractclassmethod
     def __column_class__(cls):
@@ -276,33 +300,30 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
     def __build__(cls, value):
         column_cls = cls.__column_class__()
         if not isinstance(value, basestring):
-            raise ValueError("'%s' was not a string (was %s)"
-                             % (str(value), str(value.__class__)))
+            raise ValueError(
+                "'%s' was not a string (was %s)" % (str(value), str(value.__class__))
+            )
         values = value.split(";")
         return [column_cls.__build__(val) for val in values]
 
     def __validate__(self):
         column_cls = self.__column_class__()
-        if not isinstance(self.value, list) \
-                and not isinstance(self.value, tuple):
+        if not isinstance(self.value, list) and not isinstance(self.value, tuple):
             return "'%s' was neither a list nor tuple" % str(self.value)
         for i, value in enumerate(self.value):
             column = column_cls("", value)  # create a new column to validate
             msg = column.__validate__()
             if msg:
-                return "For the %dth value in '%s': %s" \
-                       % (i + 1,
-                          str(self.value),
-                          msg)
+                return "For the %dth value in '%s': %s" % (i + 1, str(self.value), msg)
         return None
 
     def __string_it__(self):
         return ";".join([str(v) for v in self.value])
 
 
-class SequenceOfStrings(NullableEmptyStringIsEmptyList,
-                        SequenceOfValuesColumn):
+class SequenceOfStrings(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
     """A column that represents a sequence of zero or more strings"""
+
     @classmethod
     def __column_class__(cls):
         """
@@ -311,9 +332,9 @@ class SequenceOfStrings(NullableEmptyStringIsEmptyList,
         return StringColumn
 
 
-class SequenceOfIntegers(NullableEmptyStringIsEmptyList,
-                         SequenceOfValuesColumn):
+class SequenceOfIntegers(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
     """A column that represents a sequence of zero or more integers"""
+
     @classmethod
     def __column_class__(cls):
         """
@@ -325,6 +346,7 @@ class SequenceOfIntegers(NullableEmptyStringIsEmptyList,
 class NullableDnaString(_BuildStringColumn, MafCustomColumnRecord):
     """A column that represents a string of DNA bases, or an empty string
     treated as the null value"""
+
     @classmethod
     def __nullable_dict__(cls):
         return {"": None}
@@ -336,13 +358,13 @@ class NullableDnaString(_BuildStringColumn, MafCustomColumnRecord):
             return None
         for i, base in enumerate(self.value):
             if base not in ('A', 'C', 'G', 'T'):
-                return "The %dth base in '%s' was not in [ACGT]" \
-                       % (i+1, self.value)
+                return "The %dth base in '%s' was not in [ACGT]" % (i + 1, self.value)
         return None
 
 
 class DnaString(NullableDnaString):
     """A column that represents a non-empty string of DNA bases"""
+
     @classmethod
     def __nullable_dict__(cls):
         return None
@@ -359,6 +381,7 @@ class Canonical(MafCustomColumnRecord):
     """A column representing the 'canonical' MAF column.  The value is a
     boolean: True if the input string was "Yes" (case insensitive), or False
     if the empty string."""
+
     @classmethod
     def __build__(cls, value):
         if not isinstance(value, basestring):
@@ -382,6 +405,7 @@ class Canonical(MafCustomColumnRecord):
 class NullableYesOrNo(EnumColumn):
     """A column that represents the string "Yes" or "No", with the empty
     string treated as a null value."""
+
     @classmethod
     def __enum_class__(cls):
         return NullableYesOrNoEnum
@@ -394,13 +418,16 @@ class NullableYesOrNo(EnumColumn):
 
     @classmethod
     def __nullable_dict__(cls):
-        return {NullableYesOrNoEnum.Null.name: NullableYesOrNoEnum.Null,
-                "": NullableYesOrNoEnum.Null}
+        return {
+            NullableYesOrNoEnum.Null.name: NullableYesOrNoEnum.Null,
+            "": NullableYesOrNoEnum.Null,
+        }
 
 
 class NullableYOrN(EnumColumn):
     """A column that represents the string "Y" or "N", with the empty
     string treated as a null value."""
+
     @classmethod
     def __enum_class__(cls):
         return NullableYOrNEnum
@@ -413,13 +440,15 @@ class NullableYOrN(EnumColumn):
 
     @classmethod
     def __nullable_dict__(cls):
-        return {NullableYOrNEnum.Null.name: NullableYOrNEnum.Null,
-                "": NullableYOrNEnum.Null}
+        return {
+            NullableYOrNEnum.Null.name: NullableYOrNEnum.Null,
+            "": NullableYOrNEnum.Null,
+        }
 
 
-class SequenceOfNullableYesOrNo(NullableEmptyStringIsEmptyList,
-                                SequenceOfValuesColumn):
+class SequenceOfNullableYesOrNo(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
     """A column that represents a sequence of nullable yes or no."""
+
     @classmethod
     def __column_class__(cls):
         """
@@ -431,6 +460,7 @@ class SequenceOfNullableYesOrNo(NullableEmptyStringIsEmptyList,
 class PickColumn(EnumColumn):
     """A column that represents the 'Pick' MAF column, with possible values
     "1", or the empty string, which is treated as None"""
+
     @classmethod
     def __enum_class__(cls):
         return PickEnum
@@ -443,21 +473,20 @@ class PickColumn(EnumColumn):
 
     @classmethod
     def __nullable_dict__(cls):
-        return {PickEnum.Null.name: PickEnum.Null,
-                "": PickEnum.Null}
+        return {PickEnum.Null.name: PickEnum.Null, "": PickEnum.Null}
 
 
 class BooleanColumn(MafCustomColumnRecord):
     """A column that represents a boolean value, with input values either
     "True" or "False" (case insensitive)."""
+
     @classmethod
     def __build__(cls, value):
         if not isinstance(value, basestring):
             raise ValueError("'%s' was not a string" % str(value))
         value = value.upper()
         if value not in ["TRUE", "FALSE"]:
-            raise ValueError("'%s' was not either 'True' or 'False'"
-                             % str(value))
+            raise ValueError("'%s' was not either 'True' or 'False'" % str(value))
         return value == 'TRUE'
 
     def __validate__(self):
@@ -470,6 +499,7 @@ class BooleanColumn(MafCustomColumnRecord):
 class EntrezGeneId(ZeroBasedIntegerColumn):
     """A column that represents the MAF Entrez_Gene_Id column as an integer,
     where zero is treated as null."""
+
     @classmethod
     def __nullable_dict__(cls):
         return {"0": None}
@@ -478,6 +508,7 @@ class EntrezGeneId(ZeroBasedIntegerColumn):
 class Strand(EnumColumn):
     """A column that represents the 'Strand' MAF column, where strand is either
     '+' or '-' (positive strand or negative strand)"""
+
     @classmethod
     def __enum_class__(cls):
         return StrandEnum
@@ -485,6 +516,7 @@ class Strand(EnumColumn):
 
 class VariantClassification(EnumColumn):
     """A column that represents the 'Variant_Classification' MAF column."""
+
     @classmethod
     def __enum_class__(cls):
         return VariantClassificationEnum
@@ -492,6 +524,7 @@ class VariantClassification(EnumColumn):
 
 class VariantType(EnumColumn):
     """A column that represents the 'Variant_Type' MAF column."""
+
     @classmethod
     def __enum_class__(cls):
         return VariantTypeEnum
@@ -500,6 +533,7 @@ class VariantType(EnumColumn):
 class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
     """A column that represents the 'Verification_Status' MAF column,
     where the empty string is treated as null."""
+
     @classmethod
     def __enum_class__(cls):
         return VerificationStatusEnum
@@ -508,6 +542,7 @@ class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
 class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
     """A column that represents the 'Validation_Status' MAF column,
     where the empty string is treated as null."""
+
     @classmethod
     def __enum_class__(cls):
         return ValidationStatusEnum
@@ -515,6 +550,7 @@ class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
 
 class MutationStatus(EnumColumn):
     """A column that represents the 'Mutation_Status' MAF column"""
+
     @classmethod
     def __enum_class__(cls):
         return MutationStatusEnum
@@ -523,14 +559,15 @@ class MutationStatus(EnumColumn):
 class Sequencer(EnumColumn):
     """A column that represents the a single value in the 'Sequencer' MAF
     column"""
+
     @classmethod
     def __enum_class__(cls):
         return SequencerEnum
 
 
-class SequenceOfSequencers(NullableEmptyStringIsEmptyList,
-                           SequenceOfValuesColumn):
+class SequenceOfSequencers(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
     """A column that represents the 'Sequencer' MAF column"""
+
     @classmethod
     def __column_class__(cls):
         """
@@ -541,6 +578,7 @@ class SequenceOfSequencers(NullableEmptyStringIsEmptyList,
 
 class UUIDColumn(MafCustomColumnRecord):
     """A column that represents a UUID"""
+
     @classmethod
     def __build__(cls, value):
         return UUID(value)
@@ -555,12 +593,14 @@ class UUIDColumn(MafCustomColumnRecord):
 class NullableUUIDColumn(NullableEmptyStringIsNone, UUIDColumn):
     """A column that represents a UUID.  An empty string is allowed if no 
     UUID is given."""
+
     pass
 
 
 class FeatureType(NullableEmptyStringIsNone, EnumColumn):
     """A column that represents the 'Feature_Type' MAF column, with the empty
     string treated as a null value."""
+
     @classmethod
     def __enum_class__(cls):
         return FeatureTypeEnum
@@ -569,6 +609,7 @@ class FeatureType(NullableEmptyStringIsNone, EnumColumn):
 class TranscriptStrand(NullableEmptyStringIsNone, MafCustomColumnRecord):
     """A column that represents the 'Transcript_Strand' MAF column as an
     integer, either -1 or 1"""
+
     @classmethod
     def __build__(cls, value):
         return int(value)
@@ -584,6 +625,7 @@ class TranscriptStrand(NullableEmptyStringIsNone, MafCustomColumnRecord):
 
 class Impact(EnumColumn):
     """A column that represents the 'Impact' MAF column"""
+
     @classmethod
     def __enum_class__(cls):
         return ImpactEnum
@@ -591,6 +633,7 @@ class Impact(EnumColumn):
 
 class MC3Overlap(EnumColumn):
     """A column that represents the 'MC3_Overlap' MAF column"""
+
     @classmethod
     def __enum_class__(cls):
         return MC3OverlapEnum
@@ -598,6 +641,7 @@ class MC3Overlap(EnumColumn):
 
 class GdcValidationStatus(EnumColumn):
     """A column that represents the 'GDC_Validation_Status' MAF column"""
+
     @classmethod
     def __enum_class__(cls):
         return GdcValidationStatusEnum

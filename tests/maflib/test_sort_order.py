@@ -1,14 +1,16 @@
 import os
 import unittest
 
+from maflib.locatable import Locatable
 from maflib.sort_order import *
 from maflib.tests.testutils import tmp_file
-from maflib.locatable import Locatable
+
 
 class TestSortOrder(unittest.TestCase):
     def test_find(self):
-        self.assertEqual(SortOrder.find(BarcodesAndCoordinate.name()),
-                         BarcodesAndCoordinate)
+        self.assertEqual(
+            SortOrder.find(BarcodesAndCoordinate.name()), BarcodesAndCoordinate
+        )
         with self.assertRaises(ValueError):
             SortOrder.find("no-name")
 
@@ -20,7 +22,6 @@ class TestSortOrder(unittest.TestCase):
 
 
 class TestSortOrderKey(unittest.TestCase):
-
     class Comparable(SortOrderKey):
         def __init__(self, value):
             self.value = value
@@ -58,7 +59,8 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
             self._dict["Start_Position"] = start
             self._dict["End_Position"] = end
             super(TestBarcodeAndCoordinateKey.DummyRecord, self).__init__(
-                chr, start, end)
+                chr, start, end
+            )
 
         def value(self, key):
             return self._dict[key]
@@ -75,8 +77,9 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
         self.assertGreater(k2, k1)
 
     def test_name(self):
-        self.assertEqual(TestBarcodeAndCoordinateKey.TestSortOrder.name(),
-                         "BarcodesAndCoordinate")
+        self.assertEqual(
+            TestBarcodeAndCoordinateKey.TestSortOrder.name(), "BarcodesAndCoordinate"
+        )
 
     def test_diff_tumor_barcode(self):
         r1 = TestBarcodeAndCoordinateKey.DummyRecord("A", "B", "C", 1, 2)
@@ -104,17 +107,17 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
         self.__test_diff(r1, r2)
 
     def test_with_contigs(self):
-        lines = ["chr1\t248956422\t112\t70\t71"
-                 "chr2\t242193529\t252513167\t70\t71",
-                 "chr3\t198295559\t498166716\t70\t71",
-                 "chr4\t190214555\t699295181\t70\t71",
-                 "chr5\t181538259\t892227221\t70\t71",
-                 "chr6\t170805979\t1076358996\t70\t71",
-                 "chr7\t159345973\t1249605173\t70\t71",
-                 "chr8\t145138636\t1411227630\t70\t71",
-                 "chr9\t138394717\t1558439788\t70\t71",
-                 "chr10\t133797422\t1698811686\t70\t71"
-                 ]
+        lines = [
+            "chr1\t248956422\t112\t70\t71" "chr2\t242193529\t252513167\t70\t71",
+            "chr3\t198295559\t498166716\t70\t71",
+            "chr4\t190214555\t699295181\t70\t71",
+            "chr5\t181538259\t892227221\t70\t71",
+            "chr6\t170805979\t1076358996\t70\t71",
+            "chr7\t159345973\t1249605173\t70\t71",
+            "chr8\t145138636\t1411227630\t70\t71",
+            "chr9\t138394717\t1558439788\t70\t71",
+            "chr10\t133797422\t1698811686\t70\t71",
+        ]
         fd, fn = tmp_file(lines=lines)
 
         sort_order = BarcodesAndCoordinate(fasta_index=fn)
@@ -135,8 +138,7 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
         os.remove(fn)
 
     def test_str(self):
-        self.assertEqual(BarcodesAndCoordinate.name(),
-                         str(BarcodesAndCoordinate()))
+        self.assertEqual(BarcodesAndCoordinate.name(), str(BarcodesAndCoordinate()))
 
     def test_key_str(self):
         r1 = TestBarcodeAndCoordinateKey.DummyRecord("A", "B", "C", 1, 2)
@@ -154,8 +156,7 @@ class TestCoordinateKey(unittest.TestCase):
             self._dict["Chromosome"] = chr
             self._dict["Start_Position"] = start
             self._dict["End_Position"] = end
-            super(TestCoordinateKey.DummyRecord, self).__init__(
-                chr, start, end)
+            super(TestCoordinateKey.DummyRecord, self).__init__(chr, start, end)
 
         def value(self, key):
             return self._dict[key]
@@ -172,8 +173,7 @@ class TestCoordinateKey(unittest.TestCase):
         self.assertGreater(k2, k1)
 
     def test_name(self):
-        self.assertEqual(TestCoordinateKey.TestSortOrder.name(),
-                         "Coordinate")
+        self.assertEqual(TestCoordinateKey.TestSortOrder.name(), "Coordinate")
 
     def test_diff_chromosome(self):
         r1 = TestCoordinateKey.DummyRecord("C", 1, 2)
@@ -191,17 +191,17 @@ class TestCoordinateKey(unittest.TestCase):
         self.__test_diff(r1, r2)
 
     def test_with_contigs(self):
-        lines = ["chr1\t248956422\t112\t70\t71"
-                 "chr2\t242193529\t252513167\t70\t71",
-                 "chr3\t198295559\t498166716\t70\t71",
-                 "chr4\t190214555\t699295181\t70\t71",
-                 "chr5\t181538259\t892227221\t70\t71",
-                 "chr6\t170805979\t1076358996\t70\t71",
-                 "chr7\t159345973\t1249605173\t70\t71",
-                 "chr8\t145138636\t1411227630\t70\t71",
-                 "chr9\t138394717\t1558439788\t70\t71",
-                 "chr10\t133797422\t1698811686\t70\t71"
-                 ]
+        lines = [
+            "chr1\t248956422\t112\t70\t71" "chr2\t242193529\t252513167\t70\t71",
+            "chr3\t198295559\t498166716\t70\t71",
+            "chr4\t190214555\t699295181\t70\t71",
+            "chr5\t181538259\t892227221\t70\t71",
+            "chr6\t170805979\t1076358996\t70\t71",
+            "chr7\t159345973\t1249605173\t70\t71",
+            "chr8\t145138636\t1411227630\t70\t71",
+            "chr9\t138394717\t1558439788\t70\t71",
+            "chr10\t133797422\t1698811686\t70\t71",
+        ]
         fd, fn = tmp_file(lines=lines)
 
         sort_order = Coordinate(fasta_index=fn)
@@ -226,7 +226,6 @@ class TestCoordinateKey(unittest.TestCase):
         sort_key = Coordinate().sort_key()
         self.assertEqual(str(sort_key(r1)), "C\t1\t2")
 
-
     def test_not_locatable(self):
         sort_key = Coordinate().sort_key()
 
@@ -239,16 +238,14 @@ class TestCoordinateKey(unittest.TestCase):
 
 class TestSortOrderEnforcingIterator(unittest.TestCase):
     def test_empty_iter(self):
-        so_iter = SortOrderEnforcingIterator(_iter=iter([]),
-                                             sort_order=Coordinate())
+        so_iter = SortOrderEnforcingIterator(_iter=iter([]), sort_order=Coordinate())
         items = [item for item in so_iter]
         self.assertListEqual(items, [])
 
     def test_single_element_iter(self):
         r1 = TestCoordinateKey.DummyRecord("C", 1, 2)
 
-        so_iter = SortOrderEnforcingIterator(_iter=iter([r1]),
-                                             sort_order=Coordinate())
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1]), sort_order=Coordinate())
         items = [item for item in so_iter]
         self.assertListEqual(items, [r1])
 
@@ -256,8 +253,9 @@ class TestSortOrderEnforcingIterator(unittest.TestCase):
         r1 = TestCoordinateKey.DummyRecord("C", 1, 2)
         r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
 
-        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
-                                             sort_order=Coordinate())
+        so_iter = SortOrderEnforcingIterator(
+            _iter=iter([r1, r2]), sort_order=Coordinate()
+        )
         items = [item for item in so_iter]
         self.assertListEqual(items, [r1, r2])
 
@@ -265,8 +263,9 @@ class TestSortOrderEnforcingIterator(unittest.TestCase):
         r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
         r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
 
-        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
-                                             sort_order=Coordinate())
+        so_iter = SortOrderEnforcingIterator(
+            _iter=iter([r1, r2]), sort_order=Coordinate()
+        )
         with self.assertRaises(ValueError):
             items = [item for item in so_iter]
 
@@ -274,17 +273,16 @@ class TestSortOrderEnforcingIterator(unittest.TestCase):
         r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
         r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
 
-        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
-                                             sort_order=Unsorted())
+        so_iter = SortOrderEnforcingIterator(
+            _iter=iter([r1, r2]), sort_order=Unsorted()
+        )
         items = [item for item in so_iter]
         self.assertListEqual(items, [r1, r2])
-
 
     def test_unknown(self):
         r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
         r2 = TestCoordinateKey.DummyRecord("C", 2, 3)
 
-        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]),
-                                             sort_order=Unknown())
+        so_iter = SortOrderEnforcingIterator(_iter=iter([r1, r2]), sort_order=Unknown())
         items = [item for item in so_iter]
         self.assertListEqual(items, [r1, r2])

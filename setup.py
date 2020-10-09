@@ -239,6 +239,7 @@ setup(
         "print_version": PrintVersion,
     },
     include_package_data=True,
+    scripts=[os.path.join(os.path.dirname(__file__), 'bin', PACKAGE)],
 )
 
 # __END__
