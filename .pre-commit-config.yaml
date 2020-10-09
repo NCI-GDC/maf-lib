@@ -1,6 +1,31 @@
+default_stages: [commit, push]
+default_language_version:
+  python_venv: python3.6
+
 repos:
--   repo: git@github.com:Yelp/detect-secrets
+  - repo: git@github.com:Yelp/detect-secrets
     rev: v0.13.1
     hooks:
-    -   id: detect-secrets
+      - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
+      - id: detect-private-key
+  - repo: https://github.com/asottile/seed-isort-config
+    rev: v1.9.3
+    hooks:
+      - id: seed-isort-config
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.21
+    hooks:
+      - id: isort
+  - repo: https://github.com/psf/black
+    rev: 19.10b0
+    hooks:
+      - id: black
