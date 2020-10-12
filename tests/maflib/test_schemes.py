@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
+
 import unittest
 from collections import OrderedDict
 
 from maflib.header import MafHeader, MafHeaderRecord, MafHeaderVersionRecord
 from maflib.schemes import MafScheme, NoRestrictionsScheme
-from maflib.tests.testutils import (
+from tests.maflib.testutils import (
     GdcV1_0_0_BasicScheme,
     GdcV1_0_0_ProtectedScheme,
     GdcV1_0_0_PublicScheme,
@@ -132,3 +134,6 @@ class TestGdcV1_0_0_Scheme(unittest.TestCase):
                 column_index = scheme.column_index(name)
                 cls.build(name=name, value="Gene", column_index=column_index)
                 break
+
+
+# __END__
