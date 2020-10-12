@@ -2,8 +2,9 @@ import unittest
 from collections import OrderedDict
 
 from maflib.column_types import FloatColumn, StringColumn
-from maflib.record import *
+from maflib.record import MafColumnRecord, MafRecord
 from maflib.schemes import MafScheme
+from maflib.validation import MafValidationErrorType, ValidationStringency
 
 
 class TestMafRecord(unittest.TestCase):
