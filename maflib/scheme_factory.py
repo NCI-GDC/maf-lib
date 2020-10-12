@@ -33,7 +33,7 @@ def scheme_to_columns(scheme):
 
 
 def combine_columns(base_columns, extra_columns=None, filtered=None):
-    """ Combines columns when building a scheme.
+    """Combines columns when building a scheme.
 
     The `base_columns` and `extra_columns` should be a list of columns (of
     type `_Column`).
@@ -178,7 +178,7 @@ def get_built_in_filenames(filename=None):
     """
     if not filename:
         filename = __file__
-    path = os.path.join(os.path.dirname(filename), "resources")
+    path = os.path.join(os.path.dirname(filename), "schemas")  # TODO: Fixme
     return glob.glob(os.path.join(path, "*json"))
 
 
@@ -253,7 +253,8 @@ def scheme_sort_key(scheme):
         """
         if not str.startswith("gdc-"):
             return [-1, -1, -1, str]
-        str = str[len("gdc-"):]
+        gdc_len = len("gdc-")
+        str = str[gdc_len:]
         last = ""
         if "-" in str:
             index = str.index("-")
