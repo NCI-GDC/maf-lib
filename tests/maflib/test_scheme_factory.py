@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import unittest
 from collections import OrderedDict
@@ -18,7 +20,7 @@ from maflib.scheme_factory import (
     validate_schemes,
 )
 from maflib.schemes import MafScheme, NoRestrictionsScheme
-from maflib.tests.testutils import tmp_file
+from tests.maflib.testutils import tmp_file
 
 
 class TestSchemeFactory(unittest.TestCase):
@@ -302,3 +304,6 @@ class TestSchemeFactory(unittest.TestCase):
         self.assertEqual(scheme.annotation_spec(), "gdc-1.0.0-protected")
         self.assertFalse(scheme.is_basic())
         self.assertEqual(len(scheme.__column_dict__()), 125)
+
+
+# __END__
