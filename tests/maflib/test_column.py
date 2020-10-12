@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 from collections import OrderedDict
 
@@ -210,3 +212,6 @@ class TestMafCustomColumnRecord(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             TestMafCustomColumnRecord.ValidColumn.build_nullable(name="Name")
+
+
+# __END__
