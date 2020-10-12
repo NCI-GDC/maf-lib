@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 
 from maflib.column import MafColumnRecord
@@ -503,3 +505,6 @@ class TestLocatableByAlleleOverlapIterator(unittest.TestCase):
 
             with self.assertRaises(StopIteration):
                 next(items)
+
+
+# __END__
