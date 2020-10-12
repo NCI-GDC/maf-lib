@@ -12,7 +12,7 @@ GIT_REPO = "maf-lib"
 PACKAGE = "maflib"
 
 PYPI_REPO = "bioinf-{}".format(PACKAGE)
-REPO_URL = "https://github.com/NCI-GDC/{}".format(GIT_REPO)
+GIT_REPO_URL = "https://github.com/NCI-GDC/{}".format(GIT_REPO)
 
 INSTALL_REQUIRES = []
 
@@ -227,7 +227,7 @@ setup(
     name=PYPI_REPO,
     description="Mutation Annotation Format (MAF) library",
     version=__pypi_version__,
-    url=REPO_URL,
+    url=GIT_REPO_URL,
     python_requires=">=3.6",
     packages=find_packages(),
     package_data={'maflib': ['schemas/*.json']},
