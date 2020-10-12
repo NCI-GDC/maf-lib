@@ -11,7 +11,7 @@ import sys
 from uuid import UUID
 
 from maflib.column import MafColumnRecord, MafCustomColumnRecord
-from maflib.column_values import *
+from maflib import column_values
 from maflib.util import abstractclassmethod
 
 try:
@@ -408,7 +408,7 @@ class NullableYesOrNo(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return NullableYesOrNoEnum
+        return column_values.NullableYesOrNoEnum
 
     @classmethod
     def __build__(cls, value):
@@ -419,8 +419,8 @@ class NullableYesOrNo(EnumColumn):
     @classmethod
     def __nullable_dict__(cls):
         return {
-            NullableYesOrNoEnum.Null.name: NullableYesOrNoEnum.Null,
-            "": NullableYesOrNoEnum.Null,
+            column_values.NullableYesOrNoEnum.Null.name: column_values.NullableYesOrNoEnum.Null,
+            "": column_values.NullableYesOrNoEnum.Null,
         }
 
 
@@ -430,7 +430,7 @@ class NullableYOrN(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return NullableYOrNEnum
+        return column_values.NullableYOrNEnum
 
     @classmethod
     def __build__(cls, value):
@@ -441,8 +441,8 @@ class NullableYOrN(EnumColumn):
     @classmethod
     def __nullable_dict__(cls):
         return {
-            NullableYOrNEnum.Null.name: NullableYOrNEnum.Null,
-            "": NullableYOrNEnum.Null,
+            column_values.NullableYOrNEnum.Null.name: column_values.NullableYOrNEnum.Null,
+            "": column_values.NullableYOrNEnum.Null,
         }
 
 
@@ -463,7 +463,7 @@ class PickColumn(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return PickEnum
+        return column_values.PickEnum
 
     @classmethod
     def __build__(cls, value):
@@ -473,7 +473,7 @@ class PickColumn(EnumColumn):
 
     @classmethod
     def __nullable_dict__(cls):
-        return {PickEnum.Null.name: PickEnum.Null, "": PickEnum.Null}
+        return {column_values.PickEnum.Null.name: column_values.PickEnum.Null, "": column_values.PickEnum.Null}
 
 
 class BooleanColumn(MafCustomColumnRecord):
@@ -511,7 +511,7 @@ class Strand(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return StrandEnum
+        return column_values.StrandEnum
 
 
 class VariantClassification(EnumColumn):
@@ -519,7 +519,7 @@ class VariantClassification(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return VariantClassificationEnum
+        return column_values.VariantClassificationEnum
 
 
 class VariantType(EnumColumn):
@@ -527,7 +527,7 @@ class VariantType(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return VariantTypeEnum
+        return column_values.VariantTypeEnum
 
 
 class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
@@ -536,7 +536,7 @@ class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return VerificationStatusEnum
+        return column_values.VerificationStatusEnum
 
 
 class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
@@ -545,7 +545,7 @@ class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return ValidationStatusEnum
+        return column_values.ValidationStatusEnum
 
 
 class MutationStatus(EnumColumn):
@@ -553,7 +553,7 @@ class MutationStatus(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return MutationStatusEnum
+        return column_values.MutationStatusEnum
 
 
 class Sequencer(EnumColumn):
@@ -562,7 +562,7 @@ class Sequencer(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return SequencerEnum
+        return column_values.SequencerEnum
 
 
 class SequenceOfSequencers(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
@@ -603,7 +603,7 @@ class FeatureType(NullableEmptyStringIsNone, EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return FeatureTypeEnum
+        return column_values.FeatureTypeEnum
 
 
 class TranscriptStrand(NullableEmptyStringIsNone, MafCustomColumnRecord):
@@ -628,7 +628,7 @@ class Impact(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return ImpactEnum
+        return column_values.ImpactEnum
 
 
 class MC3Overlap(EnumColumn):
@@ -636,7 +636,7 @@ class MC3Overlap(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return MC3OverlapEnum
+        return column_values.MC3OverlapEnum
 
 
 class GdcValidationStatus(EnumColumn):
@@ -644,4 +644,4 @@ class GdcValidationStatus(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return GdcValidationStatusEnum
+        return column_values.GdcValidationStatusEnum
