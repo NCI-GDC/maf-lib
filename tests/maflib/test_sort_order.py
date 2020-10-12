@@ -2,8 +2,16 @@ import os
 import unittest
 
 from maflib.locatable import Locatable
-from maflib.sort_order import *
-from maflib.tests.testutils import tmp_file
+from maflib.sort_order import (
+    BarcodesAndCoordinate,
+    Coordinate,
+    SortOrder,
+    SortOrderEnforcingIterator,
+    SortOrderKey,
+    Unknown,
+    Unsorted,
+)
+from tests.maflib.testutils import tmp_file
 
 
 class TestSortOrder(unittest.TestCase):
