@@ -1,8 +1,15 @@
-import os
+#!/usr/bin/env python3
+
 import tempfile
 import unittest
 
-from maflib.validation import *
+from maflib.logger import Logger
+from maflib.validation import (
+    MafFormatException,
+    MafValidationError,
+    MafValidationErrorType,
+    ValidationStringency,
+)
 
 
 class TestMafValidationError(unittest.TestCase):
@@ -61,8 +68,10 @@ class TestMafValidationError(unittest.TestCase):
             for error in TestMafValidationError.__errors
         ]
         reader.close()
-        os.remove(err_file_name)
 
         self.assertTrue(len(actual_lines) == len(expected_lines))
         for actual_line, expected_line in zip(actual_lines, expected_lines):
             self.assertIn(expected_line, actual_line)
+
+
+# __END__
