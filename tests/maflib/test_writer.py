@@ -1,12 +1,23 @@
+#!/usr/bin/env python3
+
+import tempfile
+from collections import OrderedDict
+
 from maflib.column_types import FloatColumn, IntegerColumn, StringColumn
+from maflib.header import MafHeader
 from maflib.locatable import Locatable
-from maflib.reader import *
-from maflib.schemes import *
+from maflib.reader import MafReader
+from maflib.record import MafRecord
+from maflib.schemes import MafScheme
 from maflib.sort_order import Coordinate
-from maflib.tests.testutils import *
 from maflib.util import captured_output
-from maflib.validation import MafFormatException
-from maflib.writer import *
+from maflib.validation import (
+    MafFormatException,
+    MafValidationErrorType,
+    ValidationStringency,
+)
+from maflib.writer import MafWriter
+from tests.maflib.testutils import GdcV1_0_0_ProtectedScheme, TestCase, read_lines
 
 
 class TestMafWriter(TestCase):
@@ -88,8 +99,6 @@ class TestMafWriter(TestCase):
                 context.exception.tpe, MafValidationErrorType.HEADER_MISSING_VERSION
             )
 
-        os.remove(path)
-
     def test_gz_support(self):
         fd, path = tempfile.mkstemp(suffix=".gz")
 
@@ -113,7 +122,6 @@ class TestMafWriter(TestCase):
         stderr = stderr.getvalue().rstrip('\r\n').split("\n")
         self.assertListEqual(stdout, [''])
         self.assertListEqual(stderr, [''])
-        os.remove(path)
 
     def test_close(self):
         fd, path = tempfile.mkstemp()
@@ -290,3 +298,6 @@ class TestMafWriter(TestCase):
 
         self.assertListEqual([r["Start_Position"].value for r in records], [2, 3, 4])
         self.assertListEqual([r["End_Position"].value for r in records], [2, 3, 4])
+
+
+# __END__
