@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from maflib.tests.testutils import tmp_file
-from maflib.util import *
+from maflib.util import LineReader, PeekableIterator, extend_class, extend_instance
+from tests.maflib.testutils import tmp_file
 
 
 class TestLineReader(unittest.TestCase):
