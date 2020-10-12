@@ -1,9 +1,20 @@
+#!/usr/bin/env python3
+
+import unittest
+from collections import OrderedDict
+
 from maflib.column_types import FloatColumn, StringColumn
+from maflib.header import MafHeader
 from maflib.locatable import Locatable
-from maflib.reader import *
-from maflib.schemes import *
+from maflib.reader import MafReader
+from maflib.schemes import MafScheme, NoRestrictionsScheme
 from maflib.sort_order import Coordinate
-from maflib.tests.testutils import *
+from maflib.validation import MafValidationErrorType, ValidationStringency
+from tests.maflib.testutils import (
+    GdcV1_0_0_BasicScheme,
+    GdcV1_0_0_ProtectedScheme,
+    tmp_file,
+)
 
 
 class TestMafReader(unittest.TestCase):
@@ -281,7 +292,6 @@ class TestMafReader(unittest.TestCase):
         self.assertListEqual([r["float"].value for r in records], [1.314, 2.314, 3.314])
 
         reader.close()
-        os.remove(fn)
 
     class DummyRecord(Locatable):
         def __init__(self, chr, start, end):
@@ -332,7 +342,6 @@ class TestMafReader(unittest.TestCase):
         self.assertEqual(len(records), 3)
 
         reader.close()
-        os.remove(fn)
 
     def test_reader_out_of_order(self):
         column_names = ["Chromosome", "Start_Position", "End_Position"]
@@ -372,4 +381,6 @@ class TestMafReader(unittest.TestCase):
             records = [record for record in reader]
 
         reader.close()
-        os.remove(fn)
+
+
+# __END__
