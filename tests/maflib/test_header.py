@@ -1,19 +1,27 @@
+# /usr/bin/env python3
+
 import os
 import tempfile
 import unittest
 
-from maflib.header import *
+from maflib import sort_order
+from maflib.header import MafHeader, MafHeaderRecord, MafHeaderVersionRecord
+from maflib.logger import Logger
 from maflib.reader import MafReader
-from maflib.schemes import *
+from maflib.schemes import NoRestrictionsScheme
 from maflib.sort_order import Coordinate
-from maflib.tests.testutils import (
+from maflib.util import LineReader
+from maflib.validation import (
+    MafFormatException,
+    MafValidationErrorType,
+    ValidationStringency,
+)
+from tests.maflib.testutils import (
     GdcV1_0_0_BasicScheme,
     GdcV1_0_0_ProtectedScheme,
     GdcV1_0_0_PublicScheme,
     tmp_file,
 )
-from maflib.util import LineReader
-from maflib.validation import MafFormatException
 
 
 class TestMafHeaderRecord(unittest.TestCase):
@@ -599,3 +607,6 @@ class TestMafHeader(unittest.TestCase):
         )
 
     # TODO: get the version with an empty header
+
+
+# __END__
