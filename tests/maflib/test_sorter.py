@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import unittest
 from collections import OrderedDict
@@ -7,7 +8,7 @@ from maflib.locatable import Locatable
 from maflib.schemes import MafScheme
 from maflib.sort_order import BarcodesAndCoordinate
 from maflib.sorter import MafSorter, MafSorterCodec, Sorter
-from maflib.tests.testutils import tmp_file
+from tests.maflib.testutils import tmp_file
 
 
 class DummyScheme(MafScheme):
@@ -134,8 +135,8 @@ class TestMafSorter(unittest.TestCase):
     def __test_sorter(self, sorter, chromosome="C", with_scheme=False):
         """
         :param sorter: the sorter to use
-        :param chromosome: the chromosome value to use for all generated 
-        records 
+        :param chromosome: the chromosome value to use for all generated
+        records
         :param with_scheme: true if a scheme was used with the sorter, false
          otherwise.  If no scheme was used, compares the value as strings.
         """
@@ -209,3 +210,6 @@ class TestMafSorter(unittest.TestCase):
 
         fd.close()
         os.remove(fn)
+
+
+# __END__
