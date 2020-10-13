@@ -51,9 +51,8 @@ pipeline {
     stage('Docker Publish Staging') {
       when {
         anyOf {
-	  branch 'feat/*'
+	  branch 'feat*'
 	  branch 'develop'
-	  branch 'feature/*'
 	  branch 'hotfix/*'
 	  branch 'release/*'
 	}
@@ -72,7 +71,7 @@ pipeline {
         sh 'make publish-release'
       }
     }
-    stage('PyPI Publish') {
+    stage('PyPI Publish Branch') {
       when { 
         anyOf {
 	  branch 'master'
