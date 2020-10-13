@@ -17,9 +17,9 @@
 from collections import MutableMapping, OrderedDict
 from copy import deepcopy
 
-import maflib.sort_order as sort_order
 from maflib.logger import Logger
 from maflib.scheme_factory import all_schemes, find_scheme
+from maflib.sort_order import Coordinate, SortOrder, SortOrderKey, Unknown, Unsorted
 from maflib.validation import (
     MafValidationError,
     MafValidationErrorType,
@@ -48,7 +48,7 @@ class MafHeader(MutableMapping):
 
     AnnotationSpecKey = "annotation.spec"
 
-    SortOrderKey = "sort.order"
+    SortOrderKey = "sort.order"  # NOQA
 
     ContigKey = "contigs"
 
@@ -56,7 +56,7 @@ class MafHeader(MutableMapping):
 
     SupportedAnnotationSpecs = [s.annotation_spec() for s in all_schemes()]
 
-    SupportedSortOrders = [so.name() for so in sort_order.SortOrder.all()]
+    SupportedSortOrders = [so.name() for so in SortOrder.all()]
 
     HeaderLineStartSymbol = "#"
 
@@ -113,7 +113,7 @@ class MafHeader(MutableMapping):
         if MafHeader.SortOrderKey in self.__records:
             return self.__records[MafHeader.SortOrderKey].value
         else:
-            return sort_order.Unsorted()
+            return Unsorted()
 
     def scheme(self):
         """Gets the scheme according to the version and annotation, None if
@@ -249,7 +249,7 @@ class MafHeader(MutableMapping):
 
         if header.contigs():
             if header.sort_order() and issubclass(
-                header.sort_order().__class__, sort_order.Coordinate
+                header.sort_order().__class__, Coordinate
             ):
                 sokey = header[MafHeader.SortOrderKey].value.name()
                 header[MafHeader.SortOrderKey] = MafHeaderSortOrderRecord(
@@ -501,21 +501,18 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
 
     def __init__(self, value, fasta_index=None, contigs=None):
         """:param: value: a string representing the name of the sort order,
-        or an instance of SortOrder. """
+        or an instance of SortOrder."""
         if isinstance(value, str):
             value = next(
-                (so() for so in sort_order.SortOrder.all() if so.name() == value),
-                sort_order.Unknown,
+                (so() for so in SortOrder.all() if so.name() == value), Unknown,
             )
-        if not issubclass(value.__class__, sort_order.SortOrder):
+        if not issubclass(value.__class__, SortOrder):
             # TODO: warn? log? return None? validation error?
             raise Exception(
                 "Value of type '%s' is not a subclass of "
                 "'SortOrder'" % value.__class__.__name__
             )
-        if (fasta_index or contigs) and issubclass(
-            value.__class__, sort_order.Coordinate
-        ):
+        if (fasta_index or contigs) and issubclass(value.__class__, Coordinate):
             value = value.__class__(fasta_index=fasta_index, contigs=contigs)
 
         super(MafHeaderSortOrderRecord, self).__init__(
