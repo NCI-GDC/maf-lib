@@ -11,7 +11,22 @@ import sys
 from uuid import UUID
 
 from maflib.column import MafColumnRecord, MafCustomColumnRecord
-from maflib import column_values
+from maflib.column_values import (
+    FeatureTypeEnum,
+    GdcValidationStatusEnum,
+    ImpactEnum,
+    MC3OverlapEnum,
+    MutationStatusEnum,
+    NullableYesOrNoEnum,
+    NullableYOrNEnum,
+    PickEnum,
+    SequencerEnum,
+    StrandEnum,
+    ValidationStatusEnum,
+    VariantClassificationEnum,
+    VariantTypeEnum,
+    VerificationStatusEnum,
+)
 from maflib.util import abstractclassmethod
 
 try:
@@ -76,7 +91,7 @@ class _BuildStringColumn(object):
 class NullableStringColumn(
     NullableEmptyStringIsNone, _BuildStringColumn, MafCustomColumnRecord
 ):
-    """ A column where the value must be a string, with its null value being
+    """A column where the value must be a string, with its null value being
     an empty string"""
 
     def __validate__(self):
@@ -408,7 +423,7 @@ class NullableYesOrNo(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.NullableYesOrNoEnum
+        return NullableYesOrNoEnum
 
     @classmethod
     def __build__(cls, value):
@@ -419,8 +434,8 @@ class NullableYesOrNo(EnumColumn):
     @classmethod
     def __nullable_dict__(cls):
         return {
-            column_values.NullableYesOrNoEnum.Null.name: column_values.NullableYesOrNoEnum.Null,
-            "": column_values.NullableYesOrNoEnum.Null,
+            NullableYesOrNoEnum.Null.name: NullableYesOrNoEnum.Null,
+            "": NullableYesOrNoEnum.Null,
         }
 
 
@@ -430,7 +445,7 @@ class NullableYOrN(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.NullableYOrNEnum
+        return NullableYOrNEnum
 
     @classmethod
     def __build__(cls, value):
@@ -441,8 +456,8 @@ class NullableYOrN(EnumColumn):
     @classmethod
     def __nullable_dict__(cls):
         return {
-            column_values.NullableYOrNEnum.Null.name: column_values.NullableYOrNEnum.Null,
-            "": column_values.NullableYOrNEnum.Null,
+            NullableYOrNEnum.Null.name: NullableYOrNEnum.Null,
+            "": NullableYOrNEnum.Null,
         }
 
 
@@ -463,7 +478,7 @@ class PickColumn(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.PickEnum
+        return PickEnum
 
     @classmethod
     def __build__(cls, value):
@@ -473,7 +488,10 @@ class PickColumn(EnumColumn):
 
     @classmethod
     def __nullable_dict__(cls):
-        return {column_values.PickEnum.Null.name: column_values.PickEnum.Null, "": column_values.PickEnum.Null}
+        return {
+            PickEnum.Null.name: PickEnum.Null,
+            "": PickEnum.Null,
+        }
 
 
 class BooleanColumn(MafCustomColumnRecord):
@@ -511,7 +529,7 @@ class Strand(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.StrandEnum
+        return StrandEnum
 
 
 class VariantClassification(EnumColumn):
@@ -519,7 +537,7 @@ class VariantClassification(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.VariantClassificationEnum
+        return VariantClassificationEnum
 
 
 class VariantType(EnumColumn):
@@ -527,7 +545,7 @@ class VariantType(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.VariantTypeEnum
+        return VariantTypeEnum
 
 
 class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
@@ -536,7 +554,7 @@ class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.VerificationStatusEnum
+        return VerificationStatusEnum
 
 
 class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
@@ -545,7 +563,7 @@ class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.ValidationStatusEnum
+        return ValidationStatusEnum
 
 
 class MutationStatus(EnumColumn):
@@ -553,7 +571,7 @@ class MutationStatus(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.MutationStatusEnum
+        return MutationStatusEnum
 
 
 class Sequencer(EnumColumn):
@@ -562,7 +580,7 @@ class Sequencer(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.SequencerEnum
+        return SequencerEnum
 
 
 class SequenceOfSequencers(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
@@ -603,7 +621,7 @@ class FeatureType(NullableEmptyStringIsNone, EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.FeatureTypeEnum
+        return FeatureTypeEnum
 
 
 class TranscriptStrand(NullableEmptyStringIsNone, MafCustomColumnRecord):
@@ -628,7 +646,7 @@ class Impact(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.ImpactEnum
+        return ImpactEnum
 
 
 class MC3Overlap(EnumColumn):
@@ -636,7 +654,7 @@ class MC3Overlap(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.MC3OverlapEnum
+        return MC3OverlapEnum
 
 
 class GdcValidationStatus(EnumColumn):
@@ -644,4 +662,4 @@ class GdcValidationStatus(EnumColumn):
 
     @classmethod
     def __enum_class__(cls):
-        return column_values.GdcValidationStatusEnum
+        return GdcValidationStatusEnum
