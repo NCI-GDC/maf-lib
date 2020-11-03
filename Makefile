@@ -123,13 +123,13 @@ test-docker:
 
 .PHONY: publish-*
 
-publish-staging: docker-login
+publish-staging:
 	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_IMAGE_STAGING}
 	docker push ${DOCKER_IMAGE_COMMIT}
 	docker push ${DOCKER_IMAGE_STAGING}
 	docker push ${DOCKER_IMAGE}
 
-publish-release: docker-login
+publish-release:
 	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_IMAGE_RELEASE}
 	docker push ${DOCKER_IMAGE_RELEASE}
 
