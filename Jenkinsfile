@@ -12,7 +12,7 @@ PROXY = "http://cloud-proxy:3128"
 pipeline {
   agent any
   environment {
-        TWINE_REPOSITORY_URL = credentials("${BRANCH_NAME == 'master' ? 'twine_repository_url_prod' : 'twine_repository_url'}")
+        TWINE_REPOSITORY_URL = credentials("${BRANCH_NAME == 'main' ? 'twine_repository_url_prod' : 'twine_repository_url'}")
 	TWINE_USERNAME = credentials('twine_username')
 	TWINE_PASSWORD = credentials('twine_password')
 	QUAY_USERNAME = credentials('QUAY_USERNAME')
@@ -51,7 +51,8 @@ pipeline {
     stage('Docker Publish Staging') {
       when {
         anyOf {
-	  branch 'feat*'
+	  branch 'feat/*'
+	  branch 'feature/*'
 	  branch 'develop'
 	  branch 'hotfix/*'
 	  branch 'release/*'
@@ -64,7 +65,7 @@ pipeline {
     stage('Docker Publish Release') {
       when {
         anyOf {
-	  branch 'master'
+	  branch 'main'
 	}
       }
       steps {
@@ -74,7 +75,7 @@ pipeline {
     stage('PyPI Publish Branch') {
       when { 
         anyOf {
-	  branch 'master'
+	  branch 'main'
 	  branch 'develop'
 	  branch 'hotfix/*'
 	  branch 'release/*'

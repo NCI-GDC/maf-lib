@@ -177,7 +177,7 @@ def call_subprocess(cmd: list):
 def get_pypi_suffix(branch, commit) -> str:
     """Return PEP 440-compatible suffix based on branch type.
     """
-    if branch in ('master', 'main'):
+    if branch == 'main':
         return ''
     elif branch == 'develop':
         return ".dev{}".format(commit)
