@@ -27,13 +27,10 @@ pipeline {
     stage('Init') {
       steps {
         vbash 'make version'
-
-	script {
-	  PYPI_VERSION = sh(script: "make print-pypi", returnStdout: true).trim()
-	  currentBuild.displayName = "#${currentBuild.number} - ${PYPI_VERSION}"
-	}
-
-	echo "Version: ${VERSION}"
+        script {
+          PYPI_VERSION = sh(script: "make print-pypi", returnStdout: true).trim()
+          currentBuild.displayName = "#${currentBuild.number} - ${PYPI_VERSION}"
+        }
       }
     }
     stage('Tox') {
@@ -48,7 +45,7 @@ pipeline {
           branch 'develop'
           branch 'hotfix/*'
           branch 'release/*'
-	}
+        }
       }
       steps {
         echo "Building PyPI Version: ${PYPI_VERSION}"
@@ -58,16 +55,4 @@ pipeline {
       }
     }
   }
-}
-
-def vbash(command) {
-  sh """#!/bin/bash
-        eval \"\$(pyenv init -)\"
-	eval \"\$(pyenv virtualenv-init -)\"
-
-	pyenv virtualenv ${PYENV_VERSION} ${PROJECT_NAME}-venv || true
-	pyenv activate ${PROJECT_NAME}-venv
-
-	${command}
-  """
 }
