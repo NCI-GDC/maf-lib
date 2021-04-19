@@ -20,6 +20,9 @@ TWINE_REPOSITORY_URL?=""
 version:
 	@echo --- VERSION: ${PYPI_VERSION} ---
 
+print-pypi:
+	@echo ${PYPI_VERSION}
+
 version-docker:
 	@echo ${DOCKER_IMAGE}
 	@echo ${DOCKER_IMAGE_COMMIT}

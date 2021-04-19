@@ -29,10 +29,8 @@ pipeline {
         vbash 'make version'
 
 	script {
-	  GIT_HASH = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-	  VERSION = sh(script: "make print-version BRANCH_NAME=${BRANCH_NAME}", returnStdout: true).trim()
 	  PYPI_VERSION = sh(script: "make print-pypi", returnStdout: true).trim()
-	  currentBuild.displayName = "#${currentBuild.number} - ${VERSION}"
+	  currentBuild.displayName = "#${currentBuild.number} - ${PYPI_VERSION}"
 	}
 
 	echo "Version: ${VERSION}"
@@ -46,14 +44,14 @@ pipeline {
     stage('PyPI Publish Branch') {
       when { 
         anyOf {
-	  branch 'main'
-	  branch 'develop'
-	  branch 'hotfix/*'
-	  branch 'release/*'
+          branch 'main'
+          branch 'develop'
+          branch 'hotfix/*'
+          branch 'release/*'
 	}
       }
       steps {
-	echo "Building PyPI Version: ${PYPI_VERSION}"
+        echo "Building PyPI Version: ${PYPI_VERSION}"
         sh "pip install --user twine wheel"
         vbash "make build-pypi"
         vbash "make publish-pypi"
