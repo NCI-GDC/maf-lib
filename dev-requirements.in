@@ -1,0 +1,9 @@
+-c requirements.txt
+detect-secrets==0.13.1
+isort
+flake8
+pre-commit
+tox
+mock
+pytest
+pytest-cov
