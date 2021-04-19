@@ -35,7 +35,8 @@ pipeline {
     }
     stage('Tox') {
       steps {
-        vbash "make tox"
+        sh "pip install --user tox"
+        sh "tox"
       }
     }
     stage('PyPI Publish Branch') {
@@ -50,8 +51,8 @@ pipeline {
       steps {
         echo "Building PyPI Version: ${PYPI_VERSION}"
         sh "pip install --user twine wheel"
-        vbash "make build-pypi"
-        vbash "make publish-pypi"
+        sh "make build-pypi"
+        sh "make publish-pypi"
       }
     }
   }
