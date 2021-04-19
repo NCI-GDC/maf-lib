@@ -38,38 +38,9 @@ pipeline {
 	echo "Version: ${VERSION}"
       }
     }
-    stage('Docker Build') {
+    stage('Tox') {
       steps {
-        vbash "make build-docker PROXY=${PROXY}"
-      }
-    }
-    stage('Docker Test') {
-      steps {
-        sh 'make test-docker'
-      }
-    }
-    stage('Docker Publish Staging') {
-      when {
-        anyOf {
-	  branch 'feat/*'
-	  branch 'feature/*'
-	  branch 'develop'
-	  branch 'hotfix/*'
-	  branch 'release/*'
-	}
-      }
-      steps {
-        sh 'make publish-staging'
-      }
-    }
-    stage('Docker Publish Release') {
-      when {
-        anyOf {
-	  branch 'main'
-	}
-      }
-      steps {
-        sh 'make publish-release'
+        vbash "make tox"
       }
     }
     stage('PyPI Publish Branch') {
