@@ -26,7 +26,7 @@ pipeline {
   stages {
     stage('Init') {
       steps {
-        vbash 'make version'
+        sh 'make version'
         script {
           PYPI_VERSION = sh(script: "make print-pypi", returnStdout: true).trim()
           currentBuild.displayName = "#${currentBuild.number} - ${PYPI_VERSION}"
