@@ -3,7 +3,6 @@
 import importlib
 import os
 import subprocess
-from textwrap import dedent
 from types import SimpleNamespace
 
 from setuptools import Command, find_packages, setup
@@ -143,7 +142,7 @@ setup(
     },
     install_requires=INSTALL_REQUIRES,
     tests_require=TESTS_REQUIRE,
-    cmdclass={"capture_requirements": Requirements, "print_version": PrintVersion,},
+    cmdclass={"capture_requirements": Requirements, "print_version": PrintVersion},
 )
 
 # __END__
