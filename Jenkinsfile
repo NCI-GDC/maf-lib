@@ -35,8 +35,8 @@ pipeline {
     }
     stage('Tox') {
       steps {
-        sh "pip install --user tox"
-        sh "tox"
+        sh "pip3.6 install --user tox"
+        sh "python3.6 -m tox"
       }
     }
     stage('PyPI Publish Branch') {
