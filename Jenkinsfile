@@ -35,7 +35,7 @@ pipeline {
     }
     stage('Tox') {
       steps {
-        sh "pip3.6 install --user tox"
+        sh "python3.6 -m pip install --user tox"
         sh "python3.6 -m tox"
       }
     }
