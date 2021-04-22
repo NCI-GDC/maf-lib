@@ -121,7 +121,6 @@ test-docker:
 
 tox:
 	@echo
-	@pip install tox
 	tox
 
 .PHONY: publish-*
