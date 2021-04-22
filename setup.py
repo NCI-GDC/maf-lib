@@ -3,7 +3,6 @@
 import importlib
 import os
 import subprocess
-from textwrap import dedent
 from types import SimpleNamespace
 
 from setuptools import Command, find_packages, setup
@@ -138,12 +137,12 @@ setup(
     packages=find_packages(),
     setup_requires=['setuptools_scm'],
     use_scm_version={
-        "write_to": os.path.join(f"{PACKAGE}", "_version.py"),
+        "write_to": os.path.join(PACKAGE, "_version.py"),
         "fallback_version": __pypi_version__,
     },
     install_requires=INSTALL_REQUIRES,
     tests_require=TESTS_REQUIRE,
-    cmdclass={"capture_requirements": Requirements, "print_version": PrintVersion,},
+    cmdclass={"capture_requirements": Requirements, "print_version": PrintVersion},
 )
 
 # __END__
