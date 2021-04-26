@@ -134,5 +134,6 @@ publish:
 publish-pypi:
 	@echo
 	@echo Publishing wheel
-	python3 -m pip install --user twine
+	@python3 -m pip install --user --upgrade pip
+	@python3 -m pip install --user --upgrade twine
 	python3 -m twine upload $(shell ls -1 dist/*.whl | head -1)
