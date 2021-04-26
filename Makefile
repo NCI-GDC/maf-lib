@@ -1,32 +1,23 @@
-VERSION = 1.0.0
 REPO = maf-lib
 MODULE = maflib
-BRANCH_NAME?=unknown
 
 GIT_SHORT_HASH:=$(shell git rev-parse --short HEAD)
 
-LONG_VERSION:=$(shell python3 setup.py -q capture_version --semver ${VERSION} --branch ${BRANCH_NAME})
 PYPI_VERSION:=$(shell python3 setup.py -q print_version --pypi)
+DOCKER_VERSION:=$(shell python3 setup.py -q print_version --docker)
 COMMIT_HASH:=$(shell python3 setup.py -q print_version --hash)
 
 DOCKER_REPO := quay.io/ncigdc
-DOCKER_IMAGE := ${DOCKER_REPO}/${REPO}:${LONG_VERSION}
+
+DOCKER_IMAGE := ${DOCKER_REPO}/${REPO}:${DOCKER_VERSION}
 DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${COMMIT_HASH}
 DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
-DOCKER_IMAGE_STAGING := ${DOCKER_REPO}/${REPO}:staging
-DOCKER_IMAGE_RELEASE := ${DOCKER_REPO}/${REPO}:${VERSION}
 
 TWINE_REPOSITORY_URL?=""
 
 .PHONY: version version-* print-*
 version:
-	@echo --- VERSION: ${LONG_VERSION} ---
-
-print-version:
-	@echo ${LONG_VERSION}
-
-print-short:
-	@echo ${VERSION}
+	@echo --- VERSION: ${PYPI_VERSION} ---
 
 print-pypi:
 	@echo ${PYPI_VERSION}
@@ -34,7 +25,6 @@ print-pypi:
 version-docker:
 	@echo ${DOCKER_IMAGE}
 	@echo ${DOCKER_IMAGE_COMMIT}
-	@echo ${DOCKER_IMAGE_LATEST}
 
 .PHONY: docker-login
 docker-login:
@@ -49,6 +39,7 @@ init-pip:
 	@echo -- Installing pip packages --
 	pip3 install \
 		--no-cache-dir \
+		-r dev-requirements.txt \
 		-r requirements.txt
 	python3 setup.py develop
 
@@ -65,6 +56,7 @@ clean:
 	rm -rf ./build/
 	rm -rf ./dist/
 	rm -rf ./*.egg-info/
+	rm -rf ./.tox/
 
 lint:
 	@echo
@@ -76,9 +68,14 @@ lint:
 run:
 	bin/run
 
-requirements: init-venv
+requirements: init-venv requirements-prod requirements-dev
+
+requirements-prod:
+	pip-compile -o requirements.txt
+
+requirements-dev:
 	python3 setup.py -q capture_requirements --dev
-	pip-compile -o requirements.txt requirements.in
+	pip-compile -o dev-requirements.txt dev-requirements.in
 
 .PHONY: build build-*
 
@@ -105,7 +102,7 @@ build-pypi:
 	@echo Building wheel - ${PYPI_VERSION}
 	python3 setup.py bdist_wheel -b ${MODULE}.egg-info
 
-.PHONY: test test-*
+.PHONY: test test-* tox
 test: lint test-unit
 
 test-unit:
@@ -121,17 +118,15 @@ test-docker:
 	@echo -- Running Docker Test --
 	docker run --rm ${DOCKER_IMAGE_LATEST} test
 
-.PHONY: publish-*
+tox:
+	@echo
+	tox
 
-publish-staging:
-	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_IMAGE_STAGING}
+.PHONY: publish-*
+publish:
 	docker push ${DOCKER_IMAGE_COMMIT}
-	docker push ${DOCKER_IMAGE_STAGING}
 	docker push ${DOCKER_IMAGE}
 
-publish-release:
-	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_IMAGE_RELEASE}
-	docker push ${DOCKER_IMAGE_RELEASE}
 
 publish-pypi: dist/*.whl
 	@echo

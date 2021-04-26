@@ -130,9 +130,7 @@ class TestMafOverlapIterator(unittest.TestCase):
     def test_two_iter_no_overlap(self):
         first = TestMafOverlapIterator.RecordsNoOverlap
         second = TestMafOverlapIterator.RecordsSecondNoOverlap
-        items = LocatableOverlapIterator(
-            [iter(first), iter(second),], by_barcodes=False
-        )
+        items = LocatableOverlapIterator([iter(first), iter(second)], by_barcodes=False)
 
         n = first_i = second_i = 0
         for i, records in enumerate(items):
