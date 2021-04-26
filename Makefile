@@ -1,6 +1,5 @@
 REPO = maf-lib
 MODULE = maflib
-BRANCH_NAME?=unknown
 
 GIT_SHORT_HASH:=$(shell git rev-parse --short HEAD)
 
