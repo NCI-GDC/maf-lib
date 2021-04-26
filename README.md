@@ -63,8 +63,7 @@ The following schemes are natively supported:
 ## Tools
 
 The source for a set of command line tools for manipulating MAF files can be found in `src/maftools`.
-Once installed, they can be invoked via `maftools <global options> <tool name>
- <tool options>`, for example `maftools -v Strict view -i in.maf`.
+Once installed, they can be invoked via `maftools <global options> <tool name> <tool options>`, for example `maftools -v Strict view -i in.maf`.
 Use the `-h` option with any tool to see command line help.
 
 Support tools are as follows:

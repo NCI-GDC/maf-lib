@@ -57,6 +57,7 @@ clean:
 	rm -rf ./dist/
 	rm -rf ./*.egg-info/
 	rm -rf ./.tox/
+	rm -rf ./htmlcov
 
 lint:
 	@echo
@@ -100,7 +101,9 @@ build-docker:
 build-pypi:
 	@echo
 	@echo Building wheel - ${PYPI_VERSION}
-	python3 setup.py bdist_wheel -b ${MODULE}.egg-info
+	# Requires twine and wheel to be installed
+	python3 setup.py -q egg_info bdist_wheel -b ${MODULE}.egg-info
+	python3 setup.py -q sdist --formats zip bdist_wheel
 
 .PHONY: test test-* tox
 test: lint test-unit
@@ -128,7 +131,9 @@ publish:
 	docker push ${DOCKER_IMAGE}
 
 
-publish-pypi: dist/*.whl
+publish-pypi:
 	@echo
 	@echo Publishing wheel
+	@python3 -m pip install --user --upgrade pip
+	@python3 -m pip install --user --upgrade twine
 	python3 -m twine upload $(shell ls -1 dist/*.whl | head -1)

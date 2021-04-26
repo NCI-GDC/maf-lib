@@ -130,6 +130,8 @@ def call_subprocess(cmd: list):
 setup(
     name=PYPI_REPO,
     description="Mutation Annotation Format (MAF) library",
+    author="Charles Czysz",
+    author_email="czysz@uchicago.edu",
     long_description=get_readme(),
     url=GIT_REPO_URL,
     python_requires=">=3.6",
