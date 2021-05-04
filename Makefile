@@ -2,15 +2,10 @@ REPO = maf-lib
 MODULE = maflib
 
 GIT_SHORT_HASH:=$(shell git rev-parse --short HEAD)
-
-PYPI_VERSION:=$(shell python3 setup.py -q print_version --pypi)
-DOCKER_VERSION:=$(shell python3 setup.py -q print_version --docker)
-COMMIT_HASH:=$(shell python3 setup.py -q print_version --hash)
+GIT_COMMIT_HASH:=$(shell git rev-parse HEAD)
 
 DOCKER_REPO := quay.io/ncigdc
-
-DOCKER_IMAGE := ${DOCKER_REPO}/${REPO}:${DOCKER_VERSION}
-DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${COMMIT_HASH}
+DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${GIT_COMMIT_HASH}
 DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
 
 TWINE_REPOSITORY_URL?=""
@@ -23,8 +18,11 @@ print-pypi:
 	@echo ${PYPI_VERSION}
 
 version-docker:
-	@echo ${DOCKER_IMAGE}
-	@echo ${DOCKER_IMAGE_COMMIT}
+	@python setup.py -q print_version --docker
+
+version-docker-tag:
+	# Use this target to grab docker-friendly tag from built image
+	@docker run --rm --entrypoint="make" ${DOCKER_IMAGE_LATEST} "version-docker"
 
 .PHONY: docker-login
 docker-login:
@@ -126,9 +124,10 @@ tox:
 	tox
 
 .PHONY: publish-*
-publish:
+publish-docker:
+	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_REPO}/${REPO}:${TAG}
 	docker push ${DOCKER_IMAGE_COMMIT}
-	docker push ${DOCKER_IMAGE}
+	docker push ${DOCKER_REPO}/${REPO}:${DOCKER_TAG}
 
 
 publish-pypi:
