@@ -67,6 +67,8 @@
             [ "gnomAD_NFE_AF", "NullableFloatColumn", "Frequency of existing variant in gnomAD exomes Non-Finnish European population" ],
             [ "gnomAD_OTH_AF", "NullableFloatColumn", "Frequency of existing variant in gnomAD exomes other combined population" ],
             [ "gnomAD_SAS_AF", "NullableFloatColumn", "Frequency of existing variant in gnomAD exomes South Asian population" ],
+            [ "MAX_AF", "NullableFloatColumn", "Maximum observed allele frequency in 1000 Genomes, ESP and ExAC/gnomAD" ],
+            [ "MAX_AF_POPS", "SequenceOfStrings", "Populations in which maximum allele frequency was observed" ],
             [ "CLIN_SIG", "SequenceOfStrings", "Clinical significance of variant from dbSNP" ],
             [ "SOMATIC", "SequenceOfNullableYesOrNo", "Somatic status of each ID reported under Existing_variation (0, 1, or null)" ],
             [ "PUBMED", "SequenceOfIntegers", "Pubmed ID(s) of publications that cite existing variant" ],
