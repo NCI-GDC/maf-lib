@@ -18,11 +18,11 @@ print-pypi:
 	@echo ${PYPI_VERSION}
 
 version-docker:
-	@python setup.py -q print_version --docker
+	@echo
 
 version-docker-tag:
 	# Use this target to grab docker-friendly tag from built image
-	@docker run --rm --entrypoint="make" ${DOCKER_IMAGE_LATEST} "version-docker"
+	@echo
 
 .PHONY: docker-login
 docker-login:
@@ -82,18 +82,7 @@ build: build-docker
 
 build-docker:
 	@echo
-	@echo -- Building docker --
-	python3 setup.py build
-	mkdir -p dist
-	cp -r build/lib/* dist/
-	cp -r bin/ dist/
-	cp -f Makefile requirements.txt README.md setup.py dist/
-	docker build . \
-		--file ./Dockerfile \
-		--build-arg http_proxy=${PROXY} \
-		--build-arg https_proxy=${PROXY} \
-		-t "${DOCKER_IMAGE_COMMIT}" \
-		-t "${DOCKER_IMAGE_LATEST}"
+	@echo -- Skipping docker build --
 
 build-pypi:
 	@echo
@@ -124,9 +113,7 @@ tox:
 
 .PHONY: publish-*
 publish-docker:
-	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_REPO}/${REPO}:${TAG}
-	docker push ${DOCKER_IMAGE_COMMIT}
-	docker push ${DOCKER_REPO}/${REPO}:${DOCKER_TAG}
+	@echo Skipping docker publish
 
 
 publish-pypi:
