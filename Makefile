@@ -93,7 +93,6 @@ build-docker:
 		--build-arg http_proxy=${PROXY} \
 		--build-arg https_proxy=${PROXY} \
 		-t "${DOCKER_IMAGE_COMMIT}" \
-		-t "${DOCKER_IMAGE}" \
 		-t "${DOCKER_IMAGE_LATEST}"
 
 build-pypi:
