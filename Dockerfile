@@ -11,13 +11,16 @@ RUN make clean && pip install tox && tox
 FROM quay.io/ncigdc/bio-python:3.6
 
 COPY --from=builder /opt/dist/*.tar.gz /opt
+COPY ./requirements.txt /opt/requirements.txt
 
 ENV BINARY=maflib
 
 WORKDIR /opt
 
 # Install package from sdist
-RUN python -m pip install *.tar.gz && rm -rf *.tar.gz
+RUN pip install -r requirements.txt \
+	&& pip install *.tar.gz \
+	&& rm -rf *.tar.gz requirements.txt
 
 ENTRYPOINT ["maflib"]
 
