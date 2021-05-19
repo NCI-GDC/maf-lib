@@ -80,9 +80,14 @@ requirements-dev:
 
 build: build-docker
 
-build-docker:
+build-docker: clean
 	@echo
 	@echo -- Skipping docker build --
+	docker build . -f Dockerfile \
+		--build-arg http_proxy=${PROXY} \
+		--build-arg https_proxy=${PROXY} \
+		-t "${DOCKER_IMAGE_COMMIT}" \
+		-t "${DOCKER_IMAGE_LATEST}"
 
 build-pypi:
 	@echo
