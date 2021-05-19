@@ -38,56 +38,6 @@ GIT_COMMANDS = SimpleNamespace(
 )
 
 
-try:
-    # Set versions if version file exists
-    mod = importlib.import_module("{}".format(PACKAGE))
-    __pypi_version__ = mod.__version__
-except Exception:
-    __pypi_version__ = '0'
-
-
-def get_readme():
-    lines = ''
-    path = os.path.join(os.path.dirname(__file__), 'README.md')
-    if os.path.exists(path):
-        with open(path) as fh:
-            lines = fh.read()
-    return lines
-
-
-class PrintVersion(Command):
-    description = "Print out specified version, default long version."
-    user_options = [
-        ("docker", None, "Print docker-friendly version."),
-        ("hash", None, "Print commit hash."),
-        ("pypi", None, "Print package version."),
-    ]
-
-    def initialize_options(self):
-        self.docker = False
-        self.hash = False
-        self.pypi = False
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        if self.pypi:
-            print(__pypi_version__)
-        elif self.docker:
-            # Replace '+' in version with '.' for Docker tagging
-            print(__pypi_version__.replace('+', '.'))
-        elif self.hash:
-            try:
-                commit_hash = call_subprocess(GIT_COMMANDS.hash)
-            except Exception:
-                print('')
-            else:
-                print(commit_hash)
-        else:
-            print(__pypi_version__)
-
-
 class Requirements(Command):
     description = "Write specified requirements to requirements.in"
     user_options = [
@@ -127,24 +77,6 @@ def call_subprocess(cmd: list):
     return stdout.decode().strip()
 
 
-setup(
-    name=PYPI_REPO,
-    description="Mutation Annotation Format (MAF) library",
-    author="Charles Czysz",
-    author_email="czysz@uchicago.edu",
-    long_description=get_readme(),
-    url=GIT_REPO_URL,
-    python_requires=">=3.6",
-    include_package_data=True,
-    packages=find_packages(),
-    setup_requires=['setuptools_scm'],
-    use_scm_version={
-        "write_to": os.path.join(PACKAGE, "_version.py"),
-        "fallback_version": __pypi_version__,
-    },
-    install_requires=INSTALL_REQUIRES,
-    tests_require=TESTS_REQUIRE,
-    cmdclass={"capture_requirements": Requirements, "print_version": PrintVersion},
-)
+setup()
 
 # __END__
