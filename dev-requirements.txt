@@ -5,57 +5,33 @@
 #    pip-compile --output-file=dev-requirements.txt dev-requirements.in
 #
 appdirs==1.4.4
-    # via
-    #   -c requirements.txt
-    #   virtualenv
+    # via virtualenv
 attrs==20.2.0
-    # via
-    #   -c requirements.txt
-    #   pytest
-certifi==2020.6.20
-    # via
-    #   -c requirements.txt
-    #   requests
+    # via pytest
+certifi==2020.12.5
+    # via requests
 cfgv==3.2.0
-    # via
-    #   -c requirements.txt
-    #   pre-commit
-chardet==3.0.4
-    # via
-    #   -c requirements.txt
-    #   requests
+    # via pre-commit
+chardet==4.0.0
+    # via requests
 coverage==5.3
-    # via
-    #   -c requirements.txt
-    #   pytest-cov
+    # via pytest-cov
 detect-secrets==0.13.1
-    # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
+    # via -r dev-requirements.in
 distlib==0.3.1
-    # via
-    #   -c requirements.txt
-    #   virtualenv
+    # via virtualenv
 filelock==3.0.12
     # via
-    #   -c requirements.txt
     #   tox
     #   virtualenv
 flake8==3.8.4
-    # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
+    # via -r dev-requirements.in
 identify==1.5.5
-    # via
-    #   -c requirements.txt
-    #   pre-commit
+    # via pre-commit
 idna==2.10
-    # via
-    #   -c requirements.txt
-    #   requests
+    # via requests
 importlib-metadata==2.0.0
     # via
-    #   -c requirements.txt
     #   flake8
     #   pluggy
     #   pre-commit
@@ -64,105 +40,69 @@ importlib-metadata==2.0.0
     #   virtualenv
 importlib-resources==3.0.0
     # via
-    #   -c requirements.txt
     #   pre-commit
     #   virtualenv
 iniconfig==1.0.1
-    # via
-    #   -c requirements.txt
-    #   pytest
+    # via pytest
 isort==5.6.1
-    # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
+    # via -r dev-requirements.in
 mccabe==0.6.1
-    # via
-    #   -c requirements.txt
-    #   flake8
+    # via flake8
 mock==4.0.2
-    # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
+    # via -r dev-requirements.in
 nodeenv==1.5.0
-    # via
-    #   -c requirements.txt
-    #   pre-commit
+    # via pre-commit
 packaging==20.4
     # via
-    #   -c requirements.txt
     #   pytest
     #   tox
 pluggy==0.13.1
     # via
-    #   -c requirements.txt
     #   pytest
     #   tox
 pre-commit==2.7.1
-    # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
+    # via -r dev-requirements.in
 py==1.10.0
     # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
     #   pytest
     #   tox
 pycodestyle==2.6.0
-    # via
-    #   -c requirements.txt
-    #   flake8
+    # via flake8
 pyflakes==2.2.0
-    # via
-    #   -c requirements.txt
-    #   flake8
+    # via flake8
 pyparsing==2.4.7
-    # via
-    #   -c requirements.txt
-    #   packaging
+    # via packaging
 pytest-cov==2.10.1
-    # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
+    # via -r dev-requirements.in
 pytest==6.1.1
     # via
-    #   -c requirements.txt
     #   -r dev-requirements.in
     #   pytest-cov
 pyyaml==5.4.1
     # via
-    #   -c requirements.txt
-    #   -r dev-requirements.in
     #   detect-secrets
     #   pre-commit
-requests==2.24.0
-    # via
-    #   -c requirements.txt
-    #   detect-secrets
+requests==2.25.1
+    # via detect-secrets
 six==1.15.0
     # via
-    #   -c requirements.txt
     #   packaging
     #   tox
     #   virtualenv
 toml==0.10.1
     # via
-    #   -c requirements.txt
     #   pre-commit
     #   pytest
     #   tox
 tox==3.23.0
     # via -r dev-requirements.in
-urllib3==1.25.10
-    # via
-    #   -c requirements.txt
-    #   requests
+urllib3==1.26.4
+    # via requests
 virtualenv==20.0.33
     # via
-    #   -c requirements.txt
     #   pre-commit
     #   tox
 zipp==3.3.0
     # via
-    #   -c requirements.txt
     #   importlib-metadata
     #   importlib-resources
