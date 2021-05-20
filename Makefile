@@ -104,8 +104,7 @@ test-unit:
 
 test-docker:
 	@echo
-	@echo -- Running Docker Test --
-	docker run --rm ${DOCKER_IMAGE_LATEST} test
+	@echo -- Skipping Docker Test --
 
 tox:
 	@echo
