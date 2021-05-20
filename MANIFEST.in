@@ -1,10 +1,4 @@
-include pyproject.toml
-
-# Include the README
-include *.md
-
-# Include the license file
-include LICENSE
-
-# Include setup.py
-include setup.py
+# setuptools_scm includes most files
+exclude .pre-commit-config.yaml
+exclude .secrets.baseline
+exclude .gitignore
