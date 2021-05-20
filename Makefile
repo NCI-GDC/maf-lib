@@ -21,7 +21,6 @@ version-docker:
 	@echo
 
 version-docker-tag:
-	# Use this target to grab docker-friendly tag from built image
 	@echo
 
 .PHONY: docker-login
@@ -29,7 +28,7 @@ docker-login:
 	docker login -u="${QUAY_USERNAME}" -p="${QUAY_PASSWORD}" quay.io
 
 
-.PHONY: build build-* clean init init-* lint requirements run version
+.PHONY: build build-* clean clean-* init init-* lint requirements run version
 init: init-pip init-hooks
 
 init-pip:
@@ -57,6 +56,9 @@ clean:
 	rm -rf ./.tox/
 	rm -rf ./htmlcov
 
+clean-docker:
+	@echo
+
 lint:
 	@echo
 	@echo -- Lint --
@@ -80,23 +82,18 @@ requirements-dev:
 build: build-docker
 
 build-docker: clean
-	@echo
-	@echo -- Skipping docker build --
+	@echo -- Building docker --
 	docker build . -f Dockerfile \
 		--build-arg http_proxy=${PROXY} \
 		--build-arg https_proxy=${PROXY} \
 		-t "${DOCKER_IMAGE_COMMIT}" \
 		-t "${DOCKER_IMAGE_LATEST}"
 
-build-pypi:
-	@echo
-	@echo Building wheel - ${PYPI_VERSION}
-	# Requires twine and wheel to be installed
-	python3 setup.py -q egg_info bdist_wheel -b ${MODULE}.egg-info
-	python3 setup.py -q sdist --formats zip bdist_wheel
+build-pypi: clean
+	@tox -e check_dist
 
 .PHONY: test test-* tox
-test: lint test-unit
+test: tox
 
 test-unit:
 	@echo
@@ -108,8 +105,7 @@ test-unit:
 
 test-docker:
 	@echo
-	@echo -- Running Docker Test --
-	docker run --rm ${DOCKER_IMAGE_LATEST} test
+	@echo -- Skipping Docker Test --
 
 tox:
 	@echo
@@ -125,4 +121,4 @@ publish-pypi:
 	@echo Publishing wheel
 	@python3 -m pip install --user --upgrade pip
 	@python3 -m pip install --user --upgrade twine
-	python3 -m twine upload $(shell ls -1 dist/*.whl | head -1)
+	python3 -m twine upload dist/*
