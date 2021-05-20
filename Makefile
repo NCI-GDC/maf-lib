@@ -21,7 +21,6 @@ version-docker:
 	@echo
 
 version-docker-tag:
-	# Use this target to grab docker-friendly tag from built image
 	@echo
 
 .PHONY: docker-login
