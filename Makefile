@@ -28,7 +28,7 @@ docker-login:
 	docker login -u="${QUAY_USERNAME}" -p="${QUAY_PASSWORD}" quay.io
 
 
-.PHONY: build build-* clean init init-* lint requirements run version
+.PHONY: build build-* clean clean-* init init-* lint requirements run version
 init: init-pip init-hooks
 
 init-pip:
@@ -55,6 +55,9 @@ clean:
 	rm -rf ./*.egg-info/
 	rm -rf ./.tox/
 	rm -rf ./htmlcov
+
+clean-docker:
+	@echo
 
 lint:
 	@echo
