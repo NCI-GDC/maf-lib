@@ -12,10 +12,7 @@ TWINE_REPOSITORY_URL?=""
 
 .PHONY: version version-* print-*
 version:
-	@echo --- VERSION: ${PYPI_VERSION} ---
-
-print-pypi:
-	@echo ${PYPI_VERSION}
+	@python setup.py --version
 
 version-docker:
 	@echo
@@ -35,7 +32,7 @@ init-pip: init-venv
 	@echo
 	@echo -- Installing pip packages --
 	pip-sync requirements.txt dev-requirements.txt
-	python3 setup.py develop
+	python setup.py develop
 
 init-hooks:
 	@echo
@@ -44,7 +41,7 @@ init-hooks:
 
 init-venv:
 	@echo
-	PIP_REQUIRE_VIRTUALENV=true pip3 install --upgrade pip-tools
+	PIP_REQUIRE_VIRTUALENV=true python -m pip install --upgrade pip-tools
 
 clean:
 	rm -rf ./build/
@@ -59,15 +56,9 @@ clean-docker:
 lint:
 	@echo
 	@echo -- Lint --
-	python3 -m flake8 \
-		--ignore=E501,F401,E302,E502,E126,E731,W503,W605,F841,C901 \
-		${MODULE}/
-
-run:
-	bin/run
+	tox -p -e flake8
 
 requirements: init-venv requirements-prod requirements-dev
-
 requirements-prod:
 	pip-compile -o requirements.txt
 
@@ -95,18 +86,14 @@ test: tox
 test-unit:
 	@echo
 	@echo -- Unit Test --
-	python3 -m pytest --cov-report term-missing \
-		--junitxml=build/unit-test.xml \
-		--cov=${MODULE} \
-		tests/
+	tox -e py36
 
 test-docker:
 	@echo
-	@echo -- Skipping Docker Test --
 
 tox:
-	@echo
-	tox
+	@echo Running tox
+	tox -p all
 
 .PHONY: publish-*
 publish-docker:
@@ -116,6 +103,5 @@ publish-docker:
 publish-pypi:
 	@echo
 	@echo Publishing wheel
-	@python3 -m pip install --user --upgrade pip
-	@python3 -m pip install --user --upgrade twine
-	python3 -m twine upload dist/*
+	@python -m pip install --user --upgrade pip twine
+	python -m twine upload dist/*
