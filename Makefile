@@ -31,13 +31,10 @@ docker-login:
 .PHONY: build build-* clean clean-* init init-* lint requirements run version
 init: init-pip init-hooks
 
-init-pip:
+init-pip: init-venv
 	@echo
 	@echo -- Installing pip packages --
-	pip3 install \
-		--no-cache-dir \
-		-r dev-requirements.txt \
-		-r requirements.txt
+	pip-sync requirements.txt dev-requirements.txt
 	python3 setup.py develop
 
 init-hooks:
