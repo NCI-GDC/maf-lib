@@ -3,10 +3,12 @@ MODULE = maflib
 
 GIT_SHORT_HASH:=$(shell git rev-parse --short HEAD)
 GIT_COMMIT_HASH:=$(shell git rev-parse HEAD)
+GIT_DESCRIBE:=$(shell git describe --tags)
 
 DOCKER_REPO := quay.io/ncigdc
 DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${GIT_COMMIT_HASH}
 DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
+DOCKER_IMAGE_DESCRIBE := ${DOCKER_REPO}/${REPO}:${GIT_DESCRIBE}
 
 TWINE_REPOSITORY_URL?=""
 
@@ -102,7 +104,9 @@ lint:
 
 .PHONY: publish-*
 publish-docker:
-	@echo Skipping docker publish
+	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_IMAGE_DESCRIBE}
+	docker push ${DOCKER_IMAGE_COMMIT}
+	docker push ${DOCKER_IMAGE_DESCRIBE}
 
 publish-pypi:
 	@echo
