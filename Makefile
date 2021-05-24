@@ -3,22 +3,21 @@ MODULE = maflib
 
 GIT_SHORT_HASH:=$(shell git rev-parse --short HEAD)
 GIT_COMMIT_HASH:=$(shell git rev-parse HEAD)
+GIT_DESCRIBE:=$(shell git describe --tags)
 
 DOCKER_REPO := quay.io/ncigdc
 DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${GIT_COMMIT_HASH}
 DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
+DOCKER_IMAGE_DESCRIBE := ${DOCKER_REPO}/${REPO}:${GIT_DESCRIBE}
 
 TWINE_REPOSITORY_URL?=""
 
-.PHONY: version version-* print-*
+.PHONY: version version-*
 version:
-	@echo --- VERSION: ${PYPI_VERSION} ---
-
-print-pypi:
-	@echo ${PYPI_VERSION}
+	@python setup.py --version
 
 version-docker:
-	@echo
+	@echo ${DOCKER_IMAGE_COMMIT}
 
 version-docker-tag:
 	@echo
@@ -28,17 +27,14 @@ docker-login:
 	docker login -u="${QUAY_USERNAME}" -p="${QUAY_PASSWORD}" quay.io
 
 
-.PHONY: build build-* clean clean-* init init-* lint requirements run version
+.PHONY: init init-*
 init: init-pip init-hooks
 
 init-pip:
 	@echo
 	@echo -- Installing pip packages --
-	pip3 install \
-		--no-cache-dir \
-		-r dev-requirements.txt \
-		-r requirements.txt
-	python3 setup.py develop
+	pip-sync requirements.txt dev-requirements.txt
+	python setup.py develop
 
 init-hooks:
 	@echo
@@ -47,9 +43,12 @@ init-hooks:
 
 init-venv:
 	@echo
-	PIP_REQUIRE_VIRTUALENV=true pip3 install --upgrade pip-tools
+	PIP_REQUIRE_VIRTUALENV=true python -m pip install --upgrade pip pip-tools
 
-clean:
+.PHONY: clean clean-*
+clean: clean-dirs
+
+clean-dirs:
 	rm -rf ./build/
 	rm -rf ./dist/
 	rm -rf ./*.egg-info/
@@ -57,69 +56,59 @@ clean:
 	rm -rf ./htmlcov
 
 clean-docker:
-	@echo
+	@docker rmi -f ${DOCKER_IMAGE_COMMIT}
 
-lint:
-	@echo
-	@echo -- Lint --
-	python3 -m flake8 \
-		--ignore=E501,F401,E302,E502,E126,E731,W503,W605,F841,C901 \
-		${MODULE}/
-
-run:
-	bin/run
-
+.PHONY: requirements requirements-*
 requirements: init-venv requirements-prod requirements-dev
 
 requirements-prod:
 	pip-compile -o requirements.txt
 
 requirements-dev:
-	python3 setup.py -q capture_requirements --dev
 	pip-compile -o dev-requirements.txt dev-requirements.in
 
 .PHONY: build build-*
 
 build: build-docker
 
-build-docker:
-	@echo
-	@echo -- Skipping docker build --
+build-docker: clean
+	@echo -- Building docker --
+	docker build . -f Dockerfile \
+		--build-arg http_proxy=${PROXY} \
+		--build-arg https_proxy=${PROXY} \
+		-t "${DOCKER_IMAGE_COMMIT}" \
+		-t "${DOCKER_IMAGE_LATEST}"
 
-build-pypi:
-	@echo
-	@echo Building wheel - ${PYPI_VERSION}
-	# Requires twine and wheel to be installed
-	python3 setup.py -q egg_info bdist_wheel -b ${MODULE}.egg-info
-	python3 setup.py -q sdist --formats zip bdist_wheel
+build-pypi: clean
+	@tox -e check_dist
 
-.PHONY: test test-* tox
-test: lint test-unit
+.PHONY: lint test test-* tox
+test: tox
 
 test-unit:
 	@echo
 	@echo -- Unit Test --
-	python3 -m pytest --cov-report term-missing \
-		--junitxml=build/unit-test.xml \
-		--cov=${MODULE} \
-		tests/
+	tox -e py36
 
 test-docker:
 	@echo
-	@echo -- Skipping Docker Test --
 
 tox:
+	@echo Running tox
+	tox -p all
+
+lint:
 	@echo
-	tox
+	@echo -- Lint --
+	tox -p -e flake8
 
 .PHONY: publish-*
 publish-docker:
-	@echo Skipping docker publish
-
+	docker tag ${DOCKER_IMAGE_LATEST} ${DOCKER_IMAGE_DESCRIBE}
+	docker push ${DOCKER_IMAGE_COMMIT}
+	docker push ${DOCKER_IMAGE_DESCRIBE}
 
 publish-pypi:
 	@echo
-	@echo Publishing wheel
-	@python3 -m pip install --user --upgrade pip
-	@python3 -m pip install --user --upgrade twine
-	python3 -m twine upload $(shell ls -1 dist/*.whl | head -1)
+	@echo Publishing dists
+	python -m twine upload dist/*
