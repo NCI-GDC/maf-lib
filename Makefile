@@ -44,7 +44,7 @@ init-venv:
 	PIP_REQUIRE_VIRTUALENV=true python -m pip install --upgrade pip pip-tools
 
 .PHONY: clean clean-*
-clean: clean-dirs clean-docker
+clean: clean-dirs
 
 clean-dirs:
 	rm -rf ./build/
