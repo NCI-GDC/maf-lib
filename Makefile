@@ -10,12 +10,12 @@ DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
 
 TWINE_REPOSITORY_URL?=""
 
-.PHONY: version version-* print-*
+.PHONY: version version-*
 version:
 	@python setup.py --version
 
 version-docker:
-	@echo
+	@echo ${DOCKER_IMAGE_COMMIT}
 
 version-docker-tag:
 	@echo
@@ -25,10 +25,10 @@ docker-login:
 	docker login -u="${QUAY_USERNAME}" -p="${QUAY_PASSWORD}" quay.io
 
 
-.PHONY: build build-* clean clean-* init init-* lint requirements run version
+.PHONY: init init-*
 init: init-pip init-hooks
 
-init-pip: init-venv
+init-pip:
 	@echo
 	@echo -- Installing pip packages --
 	pip-sync requirements.txt dev-requirements.txt
@@ -41,9 +41,12 @@ init-hooks:
 
 init-venv:
 	@echo
-	PIP_REQUIRE_VIRTUALENV=true python -m pip install --upgrade pip-tools
+	PIP_REQUIRE_VIRTUALENV=true python -m pip install --upgrade pip pip-tools
 
-clean:
+.PHONY: clean clean-*
+clean: clean-dirs clean-docker
+
+clean-dirs:
 	rm -rf ./build/
 	rm -rf ./dist/
 	rm -rf ./*.egg-info/
@@ -51,14 +54,11 @@ clean:
 	rm -rf ./htmlcov
 
 clean-docker:
-	@echo
+	@docker rmi -f ${DOCKER_IMAGE_COMMIT}
 
-lint:
-	@echo
-	@echo -- Lint --
-	tox -p -e flake8
-
+.PHONY: requirements requirements-*
 requirements: init-venv requirements-prod requirements-dev
+
 requirements-prod:
 	pip-compile -o requirements.txt
 
@@ -80,7 +80,7 @@ build-docker: clean
 build-pypi: clean
 	@tox -e check_dist
 
-.PHONY: test test-* tox
+.PHONY: lint test test-* tox
 test: tox
 
 test-unit:
@@ -95,13 +95,16 @@ tox:
 	@echo Running tox
 	tox -p all
 
+lint:
+	@echo
+	@echo -- Lint --
+	tox -p -e flake8
+
 .PHONY: publish-*
 publish-docker:
 	@echo Skipping docker publish
 
-
 publish-pypi:
 	@echo
-	@echo Publishing wheel
-	@python -m pip install --user --upgrade pip twine
+	@echo Publishing dists
 	python -m twine upload dist/*
