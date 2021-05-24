@@ -4,7 +4,7 @@ COPY ./ /opt
 
 WORKDIR /opt
 
-RUN make clean && pip install tox && tox
+RUN python -m pip install tox && tox
 
 # tox step builds sdist
 
