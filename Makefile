@@ -112,4 +112,4 @@ publish-pypi:
 	@echo
 	@echo Publishing dists
 	@python3 -m pip install --user --upgrade twine
-	python -m twine upload dist/*
+	python3 -m twine upload dist/*
