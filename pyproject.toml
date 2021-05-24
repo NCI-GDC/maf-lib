@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 local_scheme = "dirty-tag"
 version_scheme = "release-branch-semver"
+write_to = "maflib/_version.py"
 fallback_version = "0"
 
 [tool.black]
