@@ -1,15 +1,9 @@
 """A set of useful utility classes and methods"""
 import sys
 from contextlib import contextmanager
+from io import StringIO
 
 from maflib.logger import Logger
-
-try:
-    # Python 2
-    from cStringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
 
 
 class LineReader(object):
