@@ -1,4 +1,5 @@
 #!groovy
 
-securityPipeline { 
+library identifier: "jenkins-lib@master"
+securityPipeline {
 }
