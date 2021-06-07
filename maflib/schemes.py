@@ -13,12 +13,13 @@ modified after being instantiated.
 """
 import abc
 from collections import OrderedDict
+from typing import Dict, Iterable, List, Optional
 
 from maflib.column import MafColumnRecord
 from maflib.util import abstractclassmethod
 
 
-class MafScheme(object):
+class MafScheme:
     """ The base scheme all schemes should implement.
 
     Sub-classes should implement ``version()``, ``annotation``, and
@@ -27,7 +28,7 @@ class MafScheme(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, column_dict=None, column_desc=None):
+    def __init__(self, column_dict: dict = None, column_desc: dict = None):
         """Create a new MafScheme.  If a ``column_dict`` is supplied,
         use that one, otherwise, use the one from ``__column_dict__``."""
         if column_dict is None:
@@ -44,28 +45,28 @@ class MafScheme(object):
             (name, desc) for name, desc in column_desc.items()
         )
 
-    def column_class(self, name):
+    def column_class(self, name: str) -> Optional[str]:
         """Get the class for the column with the given name"""
         return self.__column_name_to_column_class.get(name, None)
 
-    def column_index(self, name):
+    def column_index(self, name: str) -> Optional[int]:
         """Get the zero-based index for the column with the given name"""
         return self.__column_name_to_column_index.get(name, None)
 
-    def column_description(self, name):
+    def column_description(self, name: str) -> Optional[str]:
         """Get the description of the column with the given name"""
         return self.__column_name_to_column_desc.get(name, None)
 
-    def column_names(self):
+    def column_names(self) -> List[str]:
         """Get names of the columns in order of column index"""
         return list(self.__column_name_to_column_class.keys())
 
-    def column_descriptions(self):
+    def column_descriptions(self) -> List[str]:
         """Get description of the columns in order of column index"""
         return list(self.__column_name_to_column_desc.keys())
 
     @classmethod
-    def is_basic(cls):
+    def is_basic(cls) -> bool:
         """Returns true if the scheme is a "basic" scheme, false otherwise."""
         version = cls.version()
         annotation = cls.annotation_spec()
@@ -75,28 +76,28 @@ class MafScheme(object):
             return False
 
     @classmethod
-    @abstractclassmethod
-    def version(cls):
+    @abc.abstractmethod
+    def version(cls) -> str:
         """
         :return: the canonical version string
         """
 
     @classmethod
     @abc.abstractmethod
-    def annotation_spec(cls):
+    def annotation_spec(cls) -> str:
         """
         :return: the annotation specification
         """
 
     @classmethod
     @abstractclassmethod
-    def __column_dict__(cls):
+    def __column_dict__(cls) -> dict:
         """
         :return: A mapping between column name and class for the column type.
         """
 
     @classmethod
-    def __column_desc__(cls):
+    def __column_desc__(cls) -> dict:
         """
         :return: A mapping between column name and column description.
         """
@@ -105,10 +106,10 @@ class MafScheme(object):
             for name in cls.__column_dict__().keys()
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.version()
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         :return: The number of columns in this scheme
         """
@@ -119,7 +120,7 @@ class NoRestrictionsScheme(MafScheme):
     """A MafScheme with no restrictions on the column names and values.  A
     list of column names should be ge given when constructed."""
 
-    def __init__(self, column_names):
+    def __init__(self, column_names: Iterable[str]):
         column_dict = OrderedDict((name, MafColumnRecord) for name in column_names)
         column_desc = OrderedDict((name, "") for name in column_names)
         super(NoRestrictionsScheme, self).__init__(
@@ -127,11 +128,11 @@ class NoRestrictionsScheme(MafScheme):
         )
 
     @classmethod
-    def version(cls):
+    def version(cls) -> str:
         return "no-version"
 
     @classmethod
-    def annotation_spec(cls):
+    def annotation_spec(cls) -> str:
         return "no-annotation-specification"
 
     @classmethod

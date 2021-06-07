@@ -29,12 +29,6 @@ from maflib.column_values import (
 )
 from maflib.util import abstractclassmethod
 
-# FIXME: basestring removed in py3, refactor
-try:
-    basestring
-except NameError:
-    basestring = (str, bytes)
-
 
 def get_column_types():
     """Gets all the column types defined in maflib"""
@@ -82,7 +76,7 @@ class _BuildStringColumn(MafCustomColumnRecord):
 
     @classmethod
     def __build__(cls, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError(
                 "'%s' was not a string (was %s)" % (str(value), str(value.__class__))
             )
@@ -315,7 +309,7 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
     @classmethod
     def __build__(cls, value):
         column_cls = cls.__column_class__()
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError(
                 "'%s' was not a string (was %s)" % (str(value), str(value.__class__))
             )
@@ -400,7 +394,7 @@ class Canonical(MafCustomColumnRecord):
 
     @classmethod
     def __build__(cls, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         value = value.upper()
         if value != "" and value != "YES":
@@ -428,7 +422,7 @@ class NullableYesOrNo(EnumColumn):
 
     @classmethod
     def __build__(cls, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         return super(NullableYesOrNo, cls).__build__(value.capitalize())
 
@@ -450,7 +444,7 @@ class NullableYOrN(EnumColumn):
 
     @classmethod
     def __build__(cls, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         return super(NullableYOrN, cls).__build__(value.capitalize())
 
@@ -483,7 +477,7 @@ class PickColumn(EnumColumn):
 
     @classmethod
     def __build__(cls, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         return super(PickColumn, cls).__build__(value.capitalize())
 
@@ -501,7 +495,7 @@ class BooleanColumn(MafCustomColumnRecord):
 
     @classmethod
     def __build__(cls, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         value = value.upper()
         if value not in ["TRUE", "FALSE"]:

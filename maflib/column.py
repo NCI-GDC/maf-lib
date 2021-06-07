@@ -7,12 +7,14 @@
                          value of the column.
 """
 import abc
+from typing import Any, List, Optional
 
+from maflib.schemes import MafScheme
 from maflib.util import abstractclassmethod
 from maflib.validation import MafValidationError, MafValidationErrorType
 
 
-class MafColumnRecord(object):
+class MafColumnRecord:
     """
     A generic container for storing key and value pairs for a given column in a
     MafRecord.  Provides methods to validate the value of the column,
@@ -23,7 +25,9 @@ class MafColumnRecord(object):
     the values that should be treated as null.
     """
 
-    def __init__(self, key, value, column_index=None, description=None):
+    def __init__(
+        self, key: str, value: Any, column_index: int = None, description: str = None
+    ):
         """
         :param key: the name of the column
         :param value: the value of the column
@@ -34,7 +38,7 @@ class MafColumnRecord(object):
         self.value = value
         self.column_index = column_index
         self.description = description
-        self.validation_errors = list()
+        self.validation_errors: List[Optional[MafValidationError]] = list()
 
         # check that all nullable keys are strings
         if self.is_nullable():
@@ -46,7 +50,12 @@ class MafColumnRecord(object):
                         % (str(key), key.__class__.__name__, self.__class__.__name__)
                     )
 
-    def validate(self, reset_errors=True, scheme=None, line_number=None):
+    def validate(
+        self,
+        reset_errors: bool = True,
+        scheme: Optional[MafScheme] = None,
+        line_number: int = None,
+    ) -> List[Optional[MafValidationError]]:
         """
         Validates that the value is of the correct type and an acceptable
         value.
@@ -58,7 +67,7 @@ class MafColumnRecord(object):
 
         if scheme:
 
-            def add_errors(error):
+            def add_errors(error: MafValidationError) -> None:
                 """Adds an error"""
                 self.validation_errors.append(error)
 
