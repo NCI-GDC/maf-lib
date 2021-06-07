@@ -29,6 +29,7 @@ from maflib.column_values import (
 )
 from maflib.util import abstractclassmethod
 
+# FIXME: basestring removed in py3, refactor
 try:
     basestring
 except NameError:
@@ -76,7 +77,7 @@ class RequireNullValue(MafColumnRecord):
         return "'%s' was not a null value" % str(self.value)
 
 
-class _BuildStringColumn(object):
+class _BuildStringColumn(MafCustomColumnRecord):
     """Mix this in to require a string as the value"""
 
     @classmethod
@@ -89,7 +90,7 @@ class _BuildStringColumn(object):
 
 
 class NullableStringColumn(
-    NullableEmptyStringIsNone, _BuildStringColumn, MafCustomColumnRecord
+    NullableEmptyStringIsNone, _BuildStringColumn,
 ):
     """A column where the value must be a string, with its null value being
     an empty string"""

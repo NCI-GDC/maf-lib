@@ -6,7 +6,7 @@ except ImportError:
     __version__ = "0.0.0"
 
 
-def main():
+def main() -> None:
     print(__version__)
 
 

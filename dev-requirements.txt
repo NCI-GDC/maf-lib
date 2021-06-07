@@ -50,6 +50,10 @@ mccabe==0.6.1
     # via flake8
 mock==4.0.2
     # via -r dev-requirements.in
+mypy-extensions==0.4.3
+    # via mypy
+mypy==0.812
+    # via -r dev-requirements.in
 nodeenv==1.5.0
     # via pre-commit
 packaging==20.4
@@ -96,6 +100,10 @@ toml==0.10.1
     #   tox
 tox==3.23.0
     # via -r dev-requirements.in
+typed-ast==1.4.3
+    # via mypy
+typing-extensions==3.10.0.0
+    # via mypy
 urllib3==1.26.4
     # via requests
 virtualenv==20.0.33
