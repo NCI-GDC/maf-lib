@@ -2,21 +2,22 @@
 import sys
 from contextlib import contextmanager
 from io import StringIO
+from typing import Any, Iterator
 
 from maflib.logger import Logger
 
 
-class LineReader(object):
+class LineReader:
     """
     A little class that can read the next line without consuming it.
     """
 
-    def __init__(self, fh):
+    def __init__(self, fh: StringIO):
         self._file = fh
         self._line = self.__read_line()
-        self._line_number = 0
+        self._line_number: int = 0
 
-    def read_line(self):
+    def read_line(self) -> str:
         """Reads a single line"""
         cur_line = self._line
         if self._line:
@@ -24,43 +25,43 @@ class LineReader(object):
             self._line_number += 1
         return cur_line
 
-    def __read_line(self):
+    def __read_line(self) -> str:
         """Reads a line from the underlying file"""
         return self._file.readline().rstrip("\r\n")
 
-    def line_number(self):
+    def line_number(self) -> int:
         """
         :return: the number of lines read so far.
         """
         return self._line_number
 
-    def peek_line(self):
+    def peek_line(self) -> str:
         """Gets the next line without consuming it"""
         return self._line
 
     def __iter__(self):
         return self
 
-    def next(self):
+    def next(self) -> str:
         """Gets the next line"""
         return self.__next__()
 
-    def __next__(self):
+    def __next__(self) -> str:
         """Gets the next line and consumes it"""
         line = self.peek_line()
         if not line:
             raise StopIteration
         return self.read_line()
 
-    def close(self):
+    def close(self) -> None:
         """Close the reader and the underling file handle"""
         self._file.close()
 
 
-class PeekableIterator(object):
+class PeekableIterator:
     """An iterator that has a `peek()` method."""
 
-    def __init__(self, _iter):
+    def __init__(self, _iter: Iterator[Any]):
         self._iter = _iter
         self.__update_peek()
 
