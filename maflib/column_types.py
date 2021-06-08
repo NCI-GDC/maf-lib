@@ -8,6 +8,8 @@ custom validation to ensure proper types and values.
 import abc
 import inspect
 import sys
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from uuid import UUID
 
 from maflib.column import MafColumnRecord, MafCustomColumnRecord
@@ -15,6 +17,7 @@ from maflib.column_values import (
     FeatureTypeEnum,
     GdcValidationStatusEnum,
     ImpactEnum,
+    MafEnum,
     MC3OverlapEnum,
     MutationStatusEnum,
     NullableYesOrNoEnum,
@@ -30,35 +33,35 @@ from maflib.column_values import (
 from maflib.util import abstractclassmethod
 
 
-def get_column_types():
+def get_column_types() -> List[Tuple[str, Any]]:
     """Gets all the column types defined in maflib"""
 
-    def predicate(obj):
+    def predicate(obj: object) -> bool:
         """A predicate to get all classes that are subclasses of
         MafColumnRecord"""
-        return inspect.isclass(obj) and issubclass(obj, MafColumnRecord)
+        return inspect.isclass(obj) and issubclass(obj, MafColumnRecord)  # type: ignore
 
     # Get all available column types
     return inspect.getmembers(sys.modules["maflib.column_types"], predicate)
 
 
-class NullableEmptyStringIsNone(object):
+class NullableEmptyStringIsNone:
     """Mix this in to a MafCustomColumnRecord to make the only nullable value
     be an empty string that is treated as None
     """
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> Optional[Dict[str, None]]:
         return {"": None}
 
 
-class NullableEmptyStringIsEmptyList(object):
+class NullableEmptyStringIsEmptyList:
     """Mix this in to a MafCustomColumnRecord to make the only nullable value
     be an empty string that is treated as an empty list
     """
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> Optional[Dict[str, List]]:
         return {"": []}
 
 
@@ -67,15 +70,15 @@ class RequireNullValue(MafColumnRecord):
     value is a null
     """
 
-    def __validate__(self):
-        return "'%s' was not a null value" % str(self.value)
+    def __validate__(self) -> str:
+        return f"'{self.value}' was not a null value"
 
 
 class _BuildStringColumn(MafCustomColumnRecord):
     """Mix this in to require a string as the value"""
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> str:
         if not isinstance(value, str):
             raise ValueError(
                 "'%s' was not a string (was %s)" % (str(value), str(value.__class__))
@@ -89,9 +92,9 @@ class NullableStringColumn(
     """A column where the value must be a string, with its null value being
     an empty string"""
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, str):
-            return "'%s' was not a string" % str(self.value)
+            return f"'{self.value}' was not a string"
         else:
             return None
 
@@ -102,10 +105,10 @@ class StringColumn(NullableStringColumn):
     EmptyStringMessage = "Empty string is not allowed"
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> None:
         return None
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         msg = super(StringColumn, self).__validate__()
         if msg is None and not self.value:
             return self.EmptyStringMessage
@@ -117,14 +120,11 @@ class StringIntegerOrFloatColumn(MafCustomColumnRecord):
     """A column where the value is either a string or float"""
 
     @classmethod
-    def __type_error_message__(cls, value):
-        return "'%s' of type '%s' was neither an int, float, nor string" % (
-            str(value),
-            value.__class__.__name__,
-        )
+    def __type_error_message__(cls, value: Any) -> str:
+        return f"'{value}' of type '{value.__class__.__name__}' was neither an int, float, nor string"
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: str) -> Union[float, int, str]:
         try:
             return float(value)
         except ValueError:
@@ -135,7 +135,7 @@ class StringIntegerOrFloatColumn(MafCustomColumnRecord):
             pass
         return str(value)
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, (int, float, str)):
             return self.__type_error_message__(self.value)
         else:
@@ -146,21 +146,18 @@ class StringOrIntegerColumn(MafCustomColumnRecord):
     """A column that is a string or integer"""
 
     @classmethod
-    def __type_error_message__(cls, value):
-        return "'%s' of type '%s' was neither an int nor string" % (
-            str(value),
-            value.__class__.__name__,
-        )
+    def __type_error_message__(cls, value: Any) -> str:
+        return f"'{value}' of type '{value.__class__.__name__}' was neither an int nor string"
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> Union[str, int]:
         try:
             return int(value)
         except ValueError:
             pass
         return str(value)
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, (int, str)):
             return self.__type_error_message__(self.value)
         else:
@@ -171,25 +168,22 @@ class IntegerColumn(MafCustomColumnRecord):
     """A column that is an integer"""
 
     @classmethod
-    def __type_error_message__(cls, value):
-        return "'%s' of type '%s' was not an int" % (
-            str(value),
-            value.__class__.__name__,
-        )
+    def __type_error_message__(cls, value: Any) -> str:
+        return f"'{value}' of type '{type(value)}' was not an int"
 
     @classmethod
-    def __min_value__(cls):
+    def __min_value__(cls) -> Optional[int]:
         return None
 
     @classmethod
-    def __max_value__(cls):
+    def __max_value__(cls) -> Optional[int]:
         return None
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> int:
         return int(value)
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         min_value = self.__min_value__()
         max_value = self.__max_value__()
         if not isinstance(self.value, int):
@@ -213,7 +207,7 @@ class ZeroBasedIntegerColumn(IntegerColumn):
     """A column that represents a zero-based integer"""
 
     @classmethod
-    def __min_value__(cls):
+    def __min_value__(cls) -> int:
         return 0
 
 
@@ -221,7 +215,7 @@ class OneBasedIntegerColumn(IntegerColumn):
     """A column that represents a zero-based integer"""
 
     @classmethod
-    def __min_value__(cls):
+    def __min_value__(cls) -> int:
         return 1
 
 
@@ -230,7 +224,7 @@ class NullableZeroBasedIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
     treated as the null value"""
 
     @classmethod
-    def __min_value__(cls):
+    def __min_value__(cls) -> int:
         return 0
 
 
@@ -239,7 +233,7 @@ class NullableOneBasedIntegerColumn(NullableEmptyStringIsNone, IntegerColumn):
     treated as the null value"""
 
     @classmethod
-    def __min_value__(cls):
+    def __min_value__(cls) -> int:
         return 1
 
 
@@ -247,12 +241,12 @@ class FloatColumn(MafCustomColumnRecord):
     """A column that represents a floating point number"""
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> float:
         return float(value)
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, float):
-            return "'%s' was not a float" % str(self.value)
+            return f"'{self.value}' was not a float"
         else:
             return None
 
@@ -270,28 +264,29 @@ class EnumColumn(MafCustomColumnRecord):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
-    @abstractclassmethod
-    def __enum_class__(cls):
+    @abc.abstractmethod
+    def __enum_class__(cls) -> Type[Enum]:
         """
         :return: the class that extends `Enum`.
         """
 
+    # FIXME: Return types depend on specific enum
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> Any:
         enum_cls = cls.__enum_class__()
         try:
             return enum_cls(value)
         except ValueError:
             return enum_cls[value]
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         enum_cls = self.__enum_class__()
         if not isinstance(self.value, enum_cls):
-            return "'%s' was not of type '%s'" % (str(self.value), enum_cls.__name__)
+            return f"'{self.value}' was not of type '{enum_cls.__name__}'"
         else:
             return None
 
-    def __string_it__(self):
+    def __string_it__(self) -> str:
         return str(self.value.value)
 
 
@@ -300,14 +295,14 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
     an existing column class"""
 
     @classmethod
-    @abstractclassmethod
-    def __column_class__(cls):
+    @abc.abstractmethod
+    def __column_class__(cls) -> Type[MafCustomColumnRecord]:
         """
         :return: the class of the column to use
         """
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> list:
         column_cls = cls.__column_class__()
         if not isinstance(value, str):
             raise ValueError(
@@ -316,10 +311,10 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
         values = value.split(";")
         return [column_cls.__build__(val) for val in values]
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         column_cls = self.__column_class__()
         if not isinstance(self.value, list) and not isinstance(self.value, tuple):
-            return "'%s' was neither a list nor tuple" % str(self.value)
+            return f"'{self.value}' was neither a list nor tuple"
         for i, value in enumerate(self.value):
             column = column_cls("", value)  # create a new column to validate
             msg = column.__validate__()
@@ -327,7 +322,7 @@ class SequenceOfValuesColumn(MafCustomColumnRecord):
                 return "For the %dth value in '%s': %s" % (i + 1, str(self.value), msg)
         return None
 
-    def __string_it__(self):
+    def __string_it__(self) -> str:
         return ";".join([str(v) for v in self.value])
 
 
@@ -335,7 +330,7 @@ class SequenceOfStrings(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
     """A column that represents a sequence of zero or more strings"""
 
     @classmethod
-    def __column_class__(cls):
+    def __column_class__(cls) -> Type[StringColumn]:
         """
         :return: the class of the column to use
         """
@@ -346,7 +341,7 @@ class SequenceOfIntegers(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn)
     """A column that represents a sequence of zero or more integers"""
 
     @classmethod
-    def __column_class__(cls):
+    def __column_class__(cls) -> Type[IntegerColumn]:
         """
         :return: the class of the column to use
         """
@@ -358,12 +353,12 @@ class NullableDnaString(_BuildStringColumn, MafCustomColumnRecord):
     treated as the null value"""
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> Optional[Dict[str, None]]:
         return {"": None}
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, str):
-            return "'%s' was not a string" % str(self.value)
+            return f"'{self.value}' was not a string"
         elif "-" == self.value:
             return None
         for i, base in enumerate(self.value):
@@ -376,10 +371,10 @@ class DnaString(NullableDnaString):
     """A column that represents a non-empty string of DNA bases"""
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> Optional[dict]:
         return None
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         msg = super(DnaString, self).__validate__()
         if msg is None and not self.value:
             return "Found an empty string"
@@ -393,7 +388,7 @@ class Canonical(MafCustomColumnRecord):
     if the empty string."""
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: str) -> bool:
         if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         value = value.upper()
@@ -402,13 +397,13 @@ class Canonical(MafCustomColumnRecord):
         else:
             return value == "YES"
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, bool):
-            return "'%s' was not a bool" % str(self.value)
+            return f"'{self.value}' was not a bool"
         else:
             return None
 
-    def __string_it__(self):
+    def __string_it__(self) -> str:
         return "YES" if self.value else ""
 
 
@@ -417,17 +412,17 @@ class NullableYesOrNo(EnumColumn):
     string treated as a null value."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[NullableYesOrNoEnum]:
         return NullableYesOrNoEnum
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any):  # type: ignore
         if not isinstance(value, str):
-            raise ValueError("'%s' was not a string" % str(value))
+            raise ValueError(f"'{value}' was not a string")
         return super(NullableYesOrNo, cls).__build__(value.capitalize())
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> dict:
         return {
             NullableYesOrNoEnum.Null.name: NullableYesOrNoEnum.Null,
             "": NullableYesOrNoEnum.Null,
@@ -439,17 +434,17 @@ class NullableYOrN(EnumColumn):
     string treated as a null value."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[NullableYOrNEnum]:
         return NullableYOrNEnum
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any):  # type: ignore
         if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         return super(NullableYOrN, cls).__build__(value.capitalize())
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> dict:
         return {
             NullableYOrNEnum.Null.name: NullableYOrNEnum.Null,
             "": NullableYOrNEnum.Null,
@@ -460,7 +455,7 @@ class SequenceOfNullableYesOrNo(NullableEmptyStringIsEmptyList, SequenceOfValues
     """A column that represents a sequence of nullable yes or no."""
 
     @classmethod
-    def __column_class__(cls):
+    def __column_class__(cls) -> Type[NullableYesOrNo]:
         """
         :return: the class of the column to use
         """
@@ -472,17 +467,17 @@ class PickColumn(EnumColumn):
     "1", or the empty string, which is treated as None"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[PickEnum]:
         return PickEnum
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any):  # type: ignore
         if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         return super(PickColumn, cls).__build__(value.capitalize())
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> dict:
         return {
             PickEnum.Null.name: PickEnum.Null,
             "": PickEnum.Null,
@@ -494,15 +489,15 @@ class BooleanColumn(MafCustomColumnRecord):
     "True" or "False" (case insensitive)."""
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: str) -> bool:
         if not isinstance(value, str):
-            raise ValueError("'%s' was not a string" % str(value))
+            raise ValueError(f"'{value}' was not a string")
         value = value.upper()
         if value not in ["TRUE", "FALSE"]:
             raise ValueError("'%s' was not either 'True' or 'False'" % str(value))
         return value == 'TRUE'
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, bool):
             return "'%s' was not a bool" % str(self.value)
         else:
@@ -514,7 +509,7 @@ class EntrezGeneId(ZeroBasedIntegerColumn):
     where zero is treated as null."""
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> Dict[str, None]:
         return {"0": None}
 
 
@@ -523,7 +518,7 @@ class Strand(EnumColumn):
     '+' or '-' (positive strand or negative strand)"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[StrandEnum]:
         return StrandEnum
 
 
@@ -531,7 +526,7 @@ class VariantClassification(EnumColumn):
     """A column that represents the 'Variant_Classification' MAF column."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[VariantClassificationEnum]:
         return VariantClassificationEnum
 
 
@@ -539,7 +534,7 @@ class VariantType(EnumColumn):
     """A column that represents the 'Variant_Type' MAF column."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[VariantTypeEnum]:
         return VariantTypeEnum
 
 
@@ -548,7 +543,7 @@ class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
     where the empty string is treated as null."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[VerificationStatusEnum]:
         return VerificationStatusEnum
 
 
@@ -557,7 +552,7 @@ class ValidationStatus(NullableEmptyStringIsNone, EnumColumn):
     where the empty string is treated as null."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[ValidationStatusEnum]:
         return ValidationStatusEnum
 
 
@@ -565,7 +560,7 @@ class MutationStatus(EnumColumn):
     """A column that represents the 'Mutation_Status' MAF column"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[MutationStatusEnum]:
         return MutationStatusEnum
 
 
@@ -574,7 +569,7 @@ class Sequencer(EnumColumn):
     column"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[SequencerEnum]:
         return SequencerEnum
 
 
@@ -582,7 +577,7 @@ class SequenceOfSequencers(NullableEmptyStringIsEmptyList, SequenceOfValuesColum
     """A column that represents the 'Sequencer' MAF column"""
 
     @classmethod
-    def __column_class__(cls):
+    def __column_class__(cls) -> Type[Sequencer]:
         """
         :return: the class of the column to use
         """
@@ -593,12 +588,12 @@ class UUIDColumn(MafCustomColumnRecord):
     """A column that represents a UUID"""
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> UUID:
         return UUID(value)
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, UUID):
-            return "'%s' was not a UUID" % str(self.value)
+            return "'{self.value}' was not a UUID"
         else:
             return None
 
@@ -615,7 +610,7 @@ class FeatureType(NullableEmptyStringIsNone, EnumColumn):
     string treated as a null value."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[FeatureTypeEnum]:
         return FeatureTypeEnum
 
 
@@ -624,14 +619,14 @@ class TranscriptStrand(NullableEmptyStringIsNone, MafCustomColumnRecord):
     integer, either -1 or 1"""
 
     @classmethod
-    def __build__(cls, value):
+    def __build__(cls, value: Any) -> int:
         return int(value)
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[str]:
         if not isinstance(self.value, int):
-            return "'%s' was not an integer" % str(self.value)
+            return "'{self.value}' was not an integer"
         elif self.value not in (-1, 1):
-            return "'%s' was neither -1 nor 1" % str(self.value)
+            return "'{self.value}' was neither -1 nor 1"
         else:
             return None
 
@@ -640,7 +635,7 @@ class Impact(EnumColumn):
     """A column that represents the 'Impact' MAF column"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[ImpactEnum]:
         return ImpactEnum
 
 
@@ -648,7 +643,7 @@ class MC3Overlap(EnumColumn):
     """A column that represents the 'MC3_Overlap' MAF column"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[MC3OverlapEnum]:
         return MC3OverlapEnum
 
 
@@ -656,5 +651,5 @@ class GdcValidationStatus(EnumColumn):
     """A column that represents the 'GDC_Validation_Status' MAF column"""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[GdcValidationStatusEnum]:
         return GdcValidationStatusEnum
