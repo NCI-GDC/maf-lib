@@ -13,7 +13,7 @@ modified after being instantiated.
 """
 import abc
 from collections import OrderedDict
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, NoReturn, Optional, Union
 
 from maflib.column import MafColumnRecord
 from maflib.util import abstractclassmethod
@@ -45,7 +45,7 @@ class MafScheme:
             (name, desc) for name, desc in column_desc.items()
         )
 
-    def column_class(self, name: str) -> Optional[str]:
+    def column_class(self, name: str) -> MafColumnRecord:
         """Get the class for the column with the given name"""
         return self.__column_name_to_column_class.get(name, None)
 
@@ -90,8 +90,8 @@ class MafScheme:
         """
 
     @classmethod
-    @abstractclassmethod
-    def __column_dict__(cls) -> dict:
+    @abc.abstractmethod
+    def __column_dict__(cls) -> Union[dict, NoReturn]:
         """
         :return: A mapping between column name and class for the column type.
         """
@@ -103,7 +103,7 @@ class MafScheme:
         """
         return OrderedDict(
             (name, "No description for column '%s'" % name)
-            for name in cls.__column_dict__().keys()
+            for name in cls.__column_dict__().keys()  # type: ignore
         )
 
     def __str__(self) -> str:
@@ -136,9 +136,9 @@ class NoRestrictionsScheme(MafScheme):
         return "no-annotation-specification"
 
     @classmethod
-    def __column_dict__(cls):
+    def __column_dict__(cls) -> NoReturn:
         raise ValueError("__column_dict__ may not be called on " "NoRestrictionsScheme")
 
     @classmethod
-    def __column_desc__(cls):
+    def __column_desc__(cls) -> NoReturn:
         raise ValueError("__column_desc__ may not be called on " "NoRestrictionsScheme")
