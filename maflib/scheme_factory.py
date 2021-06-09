@@ -112,7 +112,6 @@ def build_scheme_class(
     columns = datum.columns if datum.columns else list()
 
     # extend the base scheme if necessary
-    # FIXME: base_scheme is directly from the json.load key, i.e. string. Not MafScheme
     if base_scheme:
         base_columns = list()
         for name, cls in base_scheme.__column_dict__().items():  # type: ignore
@@ -169,8 +168,9 @@ def build_schemes(data: List[SchemeDatum]) -> Dict[str, MafScheme]:
                 "Could not find a scheme to build.  Schemes "
                 "remaining annotations were: %s" % annotations
             )
+        extends = datum.extends
         scheme_cls = build_scheme_class(
-            datum=datum, base_scheme=schemes.get(datum.extends)
+            datum=datum, base_scheme=schemes.get(extends) if extends else None
         )
         schemes[scheme_cls.annotation_spec()] = scheme_cls
         del data[datum_index]  # type: ignore
