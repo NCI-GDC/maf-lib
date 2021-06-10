@@ -14,17 +14,183 @@
                                  "sort.order" pragma.
 """
 
+import logging
 from collections import MutableMapping, OrderedDict
-from copy import deepcopy
+from copy import Error, deepcopy
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from maflib.logger import Logger
+from maflib.reader import MafReader
 from maflib.scheme_factory import all_schemes, find_scheme
+from maflib.schemes import MafScheme
 from maflib.sort_order import Coordinate, SortOrder, SortOrderKey, Unknown, Unsorted
+from maflib.util import LineReader
 from maflib.validation import (
     MafValidationError,
     MafValidationErrorType,
     ValidationStringency,
 )
+
+SortOrderType = Union[None, str, SortOrder, SortOrder]
+
+
+class MafHeaderRecord:
+    """
+    A header line for MAF files.
+    """
+
+    def __init__(self, key: str, value: Any):
+        self._key = key
+        self._value = value
+
+    @property
+    def key(self) -> str:
+        """gets the key"""
+        return self._key
+
+    @key.setter
+    def key(self, key: str) -> None:
+        """sets the key"""
+        self._key = key
+
+    @property
+    def value(self) -> Any:
+        """gets the value"""
+        return self._value
+
+    @value.setter
+    def value(self, value: Any) -> None:
+        """sets the value"""
+        self._value = value
+
+    def __str__(self) -> str:
+        """gets the text representation of this header record"""
+        return f"{MafHeader.HeaderLineStartSymbol}{self._key} {self._value}"
+
+    @classmethod
+    def from_line(
+        cls, line: str, line_number: Optional[int] = None
+    ) -> Tuple[Optional['MafHeaderRecord'], Optional[MafValidationError]]:
+        """Reads a single line in the MAF file header.
+
+        If a formatting error is encountered, returns (error, None), otherwise
+        returns (None, record).  Formatting errors include:
+        - the line does not start with the correct symbol (i.e. #)
+        - the line is missing a space separator for the key and value
+        - the line has an empty key
+        - the line has an empty value
+        """
+        error: Optional[MafValidationError] = None
+        record: 'MafHeaderRecord' = None  # type: ignore
+        if not line.startswith(MafHeader.HeaderLineStartSymbol):
+            error = MafValidationError(
+                MafValidationErrorType.HEADER_LINE_MISSING_START_SYMBOL,
+                "Header line did not start with a '#'",
+                line_number=line_number,
+            )
+        else:
+            tokens = line[1:].split(" ", 1)
+            if len(tokens) != 2:
+                error = MafValidationError(
+                    MafValidationErrorType.HEADER_LINE_MISSING_SEPARATOR,
+                    "Header line did not have a key and value separated by a " "space",
+                    line_number=line_number,
+                )
+            else:
+                key, value = tokens
+                value = value.rstrip()
+                if not key:
+                    error = MafValidationError(
+                        MafValidationErrorType.HEADER_LINE_EMPTY_KEY,
+                        "Header line had an empty key",
+                        line_number=line_number,
+                    )
+                elif not value:
+                    error = MafValidationError(
+                        MafValidationErrorType.HEADER_LINE_EMPTY_VALUE,
+                        "Header line had an empty value",
+                        line_number=line_number,
+                    )
+                elif key == MafHeader.VersionKey:
+                    record = MafHeaderVersionRecord(value=value)
+                elif key == MafHeader.AnnotationSpecKey:
+                    record = MafHeaderAnnotationSpecRecord(value=value)
+                elif key == MafHeader.SortOrderKey:
+                    try:
+                        record = MafHeaderSortOrderRecord(value=value)
+                    except Exception:
+                        error = MafValidationError(
+                            MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER,
+                            "Sort order '%s' was not recognized" % value,
+                            line_number=line_number,
+                        )
+                elif key == MafHeader.ContigKey:
+                    record = MafHeaderContigRecord(value=value)
+                else:
+                    record = MafHeaderRecord(key=key, value=value)
+        return record, error
+
+
+class MafHeaderVersionRecord(MafHeaderRecord):
+    """A marker MAF header record for storing the version"""
+
+    def __init__(self, value: Any):
+        super(MafHeaderVersionRecord, self).__init__(
+            key=MafHeader.VersionKey, value=value
+        )
+
+
+class MafHeaderAnnotationSpecRecord(MafHeaderRecord):
+    """A marker MAF header record for storing the annotation specification"""
+
+    def __init__(self, value: Any):
+        super(MafHeaderAnnotationSpecRecord, self).__init__(
+            key=MafHeader.AnnotationSpecKey, value=value
+        )
+
+
+class MafHeaderSortOrderRecord(MafHeaderRecord):
+    """A marker MAF header record for storing the sort order"""
+
+    def __init__(
+        self, value: SortOrderType, fasta_index: str = None, contigs: list = None
+    ):
+        """:param: value: a string representing the name of the sort order,
+        or an instance of SortOrder."""
+        # TODO: Implement class finder here
+        if isinstance(value, str):
+            value: SortOrder = next(  #  type: ignore
+                (so() for so in SortOrder.all() if so.name() == value), Unknown,
+            )
+        if not issubclass(type(value), SortOrder):
+            # TODO: warn? log? return None? validation error?
+            raise Exception(
+                f"Value of type '{value.__class__.__name__}' is not a subclass of 'SortOrder'"
+            )
+        if (fasta_index or contigs) and issubclass(type(value), Coordinate):
+            value: Coordinate = value.__class__(fasta_index=fasta_index, contigs=contigs)  # type: ignore
+
+        super(MafHeaderSortOrderRecord, self).__init__(
+            key=MafHeader.SortOrderKey, value=value
+        )
+
+
+class MafHeaderContigRecord(MafHeaderRecord):
+    """A marker MAF header record for storing a list of contigs in the
+    order for sorting"""
+
+    def __init__(self, value: Any):
+        """:param: value: a comma separate string or a list of
+        chromosome names"""
+        if isinstance(value, str):
+            value = value.split(',')
+        super(MafHeaderContigRecord, self).__init__(
+            key=MafHeader.ContigKey, value=value
+        )
+
+    def __str__(self) -> str:
+        """gets the text representation of this header record"""
+        return f"{MafHeader.HeaderLineStartSymbol}{self._key} {','.join(self._value)}"
 
 
 class MafHeader(MutableMapping):
@@ -60,62 +226,62 @@ class MafHeader(MutableMapping):
 
     HeaderLineStartSymbol = "#"
 
-    def __init__(self, validation_stringency=None):
-        self.validation_errors = []
+    def __init__(self, validation_stringency: ValidationStringency = None):
+        self.validation_errors: List[MafValidationError] = []
         self.validation_stringency = (
             ValidationStringency.Silent
             if (validation_stringency is None)
             else validation_stringency
         )
-        self.__records = OrderedDict()
+        self.__records: Dict[str, MafHeaderRecord] = OrderedDict()
         self.__scheme = None
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> MafHeaderRecord:
         return self.__records[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: MafHeaderRecord) -> None:
         assert key == value.key
         assert isinstance(value, MafHeaderRecord)
         self.__records[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self.__records[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self.__records.keys())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__records)
 
-    def version(self):
+    def version(self) -> Optional[str]:
         """Gets the version or `None` if not present"""
         if MafHeader.VersionKey in self.__records:
             return self.__records[MafHeader.VersionKey].value
         else:
             return None
 
-    def annotation(self):
+    def annotation(self) -> Optional[str]:
         """Gets the annotation specification or `None` if not present"""
         if MafHeader.AnnotationSpecKey in self.__records:
             return self.__records[MafHeader.AnnotationSpecKey].value
         else:
             return None
 
-    def contigs(self):
+    def contigs(self) -> Optional[List[str]]:
         """Gets the contig list or `None` if not present"""
         if MafHeader.ContigKey in self.__records:
             return self.__records[MafHeader.ContigKey].value
         else:
             return None
 
-    def sort_order(self):
+    def sort_order(self) -> SortOrderType:
         """Gets the sort order or `Unsorted` if not present"""
         if MafHeader.SortOrderKey in self.__records:
             return self.__records[MafHeader.SortOrderKey].value
         else:
             return Unsorted()
 
-    def scheme(self):
+    def scheme(self) -> Optional[MafScheme]:
         """Gets the scheme according to the version and annotation, None if
         no suitable scheme was found.
         """
@@ -125,8 +291,11 @@ class MafHeader(MutableMapping):
             return None
 
     def validate(
-        self, validation_stringency=None, logger=Logger.RootLogger, reset_errors=True
-    ):
+        self,
+        validation_stringency: ValidationStringency = None,
+        logger: logging.Logger = Logger.RootLogger,
+        reset_errors: bool = True,
+    ) -> List[MafValidationError]:
         """Validates the header and returns a list of errors.
         Ensures that:
         - there is a version line in the header
@@ -140,7 +309,7 @@ class MafHeader(MutableMapping):
         if reset_errors:
             self.validation_errors = list()
 
-        def add_error(error):
+        def add_error(error: MafValidationError) -> None:
             self.validation_errors.append(error)
 
         # get the scheme!
@@ -203,18 +372,22 @@ class MafHeader(MutableMapping):
         MafValidationError.process_validation_errors(
             validation_errors=self.validation_errors,
             validation_stringency=validation_stringency,
-            name=self.__class__.__name__,
             logger=logger,
         )
 
         return self.validation_errors
 
-    def __str__(self):
+    def __str__(self) -> str:
         """gets the text representation of the header"""
         return "\n".join([str(record) for record in self.values()])
 
     @classmethod
-    def from_lines(cls, lines, validation_stringency=None, logger=Logger.RootLogger):
+    def from_lines(
+        cls,
+        lines: List[str],
+        validation_stringency: ValidationStringency = None,
+        logger: logging.Logger = Logger.RootLogger,
+    ) -> 'MafHeader':
         """
         :param lines: a sequence of lines
         :param validation_stringency: optionally the validation stringency to
@@ -223,9 +396,9 @@ class MafHeader(MutableMapping):
         :return: a MafHeader
         """
 
-        header = MafHeader(validation_stringency=validation_stringency)
+        header = cls(validation_stringency=validation_stringency)
 
-        def add_error(error):
+        def add_error(error: MafValidationError) -> None:
             header.validation_errors.append(error)
 
         for line_number, line in enumerate(lines):
@@ -262,8 +435,11 @@ class MafHeader(MutableMapping):
 
     @classmethod
     def from_line_reader(
-        cls, line_reader, validation_stringency=None, logger=Logger.RootLogger
-    ):
+        cls,
+        line_reader: LineReader,
+        validation_stringency: ValidationStringency = None,
+        logger: logging.Logger = Logger.RootLogger,
+    ) -> 'MafHeader':
         """Reads a header from a line reader.
         :param line_reader: a line reader
         :param validation_stringency: optionally the validation stringency to
@@ -285,13 +461,13 @@ class MafHeader(MutableMapping):
     @classmethod
     def from_reader(
         cls,
-        reader,
-        version=None,
-        annotation=None,
-        sort_order=None,
-        fasta_index=None,
-        contigs=None,
-    ):
+        reader: MafReader,
+        version: Optional[str] = None,
+        annotation: Optional[str] = None,
+        sort_order: SortOrderType = None,
+        fasta_index: Optional[str] = None,
+        contigs: Optional[list] = None,
+    ) -> 'MafHeader':
         header = deepcopy(reader.header())
         if version:
             header[MafHeader.VersionKey] = MafHeaderVersionRecord(value=version)
@@ -326,12 +502,12 @@ class MafHeader(MutableMapping):
     @classmethod
     def from_defaults(
         cls,
-        version=None,
-        annotation=None,
-        sort_order=None,
-        fasta_index=None,
-        contigs=None,
-    ):
+        version: Optional[str] = None,
+        annotation: Optional[str] = None,
+        sort_order: SortOrderType = None,
+        fasta_index: Optional[str] = None,
+        contigs: Optional[list] = None,
+    ) -> 'MafHeader':
         header = MafHeader()
         if version:
             header[MafHeader.VersionKey] = MafHeaderVersionRecord(value=version)
@@ -364,179 +540,10 @@ class MafHeader(MutableMapping):
         return header
 
     @classmethod
-    def scheme_header_lines(cls, scheme):
+    def scheme_header_lines(cls, scheme: MafScheme) -> List[str]:
         """Gets the list of header lines as they would be printed in a
         MafHeader for the given scheme."""
         return [
-            "%s%s %s"
-            % (MafHeader.HeaderLineStartSymbol, MafHeader.VersionKey, scheme.version()),
-            "%s%s %s"
-            % (
-                MafHeader.HeaderLineStartSymbol,
-                MafHeader.AnnotationSpecKey,
-                scheme.annotation_spec(),
-            ),
+            f"{MafHeader.HeaderLineStartSymbol}{MafHeader.VersionKey} {scheme.version()}",
+            f"{MafHeader.HeaderLineStartSymbol}{MafHeader.VersionKey} {scheme.annotation_spec()}",
         ]
-
-
-class MafHeaderRecord(object):
-    """
-    A header line for MAF files.
-    """
-
-    def __init__(self, key, value):
-        self._key = key
-        self._value = value
-
-    @property
-    def key(self):
-        """gets the key"""
-        return self._key
-
-    @key.setter
-    def key(self, key):
-        """sets the key"""
-        self._key = key
-
-    @property
-    def value(self):
-        """gets the value"""
-        return self._value
-
-    @value.setter
-    def value(self, value):
-        """sets the value"""
-        self._value = value
-
-    def __str__(self):
-        """gets the text representation of this header record"""
-        return "%s%s %s" % (
-            MafHeader.HeaderLineStartSymbol,
-            self._key,
-            str(self._value),
-        )
-
-    @classmethod
-    def from_line(cls, line, line_number=None):
-        """Reads a single line in the MAF file header.
-
-        If a formatting error is encountered, returns (error, None), otherwise
-        returns (None, record).  Formatting errors include:
-        - the line does not start with the correct symbol (i.e. #)
-        - the line is missing a space separator for the key and value
-        - the line has an empty key
-        - the line has an empty value
-        """
-        error = None
-        record = None
-        if not line.startswith(MafHeader.HeaderLineStartSymbol):
-            error = MafValidationError(
-                MafValidationErrorType.HEADER_LINE_MISSING_START_SYMBOL,
-                "Header line did not start with a '#'",
-                line_number=line_number,
-            )
-        else:
-            tokens = line[1:].split(" ", 1)
-            if len(tokens) != 2:
-                error = MafValidationError(
-                    MafValidationErrorType.HEADER_LINE_MISSING_SEPARATOR,
-                    "Header line did not have a key and value separated by a " "space",
-                    line_number=line_number,
-                )
-            else:
-                key, value = tokens
-                value = value.rstrip()
-                if not key:
-                    error = MafValidationError(
-                        MafValidationErrorType.HEADER_LINE_EMPTY_KEY,
-                        "Header line had an empty key",
-                        line_number=line_number,
-                    )
-                elif not value:
-                    error = MafValidationError(
-                        MafValidationErrorType.HEADER_LINE_EMPTY_VALUE,
-                        "Header line had an empty value",
-                        line_number=line_number,
-                    )
-                elif key == MafHeader.VersionKey:
-                    record = MafHeaderVersionRecord(value=value)
-                elif key == MafHeader.AnnotationSpecKey:
-                    record = MafHeaderAnnotationSpecRecord(value=value)
-                elif key == MafHeader.SortOrderKey:
-                    try:
-                        record = MafHeaderSortOrderRecord(value=value)
-                    except Exception:
-                        error = MafValidationError(
-                            MafValidationErrorType.HEADER_UNSUPPORTED_SORT_ORDER,
-                            "Sort order '%s' was not recognized" % value,
-                            line_number=line_number,
-                        )
-                elif key == MafHeader.ContigKey:
-                    record = MafHeaderContigRecord(value=value)
-                else:
-                    record = MafHeaderRecord(key=key, value=value)
-        return record, error
-
-
-class MafHeaderVersionRecord(MafHeaderRecord):
-    """A marker MAF header record for storing the version"""
-
-    def __init__(self, value):
-        super(MafHeaderVersionRecord, self).__init__(
-            key=MafHeader.VersionKey, value=value
-        )
-
-
-class MafHeaderAnnotationSpecRecord(MafHeaderRecord):
-    """A marker MAF header record for storing the annotation specification"""
-
-    def __init__(self, value):
-        super(MafHeaderAnnotationSpecRecord, self).__init__(
-            key=MafHeader.AnnotationSpecKey, value=value
-        )
-
-
-class MafHeaderSortOrderRecord(MafHeaderRecord):
-    """A marker MAF header record for storing the sort order"""
-
-    def __init__(self, value, fasta_index=None, contigs=None):
-        """:param: value: a string representing the name of the sort order,
-        or an instance of SortOrder."""
-        if isinstance(value, str):
-            value = next(
-                (so() for so in SortOrder.all() if so.name() == value), Unknown,
-            )
-        if not issubclass(value.__class__, SortOrder):
-            # TODO: warn? log? return None? validation error?
-            raise Exception(
-                "Value of type '%s' is not a subclass of "
-                "'SortOrder'" % value.__class__.__name__
-            )
-        if (fasta_index or contigs) and issubclass(value.__class__, Coordinate):
-            value = value.__class__(fasta_index=fasta_index, contigs=contigs)
-
-        super(MafHeaderSortOrderRecord, self).__init__(
-            key=MafHeader.SortOrderKey, value=value
-        )
-
-
-class MafHeaderContigRecord(MafHeaderRecord):
-    """A marker MAF header record for storing a list of contigs in the
-    order for sorting"""
-
-    def __init__(self, value):
-        """:param: value: a comma separate string or a list of
-        chromosome names"""
-        if isinstance(value, str):
-            value = value.split(',')
-        super(MafHeaderContigRecord, self).__init__(
-            key=MafHeader.ContigKey, value=value
-        )
-
-    def __str__(self):
-        """gets the text representation of this header record"""
-        return "%s%s %s" % (
-            MafHeader.HeaderLineStartSymbol,
-            self._key,
-            ",".join(self._value),
-        )
