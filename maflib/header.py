@@ -159,7 +159,7 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
         or an instance of SortOrder."""
         # TODO: Implement class finder here
         if isinstance(value, str):
-            value: SortOrder = next(  #  type: ignore
+            value: SortOrder = next(  # type: ignore
                 (so() for so in SortOrder.all() if so.name() == value), Unknown,
             )
         if not issubclass(type(value), SortOrder):
