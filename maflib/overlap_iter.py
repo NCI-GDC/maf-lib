@@ -11,12 +11,13 @@ iterator.
 """
 
 from enum import Enum, unique
+from typing import Callable, Iterator, List, Optional, Type
 
-from maflib.sort_order import BarcodesAndCoordinate, Coordinate
+from maflib.sort_order import BarcodesAndCoordinate, Coordinate, SortOrderKey
 from maflib.util import PeekableIterator
 
 
-class LocatableOverlapIterator(object):
+class LocatableOverlapIterator:
     """ An iterator over overlapping locatables across multiple `Locatable`s.
     One or more iterators should be given.  The records in each iterator are
     assumed to be sorted by coordinate order (see
@@ -40,11 +41,11 @@ class LocatableOverlapIterator(object):
 
     def __init__(
         self,
-        iters,
-        fasta_index=None,
-        contigs=None,
-        by_barcodes=True,
-        peekable_iterator_class=PeekableIterator,
+        iters: List[Iterator],
+        fasta_index: Optional[str] = None,
+        contigs: List[str] = None,
+        by_barcodes: bool = True,
+        peekable_iterator_class: Type[PeekableIterator] = PeekableIterator,
     ):
         """
         :param iters: the list of iterators.
@@ -59,26 +60,29 @@ class LocatableOverlapIterator(object):
         filters and custom handling of MAFs.
         """
 
-        self._by_barcodes = by_barcodes
-        if self._by_barcodes:
-            self._sort_order = BarcodesAndCoordinate(
+        if not by_barcodes:
+            _sort_order = Coordinate(fasta_index=fasta_index)
+            self._overlap_f = self.__overlaps
+        else:
+            _sort_order = BarcodesAndCoordinate(
                 fasta_index=fasta_index, contigs=contigs
             )
             self._overlap_f = self.__overlaps_with_barcode
-        else:
-            self._sort_order = Coordinate(fasta_index=fasta_index)
-            self._overlap_f = self.__overlaps
+        self._sort_order: Coordinate = _sort_order
+        self._by_barcodes: bool = by_barcodes
 
         # Trust, but verify
         _iters = [
             _SortOrderEnforcingIterator(_iter, self._sort_order) for _iter in iters
         ]
-        self._iters = [peekable_iterator_class(_iter) for _iter in _iters]
+        self._iters: List[PeekableIterator] = [
+            peekable_iterator_class(_iter) for _iter in _iters
+        ]
 
-        self._sort_key = self._sort_order.sort_key()
+        self._sort_key: SortOrderKey = self._sort_order.sort_key()
 
     @classmethod
-    def __overlaps_with_barcode(cls, min_key, cur_key):
+    def __overlaps_with_barcode(cls, min_key, cur_key) -> bool:
         return (
             min_key.tumor_barcode == cur_key.tumor_barcode
             and min_key.normal_barcode == cur_key.normal_barcode
@@ -86,7 +90,7 @@ class LocatableOverlapIterator(object):
         )
 
     @classmethod
-    def __overlaps(cls, min_key, cur_key):
+    def __overlaps(cls, min_key, cur_key) -> bool:
         # NB: we assume that min_key.start <= cur_key.start
         # NB: ignores tumor and normal barcode
         return (
@@ -94,7 +98,7 @@ class LocatableOverlapIterator(object):
             and min_key.start <= cur_key.start <= min_key.end
         )
 
-    def __iter__(self):
+    def __iter__(self) -> 'LocatableOverlapIterator':
         return self
 
     def next(self):
