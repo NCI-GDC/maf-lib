@@ -2,37 +2,92 @@
 """
 import abc
 from functools import total_ordering
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Type,
+    Union,
+)
+
+from typing_extensions import TypeAlias
 
 from maflib.locatable import Locatable
+from maflib.record import MafRecord
 from maflib.util import abstractclassmethod
 
 
-class SortOrder(object):
+@total_ordering
+class SortOrderKey:
+    """A container for the key used to sort MafRecords.  Sub-classes should
+    implement the __cmp__ method."""
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        pass
+
+    def __lt__(self, other: 'SortOrderKey') -> bool:  # type: ignore[override]
+        """Compare less than"""
+        return self.__cmp__(other) < 0
+
+    def __eq__(self, other: 'SortOrderKey') -> bool:  # type: ignore[override]
+        """Compare equal"""
+        return self.__cmp__(other) == 0
+
+    @abc.abstractmethod
+    def __cmp__(self, other: 'SortOrderKey') -> int:
+        """Compares two objects, returning -1 if this is less than the other, 0
+        if they are equal, and 1 otherwise."""
+
+    @classmethod
+    def compare(cls, this: Any, that: Any) -> int:
+        """Convenience method for comparing two objects of the same type that
+        have a total ordering."""
+        if this is None and that is None:
+            return 0
+        elif this is None:
+            return 1
+        elif that is None:
+            return -1
+        else:
+            return (this > that) - (this < that)
+
+
+TSortKey = Callable[[Union[MafRecord, Locatable]], SortOrderKey]
+
+
+class SortOrder:
     """Base class for all sort orders.  Sub-classes should implement name and
     sortKey."""
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self) -> None:
         pass
 
     @classmethod
-    @abstractclassmethod
-    def name(cls):
+    def name(cls) -> str:
         """Returns the order's name."""
+        return cls.__name__
 
     @abc.abstractmethod
-    def sort_key(self):
+    def sort_key(self) -> TSortKey:
         """Function to generate the sort key for sorting records into this
         ordering"""
 
+    # TODO: Implement this better
     @classmethod
-    def all(cls):
+    def all(cls) -> list:
         """Returns the known sort order classes."""
         return [Unknown, Unsorted, BarcodesAndCoordinate, Coordinate]
 
     @classmethod
-    def find(cls, sort_order_name):
+    def find(cls, sort_order_name: str) -> Type['SortOrder']:
         """Returns the sort order class by name.  Throws an exception if
         none was found"""
         sort_order = next(
@@ -46,56 +101,14 @@ class SortOrder(object):
             )
         return sort_order
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name()
 
 
-@total_ordering
-class SortOrderKey(object):
-    """A container for the key used to sort MafRecords.  Sub-classes should
-    implement the __cmp__ method."""
-
-    __metaclass__ = abc.ABCMeta
-
-    def __lt__(self, other):
-        """Compare less than"""
-        return self.__cmp__(other) < 0
-
-    def __eq__(self, other):
-        """Compare equal"""
-        return self.__cmp__(other) == 0
-
-    @abc.abstractmethod
-    def __cmp__(self, other):
-        """Compares two objects, returning -1 if this is less than the other, 0
-        if they are equal, and 1 otherwise."""
-
-    @classmethod
-    def compare(cls, this, that):
-        """Convenience method for comparing two objects of the same type that
-        have a total ordering."""
-        if this is None and that is None:
-            return 0
-        elif this is None:
-            return 1
-        elif that is None:
-            return -1
-        else:
-            return (this > that) - (this < that)
-
-
 class Unknown(SortOrder):
-    """Defines a sort order """
+    """Defines a sort order"""
 
-    def __init__(self, *args, **kwargs):
-        super(Unknown, self).__init__(*args, **kwargs)
-
-    @classmethod
-    def name(cls):
-        """Returns the order's name."""
-        return "Unknown"
-
-    def sort_key(self):
+    def sort_key(self) -> NoReturn:
         """Returns the sort key, which is not implemented as sorting is not
         valid for the Unknown sort order."""
         raise NotImplementedError("Sorting not supported for Unknown order.")
@@ -105,15 +118,7 @@ class Unsorted(SortOrder):
     """Defines a sort order based on the chromosome, start position, and end
     position, in that order."""
 
-    def __init__(self, *args, **kwargs):
-        super(Unsorted, self).__init__(*args, **kwargs)
-
-    @classmethod
-    def name(cls):
-        """Returns the order's name."""
-        return "Unsorted"
-
-    def sort_key(self):
+    def sort_key(self) -> NoReturn:
         """Returns the sort key, which is not implemented as sorting is not
         valid for the Unsorted sort order."""
         raise NotImplementedError("Sorting not supported for Unsorted order.")
@@ -123,7 +128,7 @@ class _CoordinateKey(SortOrderKey, Locatable):
     """A little class that aids in comparing records based on chromosome,
     start position, and end position"""
 
-    def __init__(self, record, contigs):
+    def __init__(self, record: Locatable, contigs: List[str]):
         if not issubclass(record.__class__, Locatable):
             raise ValueError(
                 "Record of type '%s' is not a subclass of "
@@ -132,7 +137,7 @@ class _CoordinateKey(SortOrderKey, Locatable):
         chromosome = record.chromosome
         if contigs:
             try:
-                chromosome = contigs.index(chromosome)
+                chromosome = contigs.index(chromosome)  # type: ignore
             except ValueError:
                 raise ValueError(
                     "Could not find contig '%s' in list of contigs: %s"
@@ -140,7 +145,8 @@ class _CoordinateKey(SortOrderKey, Locatable):
                 )
         Locatable.__init__(self, chromosome, record.start, record.end)
 
-    def __cmp__(self, other):
+    def __cmp__(self, other: '_CoordinateKey') -> int:  # type: ignore[override]
+
         diff = self.compare(self.chromosome, other.chromosome)
         if diff == 0:
             diff = self.compare(self.start, other.start)
@@ -148,7 +154,7 @@ class _CoordinateKey(SortOrderKey, Locatable):
             diff = self.compare(self.end, other.end)
         return diff
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\t".join(str(s) for s in [self.chromosome, self.start, self.end])
 
 
@@ -156,7 +162,9 @@ class Coordinate(SortOrder):
     """Defines a sort order based on the chromosome, start position, and end
     position, in that order."""
 
-    def __init__(self, fasta_index=None, contigs=None, *args, **kwargs):
+    def __init__(
+        self, fasta_index: Optional[str] = None, contigs: Optional[list] = None
+    ):
         """
         provide either fasta_index or contigs
 
@@ -164,28 +172,21 @@ class Coordinate(SortOrder):
         ordering across chromosomes.
         :param contigs: list of contigs for ordering
         """
-        self._contigs = None
         if fasta_index:
-            handle = open(fasta_index, "r")
-            self._contigs = [line.rstrip("\r\n").split("\t")[0] for line in handle]
-            handle.close()
+            with open(fasta_index) as handle:
+                _contigs = [line.strip().split("\t")[0] for line in handle]
         elif contigs:
             assert isinstance(
                 contigs, list
             ), "contigs must be a list, but {0} found".format(type(contigs))
-            self._contigs = contigs[:]
-        super(Coordinate, self).__init__(*args, **kwargs)
+            _contigs = contigs
+        self._contigs: list = _contigs
 
-    @classmethod
-    def name(cls):
-        """Returns the order's name."""
-        return "Coordinate"
-
-    def sort_key(self):
+    def sort_key(self) -> TSortKey:
         """Function to generate the sort key for sorting records into this
         ordering"""
 
-        def key(record):
+        def key(record: Locatable) -> _CoordinateKey:
             """Gets the key"""
             return _CoordinateKey(record=record, contigs=self._contigs)
 
@@ -196,12 +197,13 @@ class _BarcodesAndCoordinateKey(_CoordinateKey):
     """A little class that aids in comparing records based on tumor barcode,
     matched normal barcode, chromosome, start position, and end position"""
 
-    def __init__(self, record, contigs):
+    def __init__(self, record: MafRecord, contigs: List[str]):
         self.tumor_barcode = record.value("Tumor_Sample_Barcode")
         self.normal_barcode = record.value("Matched_Norm_Sample_Barcode")
         super(_BarcodesAndCoordinateKey, self).__init__(record, contigs)
 
-    def __cmp__(self, other):
+    def __cmp__(self, other: '_BarcodesAndCoordinateKey') -> int:  # type: ignore[override]
+
         diff = self.compare(self.tumor_barcode, other.tumor_barcode)
         if diff == 0:
             diff = self.compare(self.normal_barcode, other.normal_barcode)
@@ -209,7 +211,7 @@ class _BarcodesAndCoordinateKey(_CoordinateKey):
             diff = super(_BarcodesAndCoordinateKey, self).__cmp__(other)
         return diff
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\t".join(
             [
                 self.tumor_barcode,
@@ -223,72 +225,65 @@ class BarcodesAndCoordinate(Coordinate):
     """Defines a sort order based on the tumor barcode, matched normal
     barcode, chromosome, start position, and end position, in that order."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super(BarcodesAndCoordinate, self).__init__(*args, **kwargs)
 
-    @classmethod
-    def name(cls):
-        """Returns the order's name."""
-        return "BarcodesAndCoordinate"
-
-    def sort_key(self):
+    def sort_key(self) -> TSortKey:
         """Function to generate the sort key for sorting records into this
         ordering"""
 
-        def key(record):
+        def key(record: MafRecord) -> _BarcodesAndCoordinateKey:
             """Gets the key"""
             return _BarcodesAndCoordinateKey(record=record, contigs=self._contigs)
 
-        return key
+        return key  # type: ignore
 
 
-class SortOrderChecker(object):
+class SortOrderChecker:
     """Checks that the records given are in sorted order"""
 
-    def __init__(self, sort_order):
-        self._last_rec = None
+    def __init__(self, sort_order: SortOrder):
+        self._last_record: Optional[Locatable] = None
+        self._sort_f: Optional[TSortKey]
         try:
             self._sort_f = sort_order.sort_key()
         except NotImplementedError:
             self._sort_f = None
-            pass
 
-    def add(self, rec):
+    def add(self, record: Locatable) -> 'SortOrderChecker':
         """Check that the given record is in order relative to the previous
         record"""
-        return self.__iadd__(rec)
+        return self.__iadd__(record)
 
-    def __iadd__(self, rec):
-        if self._last_rec and self._sort_f:
-            rec_key = self._sort_f(rec)
-            last_rec_key = self._sort_f(self._last_rec)
+    def __iadd__(self, record: Locatable) -> 'SortOrderChecker':
+        if self._last_record and self._sort_f:
+            rec_key = self._sort_f(record)
+            last_rec_key = self._sort_f(self._last_record)
             if rec_key < last_rec_key:
-                raise ValueError(
-                    "Records out of order\n%s\n%s" % (str(self._last_rec), str(rec))
-                )
-        self._last_rec = rec
+                raise ValueError(f"Records out of order: {self._last_record} {record}")
+        self._last_rec = record
         return self
 
-    def __del__(self):
-        self._last_rec = None
+    def __del__(self) -> None:
+        self._last_record = None
         self._sort_f = None
 
 
-class SortOrderEnforcingIterator(object):
+class SortOrderEnforcingIterator:
     """An iterator that enforces a sort order."""
 
-    def __init__(self, _iter, sort_order):
-        self._checker = SortOrderChecker(sort_order=sort_order)
-        self._iter = _iter
+    def __init__(self, _iter: Iterator[Locatable], sort_order: SortOrder):
+        self._checker: SortOrderChecker = SortOrderChecker(sort_order=sort_order)
+        self._iter: Iterator = _iter
 
-    def __iter__(self):
+    def __iter__(self) -> 'SortOrderEnforcingIterator':
         return self
 
-    def next(self):
+    def next(self) -> Locatable:
         """Gets the next element."""
         return self.__next__()
 
-    def __next__(self):
-        rec = next(self._iter)
-        self._checker.add(rec)
-        return rec
+    def __next__(self) -> Locatable:
+        record = next(self._iter)
+        self._checker.add(record)
+        return record
