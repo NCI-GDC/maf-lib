@@ -1,24 +1,24 @@
 """A module for locatable records."""
 
 
-from typing import List
+from typing import List, Union
 
 
 class Locatable:
     """A class that defines a genomic location (or span)."""
 
-    def __init__(self, chromosome: str, start: int, end: int):
+    def __init__(self, chromosome: Union[str, int], start: int, end: int):
         self._chromosome = chromosome
         self._start = start
         self._end = end
 
     @property
-    def chromosome(self) -> str:
+    def chromosome(self) -> Union[str, int]:
         """Returns the chromosome name"""
         return self._chromosome
 
     @chromosome.setter
-    def chromosome(self, value: str) -> None:
+    def chromosome(self, value: Union[str, int]) -> None:
         """Sets the chromosome position"""
         self._chromosome = value
 
