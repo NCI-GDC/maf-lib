@@ -21,7 +21,7 @@ from maflib.record import MafRecord
 from maflib.util import abstractclassmethod
 
 
-@total_ordering
+@total_ordering  # type: ignore
 class SortOrderKey:
     """A container for the key used to sort MafRecords.  Sub-classes should
     implement the __cmp__ method."""
