@@ -314,7 +314,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             else:
                 # add any validation errors from the column itself.
                 self.validation_errors.extend(
-                    column.validate(reset_errors=reset_errors, scheme=scheme)
+                    column.validate(reset_errors=reset_errors, scheme=scheme)  # type: ignore
                 )
 
         # if we did not find any None columns, then do a bunch of internal
@@ -436,7 +436,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
                     column_validation_errors = column.validate(
                         scheme=scheme, line_number=line_number
                     )
-                    record.validation_errors.extend(column_validation_errors)
+                    record.validation_errors.extend(column_validation_errors)  # type: ignore
                     if len(column_validation_errors) == 0:
                         record[column_name] = column
 

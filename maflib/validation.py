@@ -6,6 +6,7 @@
 * ValidationStringency    an enumeartion for the stringency in which to validate
 """
 
+import logging
 from enum import Enum, unique
 from typing import List, Optional
 
@@ -68,7 +69,9 @@ class MafFormatException(Exception):
     Thrown when reading or writing MAF files after finding a formatting error.
     """
 
-    def __init__(self, tpe, message: str, line_number: int = None):
+    def __init__(
+        self, tpe: MafValidationErrorType, message: str, line_number: int = None
+    ):
         super(MafFormatException, self).__init__(message)
         self.tpe = tpe
         self.line_number = line_number
@@ -88,7 +91,9 @@ class MafValidationError:
         """Returns a string message for when an error will be ignored"""
         return MafValidationError.__IgnoringMessageFormat % str(validation_error)
 
-    def __init__(self, tpe, message: str, line_number: int = None):
+    def __init__(
+        self, tpe: MafValidationErrorType, message: str, line_number: int = None
+    ):
         self.tpe = tpe
         self.message = message
         self.line_number = line_number
@@ -107,7 +112,7 @@ class MafValidationError:
     def process_validation_errors(
         validation_errors: Optional[List['MafValidationError']],
         validation_stringency: ValidationStringency,
-        logger=Logger.RootLogger,
+        logger: logging.Logger = Logger.RootLogger,
     ) -> None:
         """Handles a list of errors given a validation stringency.
 
