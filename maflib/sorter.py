@@ -8,7 +8,7 @@ import heapq
 import os
 import struct
 import tempfile
-from typing import Any, AnyStr, Callable, Generator, Optional, Type, Union
+from typing import Any, AnyStr, Callable, Generator, List, Optional, Type, Union
 
 from _typeshed import AnyPath
 
@@ -23,7 +23,7 @@ class _SortEntry:
     """A specialized tuple that contains a key used to compare entries, and a
     serialized version of the object being sorted."""
 
-    def __init__(self, key: int, data: Any):
+    def __init__(self, key: Any, data: Any):
         """
         :param key: the key used to determine the order of the objects being
         sorted
@@ -56,6 +56,10 @@ class SorterCodec:
         """Decode the object from an array of bytes"""
 
 
+TNextKey = Optional[SortOrderKey]
+TNextValue = Optional[Union[Locatable, MafRecord]]
+
+
 class _SortedIterator:
     """An iterator that consumes data from a single tmp file of sorted data and
     produces an iterator of sorted objects."""
@@ -72,8 +76,8 @@ class _SortedIterator:
         self._key_func = key_func
         # TODO: Refactor to context manager class
         self._handle: gzip.GzipFile = gzip.open(path, mode="rb", compresslevel=5)
-        self._next_value: Optional[Union[Locatable, MafRecord]] = None
-        self._next_key: Optional[SortOrderKey] = None
+        self._next_value: TNextValue = None
+        self._next_key: TNextKey = None
         self._closed = False
         self.__advance()
 
@@ -93,20 +97,20 @@ class _SortedIterator:
                 self._next_key = self._key_func(self._next_value)
 
     def __lt__(self, other: '_SortedIterator') -> bool:
-        return self.peek_key() < other.peek_key()
+        return self.peek_key() < other.peek_key()  # type: ignore
 
     def __iter__(self) -> '_SortedIterator':
         return self
 
-    def peek_key(self):
+    def peek_key(self) -> TNextKey:
         """Gets the next record's key, None if none exists"""
         return self._next_key
 
-    def next(self):
+    def next(self) -> TNextValue:
         """Gets the next record in sorted order"""
         return self.__next__()
 
-    def __next__(self):
+    def __next__(self) -> TNextValue:
         if not self._next_value:
             raise StopIteration
         return_value = self._next_value
@@ -129,28 +133,28 @@ class _MergingIterator:
     """An iterator that merges objects from _SortedIterator and maintains
     ordering"""
 
-    def __init__(self, paths, codec, key_func: SortOrderKey):
+    def __init__(self, paths: List[AnyPath], codec: SorterCodec, key_func: TSortKey):
         """
         :param paths: the paths to the tmp files to merge
         :param codec: the codec used to decode
         :param key_func: a function that creates a key used to determine the
         order of each object
         """
-        self._heap = []
-        self._iterators = []
+        self._heap: list = []
+        self._iterators: List[_SortedIterator] = []
         for path in paths:
             s_iter = _SortedIterator(path=path, codec=codec, key_func=key_func)
             heapq.heappush(self._heap, s_iter)
             self._iterators.append(s_iter)
 
-    def __iter__(self):
+    def __iter__(self) -> '_MergingIterator':
         return self
 
-    def next(self):
+    def next(self) -> TNextValue:
         """Gets the next record in sorted order"""
         return self.__next__()
 
-    def __next__(self):
+    def __next__(self) -> TNextValue:
         if not self._heap:
             self.close()
             raise StopIteration
@@ -160,7 +164,7 @@ class _MergingIterator:
             heapq.heappush(self._heap, s_iter)
         return entry
 
-    def close(self):
+    def close(self) -> None:
         """Closes all the underlying iterators"""
         for s_iter in self._iterators:
             s_iter.close()
@@ -173,9 +177,9 @@ class MafSorterCodec(SorterCodec):
 
     def __init__(
         self,
-        column_names=None,
-        scheme=None,
-        validation_stringency=ValidationStringency.Strict,
+        column_names: Optional[list] = None,
+        scheme: Optional[MafScheme] = None,
+        validation_stringency: ValidationStringency = ValidationStringency.Strict,
     ):
         # NB: if neither column_names nor scheme are given, then encode must be
         # called once before decode, and then the column names from the first
@@ -187,10 +191,10 @@ class MafSorterCodec(SorterCodec):
     def encode(self, record: MafRecord) -> bytearray:
         """Encodes a MafRecord"""
         if not self._column_names:
-            self._column_names = record.keys()
+            self._column_names = record.keys()  # type: ignore
         return bytearray(source=str(record), encoding='utf-8')  # type: ignore
 
-    def decode(self, data: bytearray, start: int, length: int) -> MafRecord:
+    def decode(self, data: bytes, start: int, length: int) -> MafRecord:
         """Decodes the data and re-parses the text, returning a MafRecord"""
         end = start + length
         line = data[start:end].decode('utf-8')
@@ -218,7 +222,7 @@ class Sorter:
         self,
         max_objects_in_ram: int,
         codec: SorterCodec,
-        key_func: Type[SortOrderKey],
+        key_func: TSortKey,
         tmp_dir: Optional[str] = None,
         always_spill: bool = True,
     ):
@@ -234,7 +238,7 @@ class Sorter:
         """
         self._max_objects_in_ram: int = max_objects_in_ram
         self._codec: SorterCodec = codec
-        self._key_func: Type[SortOrderKey] = key_func
+        self._key_func = key_func
         self._tmp_dir: Optional[str] = tmp_dir
         self._stash: list = [None] * max_objects_in_ram
         self._paths: list = []
@@ -256,7 +260,7 @@ class Sorter:
             self.__spill()
         return self
 
-    def __iter__(self) -> Generator[MafRecord, None, None]:
+    def __iter__(self) -> Generator[Optional[Union[Locatable, MafRecord]], None, None]:
         """:return an iterator over the sorted records"""
         if self._paths or self._always_spill:
             self.__spill()
@@ -268,7 +272,7 @@ class Sorter:
         else:
             self.__sort_stash()
 
-            def decode(idx: int) -> AnyStr:
+            def decode(idx: int) -> MafRecord:
                 """Decodes an entry"""
                 entry = self._stash[idx]
                 data = entry.data
