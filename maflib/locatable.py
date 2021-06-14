@@ -1,19 +1,24 @@
 """A module for locatable records."""
 
 
-from typing import List, Union
+from typing import List, Optional, Union
 
 
 class Locatable:
     """A class that defines a genomic location (or span)."""
 
-    def __init__(self, chromosome: Union[str, int], start: int, end: int):
+    def __init__(
+        self,
+        chromosome: Optional[Union[str, int]],
+        start: Optional[int],
+        end: Optional[int],
+    ):
         self._chromosome = chromosome
         self._start = start
         self._end = end
 
     @property
-    def chromosome(self) -> Union[str, int]:
+    def chromosome(self) -> Optional[Union[str, int]]:
         """Returns the chromosome name"""
         return self._chromosome
 
@@ -23,7 +28,7 @@ class Locatable:
         self._chromosome = value
 
     @property
-    def start(self) -> int:
+    def start(self) -> Optional[int]:
         """Returns the start position"""
         return self._start
 
@@ -33,7 +38,7 @@ class Locatable:
         self._start = value
 
     @property
-    def end(self) -> int:
+    def end(self) -> Optional[int]:
         """Returns the end position"""
         return self._end
 
@@ -48,18 +53,23 @@ class LocatableByAllele(Locatable):
     """
 
     def __init__(
-        self, chromosome: str, start: int, end: int, ref: str, alts: List[str]
+        self,
+        chromosome: Optional[Union[int, str]],
+        start: Optional[int],
+        end: Optional[int],
+        ref: Optional[str],
+        alts: Optional[List[str]],
     ):
         self._ref = ref
         self._alts = alts
         super(LocatableByAllele, self).__init__(chromosome, start, end)
 
     @property
-    def ref(self) -> str:
+    def ref(self) -> Optional[str]:
         """Returns the reference allele"""
         return self._ref
 
     @property
-    def alts(self) -> List[str]:
+    def alts(self) -> Optional[List[str]]:
         """Returns a list of valid alternate alleles"""
         return self._alts
