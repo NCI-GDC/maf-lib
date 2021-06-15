@@ -2,9 +2,7 @@
 
 import logging
 import sys
-from typing import Optional
-
-from _typeshed import SupportsWrite
+from typing import IO, Optional
 
 
 class Logger:
@@ -30,9 +28,7 @@ class Logger:
     LoggerLevel = logging.INFO
 
     @classmethod
-    def get_logger(
-        cls, name: str, stream: Optional[SupportsWrite] = None
-    ) -> logging.Logger:
+    def get_logger(cls, name: str, stream: Optional[IO] = None) -> logging.Logger:
         """Gets a logger with the given name.  If a ``stream`` is not
         provided, the logger will be a child of the root logger, otherwise, a
         new logger is created using the given ``stream``."""
