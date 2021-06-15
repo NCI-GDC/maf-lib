@@ -13,10 +13,7 @@ modified after being instantiated.
 """
 import abc
 from collections import OrderedDict
-from typing import Dict, Iterable, List, NoReturn, Optional, Union
-
-from maflib.column import MafColumnRecord
-from maflib.util import abstractclassmethod
+from typing import Any, List, NoReturn, Optional, Union
 
 
 class MafScheme:
@@ -45,7 +42,7 @@ class MafScheme:
             (name, desc) for name, desc in column_desc.items()
         )
 
-    def column_class(self, name: str) -> MafColumnRecord:
+    def column_class(self, name: str) -> Any:  # MafColumnRecord
         """Get the class for the column with the given name"""
         return self.__column_name_to_column_class.get(name, None)
 
@@ -114,31 +111,3 @@ class MafScheme:
         :return: The number of columns in this scheme
         """
         return len(self.__column_name_to_column_class)
-
-
-class NoRestrictionsScheme(MafScheme):
-    """A MafScheme with no restrictions on the column names and values.  A
-    list of column names should be ge given when constructed."""
-
-    def __init__(self, column_names: Iterable[str]):
-        column_dict = OrderedDict((name, MafColumnRecord) for name in column_names)
-        column_desc = OrderedDict((name, "") for name in column_names)
-        super(NoRestrictionsScheme, self).__init__(
-            column_dict=column_dict, column_desc=column_desc
-        )
-
-    @classmethod
-    def version(cls) -> str:
-        return "no-version"
-
-    @classmethod
-    def annotation_spec(cls) -> str:
-        return "no-annotation-specification"
-
-    @classmethod
-    def __column_dict__(cls) -> NoReturn:
-        raise ValueError("__column_dict__ may not be called on " "NoRestrictionsScheme")
-
-    @classmethod
-    def __column_desc__(cls) -> NoReturn:
-        raise ValueError("__column_desc__ may not be called on " "NoRestrictionsScheme")
