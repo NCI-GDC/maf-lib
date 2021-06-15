@@ -182,6 +182,11 @@ class Coordinate(SortOrder):
             ), "contigs must be a list, but {0} found".format(type(contigs))
             _contigs = contigs
         self._contigs: list = _contigs
+        super().__init__()
+
+    @classmethod
+    def name(cls) -> str:
+        return cls.__name__
 
     def sort_key(self) -> TSortKey:
         """Function to generate the sort key for sorting records into this
@@ -262,7 +267,7 @@ class SortOrderChecker:
             last_rec_key = self._sort_f(self._last_record)
             if rec_key < last_rec_key:
                 raise ValueError(f"Records out of order: {self._last_record} {record}")
-        self._last_rec = record
+        self._last_record = record
         return self
 
     def __del__(self) -> None:
