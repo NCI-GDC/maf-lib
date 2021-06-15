@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from maflib.column_types import IntegerColumn, StringColumn
 from maflib.locatable import Locatable
-from maflib.schemes import MafScheme
+from maflib.schemes.base import MafScheme
 from maflib.sort_order import BarcodesAndCoordinate
 from maflib.sorter import MafSorter, MafSorterCodec, Sorter
 from tests.maflib.testutils import tmp_file

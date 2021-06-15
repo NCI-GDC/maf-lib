@@ -8,7 +8,7 @@ import gzip
 
 from maflib.logger import Logger
 from maflib.record import MafRecord
-from maflib.schemes import NoRestrictionsScheme
+from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
 from maflib.sort_order import SortOrderChecker
 from maflib.sorter import MafSorter
 from maflib.validation import ValidationStringency

@@ -9,7 +9,8 @@ from typing import Any, Iterable, Iterator, List, Optional
 from maflib.header import MafHeader
 from maflib.logger import Logger
 from maflib.record import MafRecord
-from maflib.schemes import MafScheme, NoRestrictionsScheme
+from maflib.schemes.base import MafScheme
+from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
 from maflib.sort_order import SortOrderEnforcingIterator
 from maflib.validation import (
     MafValidationError,

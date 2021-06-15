@@ -8,7 +8,7 @@ from maflib import sort_order
 from maflib.header import MafHeader, MafHeaderRecord, MafHeaderVersionRecord
 from maflib.logger import Logger
 from maflib.reader import MafReader
-from maflib.schemes import NoRestrictionsScheme
+from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
 from maflib.sort_order import Coordinate
 from maflib.util import LineReader
 from maflib.validation import (

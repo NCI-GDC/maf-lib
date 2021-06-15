@@ -8,7 +8,7 @@ from maflib.header import MafHeader
 from maflib.locatable import Locatable
 from maflib.reader import MafReader
 from maflib.record import MafRecord
-from maflib.schemes import MafScheme
+from maflib.schemes.base import MafScheme
 from maflib.sort_order import Coordinate
 from maflib.util import captured_output
 from maflib.validation import (

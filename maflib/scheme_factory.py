@@ -15,13 +15,15 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     TypeVar,
     Union,
 )
 
 from maflib.column import MafColumnRecord
 from maflib.column_types import get_column_types
-from maflib.schemes import MafScheme, NoRestrictionsScheme
+from maflib.schemes.base import MafScheme
+from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
 from maflib.util import extend_class
 
 
@@ -97,7 +99,8 @@ def combine_columns(
         filtered_columns = [
             column for name, column in columns.items() if name not in filtered
         ]
-    return filtered_columns
+        return filtered_columns
+    return list(columns.values())
 
 
 def build_scheme_class(
@@ -253,7 +256,7 @@ def load_all_scheme_data(
             if not cls:
                 raise ValueError(
                     "Could not find a column type with name "
-                    "'%s' for column '%s'" % (column_cls, column.name)
+                    "'%s' for column '%s'" % (column_cls, column_name)
                 )
 
             columns.append(_Column(name=column_name, cls=cls, desc=column_desc))
@@ -291,7 +294,7 @@ def scheme_sort_key(scheme: MafScheme) -> T:
             l_index = index + 1
             last = vstr[l_index:]
             vstr = vstr[:index]
-        semver: List[Union[int, str]] = [int(s) for s in str.split(".")]
+        semver: List[Union[int, str]] = [int(s) for s in vstr.split(".")]
         semver.append(last)
         return semver
 
@@ -301,7 +304,9 @@ def scheme_sort_key(scheme: MafScheme) -> T:
     return version + annotation_spec
 
 
-def load_all_schemes(extra_filenames: Optional[List[str]] = None) -> List[MafScheme]:
+def load_all_schemes(
+    extra_filenames: Optional[List[str]] = None,
+) -> List[Type[MafScheme]]:
     """Load all the built-in schemes and any schemes given with
     ``extra_filename``.  Schemes must have a unique version and annotation
     pair across all schemes."""
@@ -322,9 +327,10 @@ def load_all_schemes(extra_filenames: Optional[List[str]] = None) -> List[MafSch
 
     # Gather all the schemes
     # NB: could sort by version an annotation
-    schemes_list: List[MafScheme] = [NoRestrictionsScheme(column_names=list())] + list(
-        schemes_dict.values()
-    )
+    schemes_list: List[Union[MafScheme, NoRestrictionsScheme]] = [
+        NoRestrictionsScheme(column_names=list())
+    ]
+    schemes_list.extend(list(schemes_dict.values()))
 
     # Validate that all schemes have different combinations of version
     # and annotations
@@ -352,7 +358,7 @@ def all_schemes(extra_filenames: Optional[List[str]] = None) -> List[MafScheme]:
 
 def find_scheme_class(
     version: Optional[str] = None, annotation: Optional[str] = None
-) -> Optional[MafScheme]:
+) -> Optional[Type[MafScheme]]:
     """Finds the scheme with the given version and annotation from all the
     known schemes.  If no version is given, get the first scheme with the
     given annotation.  If no annotation is given, find the first scheme with

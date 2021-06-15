@@ -8,13 +8,11 @@ import heapq
 import os
 import struct
 import tempfile
-from typing import Any, AnyStr, Callable, Generator, List, Optional, Type, Union
-
-from _typeshed import AnyPath
+from typing import Any, Generator, List, Optional, Union
 
 from maflib.locatable import Locatable
 from maflib.record import MafRecord
-from maflib.schemes import MafScheme
+from maflib.schemes.base import MafScheme
 from maflib.sort_order import SortOrder, SortOrderKey, TSortKey, _CoordinateKey
 from maflib.validation import ValidationStringency
 
@@ -64,7 +62,7 @@ class _SortedIterator:
     """An iterator that consumes data from a single tmp file of sorted data and
     produces an iterator of sorted objects."""
 
-    def __init__(self, path: AnyPath, codec: SorterCodec, key_func: TSortKey):
+    def __init__(self, path: str, codec: SorterCodec, key_func: TSortKey):
         """
         :param path: the path to the tmp file
         :param codec: the codec used to decode
@@ -133,7 +131,7 @@ class _MergingIterator:
     """An iterator that merges objects from _SortedIterator and maintains
     ordering"""
 
-    def __init__(self, paths: List[AnyPath], codec: SorterCodec, key_func: TSortKey):
+    def __init__(self, paths: List[str], codec: SorterCodec, key_func: TSortKey):
         """
         :param paths: the paths to the tmp files to merge
         :param codec: the codec used to decode

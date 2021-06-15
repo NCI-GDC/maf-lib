@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 from maflib.column import MafColumnRecord
 from maflib.locatable import LocatableByAllele
 from maflib.logger import Logger
-from maflib.schemes import MafScheme
+from maflib.schemes.base import MafScheme
 from maflib.validation import (
     MafValidationError,
     MafValidationErrorType,

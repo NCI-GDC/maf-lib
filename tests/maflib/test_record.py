@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from maflib.column_types import FloatColumn, StringColumn
 from maflib.record import MafColumnRecord, MafRecord
-from maflib.schemes import MafScheme
+from maflib.schemes.base import MafScheme
 from maflib.validation import MafValidationErrorType, ValidationStringency
 
 

@@ -20,9 +20,8 @@ from copy import Error, deepcopy
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from maflib.logger import Logger
-from maflib.reader import MafReader
 from maflib.scheme_factory import all_schemes, find_scheme
-from maflib.schemes import MafScheme
+from maflib.schemes.base import MafScheme
 from maflib.sort_order import Coordinate, SortOrder, SortOrderKey, Unknown, Unsorted
 from maflib.util import LineReader
 from maflib.validation import (
@@ -461,7 +460,7 @@ class MafHeader(MutableMapping):
     @classmethod
     def from_reader(
         cls,
-        reader: MafReader,
+        reader: Any,  # MafReader, but causes circular import
         version: Optional[str] = None,
         annotation: Optional[str] = None,
         sort_order: SortOrderType = None,
@@ -545,5 +544,5 @@ class MafHeader(MutableMapping):
         MafHeader for the given scheme."""
         return [
             f"{MafHeader.HeaderLineStartSymbol}{MafHeader.VersionKey} {scheme.version()}",
-            f"{MafHeader.HeaderLineStartSymbol}{MafHeader.VersionKey} {scheme.annotation_spec()}",
+            f"{MafHeader.HeaderLineStartSymbol}{MafHeader.AnnotationSpecKey} {scheme.annotation_spec()}",
         ]

@@ -7,11 +7,10 @@
                          value of the column.
 """
 import abc
-from typing import Any, Iterable, List, Optional, Type, Union
+from typing import Any, List, Optional, Union
 from uuid import UUID
 
-from maflib.schemes import MafScheme
-from maflib.util import abstractclassmethod
+from maflib.schemes.base import MafScheme
 from maflib.validation import MafValidationError, MafValidationErrorType
 
 
