@@ -11,10 +11,50 @@ iterator.
 """
 
 from enum import Enum, unique
-from typing import Callable, Iterator, List, Optional, Type
+from typing import Callable, Iterator, List, Optional, Type, Union
 
-from maflib.sort_order import BarcodesAndCoordinate, Coordinate, SortOrderKey
+from maflib.locatable import Locatable
+from maflib.reader import MafReader
+from maflib.record import MafRecord
+from maflib.sort_order import (
+    BarcodesAndCoordinate,
+    Coordinate,
+    SortOrder,
+    SortOrderKey,
+    _BarcodesAndCoordinateKey,
+)
 from maflib.util import PeekableIterator
+
+TSortKey = Callable[[Union[MafRecord, Locatable]], SortOrderKey]
+
+
+class _SortOrderEnforcingIterator:
+    """An iterator that enforces a sort order."""
+
+    def __init__(self, _iter: Iterator, sort_order: SortOrder):
+        self._iter: Iterator = _iter
+        self._sort_f: TSortKey = sort_order.sort_key()
+        self._last_rec: Optional[Locatable] = None
+
+    def __iter__(self) -> '_SortOrderEnforcingIterator':
+        return self
+
+    def next(self) -> Optional[Locatable]:
+        """Gets the next element."""
+        return self.__next__()
+
+    def __next__(self) -> Optional[Locatable]:
+        rec = next(self._iter)
+        if self._last_rec:
+            rec_key = self._sort_f(rec)
+            last_rec_key = self._sort_f(self._last_rec)
+            if rec_key < last_rec_key:
+                raise Exception(
+                    "Records out of order\n%s\n%s" % (str(self._last_rec), str(rec))
+                )
+
+        self._last_rec = rec
+        return rec
 
 
 class LocatableOverlapIterator:
@@ -41,7 +81,7 @@ class LocatableOverlapIterator:
 
     def __init__(
         self,
-        iters: List[Iterator],
+        iters: List[MafReader],
         fasta_index: Optional[str] = None,
         contigs: List[str] = None,
         by_barcodes: bool = True,
@@ -60,6 +100,10 @@ class LocatableOverlapIterator:
         filters and custom handling of MAFs.
         """
 
+        self._overlap_f: Union[
+            Callable[[_BarcodesAndCoordinateKey, _BarcodesAndCoordinateKey], bool],
+            Callable[[Locatable, Locatable], bool],
+        ]
         if not by_barcodes:
             _sort_order = Coordinate(fasta_index=fasta_index)
             self._overlap_f = self.__overlaps
@@ -79,10 +123,12 @@ class LocatableOverlapIterator:
             peekable_iterator_class(_iter) for _iter in _iters
         ]
 
-        self._sort_key: SortOrderKey = self._sort_order.sort_key()
+        self._sort_key: TSortKey = self._sort_order.sort_key()
 
     @classmethod
-    def __overlaps_with_barcode(cls, min_key, cur_key) -> bool:
+    def __overlaps_with_barcode(
+        cls, min_key: _BarcodesAndCoordinateKey, cur_key: _BarcodesAndCoordinateKey
+    ) -> bool:
         return (
             min_key.tumor_barcode == cur_key.tumor_barcode
             and min_key.normal_barcode == cur_key.normal_barcode
@@ -90,12 +136,12 @@ class LocatableOverlapIterator:
         )
 
     @classmethod
-    def __overlaps(cls, min_key, cur_key) -> bool:
+    def __overlaps(cls, min_key: Locatable, cur_key: Locatable) -> bool:
         # NB: we assume that min_key.start <= cur_key.start
         # NB: ignores tumor and normal barcode
         return (
             min_key.chromosome == cur_key.chromosome
-            and min_key.start <= cur_key.start <= min_key.end
+            and min_key.start <= cur_key.start <= min_key.end  # type: ignore
         )
 
     def __iter__(self) -> 'LocatableOverlapIterator':
@@ -105,15 +151,17 @@ class LocatableOverlapIterator:
         """Gets the next set of overlapping locatables."""
         return self.__next__()
 
-    def __to_sort_key(self, rec):
+    def __to_sort_key(self, rec: Locatable) -> Optional[Union[SortOrderKey, Locatable]]:
         return self._sort_key(rec) if rec else None
 
-    def __next__(self):
+    def __next__(self) -> List[List[MafRecord]]:
         # 1. find the record with the smallest key.
-        keys = [self.__to_sort_key(_iter.peek()) for _iter in self._iters]
+        keys: List[Optional[Union[SortOrderKey, Locatable]]] = [
+            self.__to_sort_key(_iter.peek()) for _iter in self._iters
+        ]
         # check that we have at least one _iter that return a non-None value
         next(iter([k for k in keys if k]))
-        min_key = min([k for k in keys if k])
+        min_key: Union[Locatable, SortOrderKey] = min([k for k in keys if k])
 
         # 2. while we cannot add anymore, find all that are overlapping,
         # and add them to the list of records to be returned.  We update the
@@ -258,32 +306,3 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
             to_return.append(cur_items)
 
         return to_return
-
-
-class _SortOrderEnforcingIterator(object):
-    """An iterator that enforces a sort order."""
-
-    def __init__(self, _iter, sort_order):
-        self._iter = _iter
-        self._sort_f = sort_order.sort_key()
-        self._last_rec = None
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        """Gets the next element."""
-        return self.__next__()
-
-    def __next__(self):
-        rec = next(self._iter)
-        if self._last_rec:
-            rec_key = self._sort_f(rec)
-            last_rec_key = self._sort_f(self._last_rec)
-            if rec_key < last_rec_key:
-                raise Exception(
-                    "Records out of order\n%s\n%s" % (str(self._last_rec), str(rec))
-                )
-
-        self._last_rec = rec
-        return rec
