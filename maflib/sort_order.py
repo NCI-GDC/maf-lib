@@ -172,6 +172,7 @@ class Coordinate(SortOrder):
         ordering across chromosomes.
         :param contigs: list of contigs for ordering
         """
+        _contigs = []
         if fasta_index:
             with open(fasta_index) as handle:
                 _contigs = [line.strip().split("\t")[0] for line in handle]
