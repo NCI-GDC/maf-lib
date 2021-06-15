@@ -2,7 +2,7 @@
 import sys
 from contextlib import contextmanager
 from io import StringIO
-from typing import Any, Iterator
+from typing import Any, Callable, Generator, Iterator, TextIO, Tuple, Type
 
 from maflib.logger import Logger
 
@@ -39,7 +39,7 @@ class LineReader:
         """Gets the next line without consuming it"""
         return self._line
 
-    def __iter__(self):
+    def __iter__(self) -> 'LineReader':
         return self
 
     def next(self) -> str:
@@ -58,48 +58,41 @@ class LineReader:
         self._file.close()
 
 
+TPeekReturn = Any
+
+
 class PeekableIterator:
     """An iterator that has a `peek()` method."""
 
-    def __init__(self, _iter: Iterator[Any]):
+    def __init__(self, _iter: Iterator[TPeekReturn]):
         self._iter = _iter
         self.__update_peek()
 
-    def __iter__(self):
+    def __iter__(self) -> 'PeekableIterator':
         return self
 
-    def next(self):
+    def next(self) -> TPeekReturn:
         """Gets the next record"""
         return self.__next__()
 
-    def __next__(self):
+    def __next__(self) -> TPeekReturn:
         if self._peek is None:
             raise StopIteration
         to_return = self._peek
         self.__update_peek()
         return to_return
 
-    def __update_peek(self):
+    def __update_peek(self) -> None:
         self._peek = next(self._iter, None)
 
-    def peek(self):
+    def peek(self) -> TPeekReturn:
         """Returns the next element without consuming it, or None
         if there are no more elements."""
         return self._peek
 
 
-class abstractclassmethod(classmethod):
-    """A class that can be used to annotate an abstract class method"""
-
-    __isabstractmethod__ = True
-
-    def __init__(self, callable):
-        callable.__isabstractmethod__ = True
-        super(abstractclassmethod, self).__init__(callable)
-
-
 @contextmanager
-def captured_output():
+def captured_output() -> Generator[Tuple[TextIO, TextIO], None, None]:
     """Captures stderr and stdout and returns them"""
     new_out, new_err = StringIO(), StringIO()
     old_out, old_err = sys.stdout, sys.stderr
@@ -111,13 +104,13 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-def extend_class(base_cls, cls):
+def extend_class(base_cls: Any, cls: Any) -> Type:
     """Apply mixins"""
     base_cls_name = base_cls.__name__
     return type(base_cls_name, (cls, base_cls), {})
 
 
-def extend_instance(obj, cls):
+def extend_instance(obj: object, cls: type) -> None:
     """Apply mixins after object creation"""
     base_cls = obj.__class__
     base_cls_name = obj.__class__.__name__
