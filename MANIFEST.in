@@ -1,0 +1,4 @@
+# setuptools_scm includes most files
+exclude .pre-commit-config.yaml
+exclude .secrets.baseline
+exclude .gitignore
