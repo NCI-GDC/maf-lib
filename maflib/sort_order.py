@@ -2,23 +2,10 @@
 """
 import abc
 from functools import total_ordering
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    Type,
-    Union,
-)
-
-from typing_extensions import TypeAlias
+from typing import Any, Callable, Iterator, List, NoReturn, Optional, Type, Union
 
 from maflib.locatable import Locatable
 from maflib.record import MafRecord
-from maflib.util import abstractclassmethod
 
 
 @total_ordering  # type: ignore
@@ -245,14 +232,17 @@ class BarcodesAndCoordinate(Coordinate):
         return key  # type: ignore
 
 
+SortOrderType = Optional[SortOrder]
+
+
 class SortOrderChecker:
     """Checks that the records given are in sorted order"""
 
-    def __init__(self, sort_order: SortOrder):
+    def __init__(self, sort_order: SortOrderType):
         self._last_record: Optional[Locatable] = None
         self._sort_f: Optional[TSortKey]
         try:
-            self._sort_f = sort_order.sort_key()
+            self._sort_f = sort_order.sort_key()  # type: ignore
         except NotImplementedError:
             self._sort_f = None
 
@@ -278,7 +268,7 @@ class SortOrderChecker:
 class SortOrderEnforcingIterator:
     """An iterator that enforces a sort order."""
 
-    def __init__(self, _iter: Iterator[Locatable], sort_order: SortOrder):
+    def __init__(self, _iter: Iterator[Locatable], sort_order: SortOrderType):
         self._checker: SortOrderChecker = SortOrderChecker(sort_order=sort_order)
         self._iter: Iterator = _iter
 
