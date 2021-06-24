@@ -30,7 +30,6 @@ from maflib.column_values import (
     VariantTypeEnum,
     VerificationStatusEnum,
 )
-from maflib.util import abstractclassmethod
 
 
 def get_column_types() -> List[Tuple[str, Any]]:
