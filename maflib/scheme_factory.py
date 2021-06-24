@@ -84,7 +84,7 @@ def combine_columns(
             if name in columns:
                 cls = extend_class(columns[name].cls, extra_column.cls)
                 desc = extra_column.desc
-                columns[name] = _Column(name=name, cls=cls, desc=desc)
+                columns[name] = _Column(name=name, cls=cls, desc=desc)  # type: ignore
 
         # add the extra_columns
         columns.update([(c.name, c) for c in extra_columns if c.name not in columns])
@@ -104,8 +104,8 @@ def combine_columns(
 
 
 def build_scheme_class(
-    datum: SchemeDatum, base_scheme: Optional[MafScheme]
-) -> MafScheme:
+    datum: SchemeDatum, base_scheme: Optional[Type[MafScheme]]
+) -> Type[MafScheme]:
     """
     :param datum: a scheme datum class
     :param base_scheme: the base scheme, or None if no base scheme
@@ -148,12 +148,12 @@ def build_scheme_class(
     return tpe  # type: ignore
 
 
-def build_schemes(data: List[SchemeDatum]) -> Dict[str, MafScheme]:
+def build_schemes(data: List[SchemeDatum]) -> Dict[str, Type[MafScheme]]:
     """
     Builds the schemes represented by the list of ``SchemeDatum``s.
     :return: a mapping from the scheme annotation to the scheme
     """
-    schemes: Dict[str, MafScheme] = {}
+    schemes: Dict[str, Type[MafScheme]] = {}
     while data:
         # find a scheme data that either doesn't extend any other scheme, or
         # whose base scheme it extends we have already built
@@ -180,7 +180,7 @@ def build_schemes(data: List[SchemeDatum]) -> Dict[str, MafScheme]:
     return schemes
 
 
-def validate_schemes(schemes: List[MafScheme]) -> bool:
+def validate_schemes(schemes: List[Type[MafScheme]]) -> bool:
     """Validate that all schemes have different combinations of version
     and annotations
     """
@@ -274,7 +274,7 @@ def load_all_scheme_data(
 T = List[Union[int, str]]
 
 
-def scheme_sort_key(scheme: MafScheme) -> T:
+def scheme_sort_key(scheme: Type[MafScheme]) -> T:
     """Sort key for sorting schemes.  Sorts by version and then annotation
     spec.  Extracts, major, minor, and patch versions."""
 
@@ -323,13 +323,11 @@ def load_all_schemes(
     data = load_all_scheme_data(filenames=filenames, column_types=column_types)
 
     # Build the schemes
-    schemes_dict: Dict[str, MafScheme] = build_schemes(data=data)
+    schemes_dict: Dict[str, Type[MafScheme]] = build_schemes(data=data)
 
     # Gather all the schemes
     # NB: could sort by version an annotation
-    schemes_list: List[Union[MafScheme, NoRestrictionsScheme]] = [
-        NoRestrictionsScheme(column_names=list())
-    ]
+    schemes_list: List[Type[MafScheme]] = [NoRestrictionsScheme]
     schemes_list.extend(list(schemes_dict.values()))
 
     # Validate that all schemes have different combinations of version
@@ -346,7 +344,7 @@ __ALL_SCHEMES = []
 __LOADED_ALL_SCHEMES = False
 
 
-def all_schemes(extra_filenames: Optional[List[str]] = None) -> List[MafScheme]:
+def all_schemes(extra_filenames: Optional[List[str]] = None) -> List[Type[MafScheme]]:
     """Gets all the known schemes."""
     global __LOADED_ALL_SCHEMES
     global __ALL_SCHEMES
