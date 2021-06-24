@@ -16,13 +16,13 @@
 
 import logging
 from collections import MutableMapping, OrderedDict
-from copy import Error, deepcopy
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
+from copy import deepcopy
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from maflib.logger import Logger
 from maflib.scheme_factory import all_schemes, find_scheme
 from maflib.schemes.base import MafScheme
-from maflib.sort_order import Coordinate, SortOrder, SortOrderKey, Unknown, Unsorted
+from maflib.sort_order import Coordinate, SortOrder, Unknown, Unsorted
 from maflib.util import LineReader
 from maflib.validation import (
     MafValidationError,
@@ -30,7 +30,7 @@ from maflib.validation import (
     ValidationStringency,
 )
 
-SortOrderType = Union[None, str, SortOrder, SortOrder]
+SortOrderType = Optional[SortOrder]
 
 
 class MafHeaderRecord:
@@ -152,7 +152,10 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
     """A marker MAF header record for storing the sort order"""
 
     def __init__(
-        self, value: SortOrderType, fasta_index: str = None, contigs: list = None
+        self,
+        value: Optional[Union[SortOrder, str]],
+        fasta_index: str = None,
+        contigs: list = None,
     ):
         """:param: value: a string representing the name of the sort order,
         or an instance of SortOrder."""
