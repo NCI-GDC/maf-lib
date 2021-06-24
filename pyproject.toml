@@ -13,5 +13,19 @@ line-length = 88
 skip-string-normalization = true
 target-version = ['py36']
 
-[flake8]
-max-line-length = 88
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses=true
+line_length = 88
+
+[tool.mypy]
+python_version = 3.6
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = "maflib.overlap_iter"
+ignore_errors = true
