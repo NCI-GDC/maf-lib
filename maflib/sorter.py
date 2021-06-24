@@ -13,7 +13,7 @@ from typing import Any, Generator, List, Optional, Union
 from maflib.locatable import Locatable
 from maflib.record import MafRecord
 from maflib.schemes.base import MafScheme
-from maflib.sort_order import SortOrder, SortOrderKey, TSortKey, _CoordinateKey
+from maflib.sort_order import SortOrder, SortOrderKey, TSortKey
 from maflib.validation import ValidationStringency
 
 
