@@ -251,7 +251,8 @@ def load_all_scheme_data(
             column_desc = str(column[2]) if len(column) > 2 else ""
 
             cls = next(
-                (cls for cls_name, cls in column_types if cls_name == column_cls), None,
+                (cls for cls_name, cls in column_types if cls_name == column_cls),
+                None,
             )
             if not cls:
                 raise ValueError(

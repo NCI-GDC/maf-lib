@@ -49,8 +49,7 @@ class Locatable:
 
 
 class LocatableByAllele(Locatable):
-    """Defines a genomic location (or span) with ref and alt alleles.
-    """
+    """Defines a genomic location (or span) with ref and alt alleles."""
 
     def __init__(
         self,

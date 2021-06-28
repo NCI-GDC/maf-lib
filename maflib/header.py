@@ -162,7 +162,8 @@ class MafHeaderSortOrderRecord(MafHeaderRecord):
         # TODO: Implement class finder here
         if isinstance(value, str):
             value: SortOrder = next(  # type: ignore
-                (so() for so in SortOrder.all() if so.name() == value), Unknown,
+                (so() for so in SortOrder.all() if so.name() == value),
+                Unknown,
             )
         if not issubclass(type(value), SortOrder):
             # TODO: warn? log? return None? validation error?
@@ -258,28 +259,28 @@ class MafHeader(MutableMapping):
     def version(self) -> Optional[str]:
         """Gets the version or `None` if not present"""
         if MafHeader.VersionKey in self.__records:
-            return self.__records[MafHeader.VersionKey].value
+            return str(self.__records[MafHeader.VersionKey].value)
         else:
             return None
 
     def annotation(self) -> Optional[str]:
         """Gets the annotation specification or `None` if not present"""
         if MafHeader.AnnotationSpecKey in self.__records:
-            return self.__records[MafHeader.AnnotationSpecKey].value
+            return str(self.__records[MafHeader.AnnotationSpecKey].value)
         else:
             return None
 
     def contigs(self) -> Optional[List[str]]:
         """Gets the contig list or `None` if not present"""
         if MafHeader.ContigKey in self.__records:
-            return self.__records[MafHeader.ContigKey].value
+            return self.__records[MafHeader.ContigKey].value  # type: ignore
         else:
             return None
 
     def sort_order(self) -> SortOrderType:
         """Gets the sort order or `Unsorted` if not present"""
         if MafHeader.SortOrderKey in self.__records:
-            return self.__records[MafHeader.SortOrderKey].value
+            return self.__records[MafHeader.SortOrderKey].value  # type: ignore
         else:
             return Unsorted()
 
@@ -470,7 +471,7 @@ class MafHeader(MutableMapping):
         fasta_index: Optional[str] = None,
         contigs: Optional[list] = None,
     ) -> 'MafHeader':
-        header = deepcopy(reader.header())
+        header: 'MafHeader' = deepcopy(reader.header())
         if version:
             header[MafHeader.VersionKey] = MafHeaderVersionRecord(value=version)
         if annotation:

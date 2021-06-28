@@ -7,7 +7,7 @@
                          value of the column.
 """
 import abc
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
 from maflib.schemes.base import MafScheme
@@ -42,7 +42,7 @@ class MafColumnRecord:
 
         # check that all nullable keys are strings
         if self.is_nullable():
-            for key in self.__nullable_keys__():  # type: ignore
+            for key in self.__nullable_keys__():
                 if not isinstance(key, str):
                     raise ValueError(
                         "Nullable key '%s' was not a 'str' but"
@@ -72,7 +72,9 @@ class MafColumnRecord:
                 self.validation_errors.append(error)
 
             scheme_column_index: Optional[int] = scheme.column_index(name=self.key)
-            scheme_column_class: MafColumnRecord = scheme.column_class(name=self.key)
+            scheme_column_class: Optional[MafColumnRecord] = scheme.column_class(
+                name=self.key
+            )
 
             if scheme_column_index is None:
                 add_errors(
@@ -155,7 +157,7 @@ class MafColumnRecord:
                     % (str(column_index), str(scheme_column_index))
                 )
             # NB: do not pass the scheme!
-            return scheme.column_class(name=name).build(
+            return scheme.column_class(name=name).build(  # type: ignore
                 name=name,
                 value=value,
                 column_index=scheme_column_index,
@@ -175,10 +177,10 @@ class MafColumnRecord:
         :return: ``True`` if this column has a possible "null" value, ``False``
         otherwise.
         """
-        return cls.__nullable_values__() is not None
+        return bool(cls.__nullable_values__())
 
     @classmethod
-    def __nullable_dict__(cls) -> Optional[dict]:
+    def __nullable_dict__(cls) -> Optional[Dict[str, Any]]:
         """
         :return: a map from the string representation of nullable values to
         the actual nullable value.  For example, an empty string may map to
@@ -187,30 +189,28 @@ class MafColumnRecord:
         return None
 
     @classmethod
-    def __nullable_values__(cls) -> Optional[List[str]]:
+    def __nullable_values__(cls) -> List[str]:
         """
         This method should not be overridden by sub-classes.
         :return: a list of values that should be treated as "null", ``None``
         otherwise.
         """
-        return (
-            list(cls.__nullable_dict__().values())  # type: ignore
-            if cls.__nullable_dict__() is not None
-            else None
-        )
+        if cls.__nullable_dict__() is not None:
+            return list(cls.__nullable_dict__().values())  # type: ignore
+        else:
+            return []
 
     @classmethod
-    def __nullable_keys__(cls) -> Optional[List[str]]:
+    def __nullable_keys__(cls) -> List[str]:
         """
         This method should not be overridden by sub-classes.
         :return: a list of values that should be treated as "null", ``None``
         otherwise.
         """
-        return (
-            list(cls.__nullable_dict__().keys())  # type:ignore
-            if cls.__nullable_dict__() is not None
-            else None
-        )
+        if cls.__nullable_dict__() is not None:
+            return list(cls.__nullable_dict__().keys())  # type: ignore
+        else:
+            return []
 
     def __str__(self) -> str:
         """Delegates the conversion to a string for non-null values to
@@ -223,6 +223,7 @@ class MafColumnRecord:
                 key for key, value in nullable_dict.items() if value == self.value
             ]
 
+            # FIXME: Too-clever solution for grabbing first item of list without IndexError
             key = next(iter(possible_keys), None)
 
             # did we find a key for the given null value?

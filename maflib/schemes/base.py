@@ -17,7 +17,7 @@ from typing import Any, List, NoReturn, Optional, Union
 
 
 class MafScheme:
-    """ The base scheme all schemes should implement.
+    """The base scheme all schemes should implement.
 
     Sub-classes should implement ``version()``, ``annotation``, and
     ``__column_dict__()``.
@@ -42,7 +42,7 @@ class MafScheme:
             (name, desc) for name, desc in column_desc.items()
         )
 
-    def column_class(self, name: str) -> Any:  # MafColumnRecord
+    def column_class(self, name: str):  # type: ignore
         """Get the class for the column with the given name"""
         return self.__column_name_to_column_class.get(name, None)
 

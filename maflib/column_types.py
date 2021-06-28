@@ -50,7 +50,7 @@ class NullableEmptyStringIsNone:
     """
 
     @classmethod
-    def __nullable_dict__(cls) -> Optional[Dict[str, None]]:
+    def __nullable_dict__(cls) -> Optional[Dict[str, Optional[str]]]:
         return {"": None}
 
 
@@ -60,7 +60,7 @@ class NullableEmptyStringIsEmptyList:
     """
 
     @classmethod
-    def __nullable_dict__(cls) -> Optional[Dict[str, List]]:
+    def __nullable_dict__(cls) -> Optional[Dict[str, Any]]:
         return {"": []}
 
 
@@ -86,7 +86,8 @@ class _BuildStringColumn(MafCustomColumnRecord):
 
 
 class NullableStringColumn(
-    NullableEmptyStringIsNone, _BuildStringColumn,
+    NullableEmptyStringIsNone,
+    _BuildStringColumn,
 ):
     """A column where the value must be a string, with its null value being
     an empty string"""

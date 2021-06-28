@@ -35,7 +35,7 @@ class _SortEntry:
         :param other: the other object of the same type
         :return: true if the current object should come before the other object
         """
-        return self.key < other.key
+        return bool(self.key < other.key)
 
 
 class SorterCodec:
@@ -160,7 +160,7 @@ class _MergingIterator:
         entry = s_iter.next()
         if s_iter.peek_key():
             heapq.heappush(self._heap, s_iter)
-        return entry
+        return entry  # type: ignore
 
     def close(self) -> None:
         """Closes all the underlying iterators"""

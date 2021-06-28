@@ -110,7 +110,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         return key_as_column.key
 
     def __setitem__(self, key: Union[int, str], column: MafColumnRecord) -> None:
-        """ If a record already exists with the column name `key`, we either
+        """If a record already exists with the column name `key`, we either
         check that the `column_index`es are the same, or set the `column_index`
         if it is not set on the record.  Otherwise, if the `column_index` is not
         set and no existing record is found with the column name `key`, then
@@ -128,7 +128,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         `key` as the provided column. 3. If `None`, then `None` will always be
         returned. 4. Otherwise, it should be the column name, and be the same as
         the `key` in the provided column.
-        :param column: an instance of `MafColumnRecord`. """
+        :param column: an instance of `MafColumnRecord`."""
         if not isinstance(column, MafColumnRecord):
             raise TypeError(
                 "Adding a column that was not of type "
@@ -368,7 +368,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         :param logger the logger to which to write errors
         :return:
         """
-        record = MafRecord(
+        record = cls(
             line_number=line_number, validation_stringency=validation_stringency
         )
 
@@ -380,7 +380,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         def add_errors(error: MafValidationError) -> None:
             record.validation_errors.append(error)
 
-        column_values = line.rstrip("\r\n").split(MafRecord.ColumnSeparator)
+        column_values = line.rstrip("\r\n").split(cls.ColumnSeparator)
 
         if len(column_names) != len(column_values):
             add_errors(
@@ -390,55 +390,56 @@ class MafRecord(MutableMapping, LocatableByAllele):
                     line_number=line_number,
                 )
             )
-        else:
-            for column_index, column_name_and_value in enumerate(
-                zip(column_names, column_values)
-            ):
-                column_name = column_name_and_value[0]
-                column_value = column_name_and_value[1]
-                column = None
+            record.validate(logger=logger, reset_errors=False)
 
-                scheme_column_class = (
-                    scheme.column_class(name=column_name) if scheme else None
+            return record
+
+        for column_index, (column_name, column_value) in enumerate(
+            zip(column_names, column_values)
+        ):
+            column = None
+
+            scheme_column_class = (
+                scheme.column_class(name=column_name) if scheme else None
+            )
+
+            # A validation error will be found later if we don't find the
+            # column name
+            if scheme_column_class is None:
+                column = MafColumnRecord(
+                    key=column_name, value=column_value, column_index=column_index
                 )
-
-                # A validation error will be found later if we don't find the
-                # column name
-                if scheme_column_class is None:
-                    column = MafColumnRecord(
-                        key=column_name, value=column_value, column_index=column_index
+            else:
+                try:
+                    scheme_column_class = scheme.column_class(name=column_name)  # type: ignore
+                    column = scheme_column_class.build(  # type: ignore
+                        name=column_name,
+                        value=column_value,
+                        column_index=column_index,
                     )
-                else:
-                    try:
-                        scheme_column_class = scheme.column_class(name=column_name)  # type: ignore
-                        column = scheme_column_class.build(
-                            name=column_name,
-                            value=column_value,
-                            column_index=column_index,
+                except Exception as error:
+                    add_errors(
+                        MafValidationError(
+                            MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
+                            "Could not build column '%d' with name '%s' "
+                            "with the scheme '%s': %s"
+                            % (
+                                column_index + 1,
+                                column_name,
+                                scheme.version(),  # type: ignore
+                                str(error),
+                            ),
+                            line_number=line_number,
                         )
-                    except Exception as error:
-                        add_errors(
-                            MafValidationError(
-                                MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
-                                "Could not build column '%d' with name '%s' "
-                                "with the scheme '%s': %s"
-                                % (
-                                    column_index + 1,
-                                    column_name,
-                                    scheme.version(),  # type: ignore
-                                    str(error),
-                                ),
-                                line_number=line_number,
-                            )
-                        )
-
-                if column is not None:
-                    column_validation_errors = column.validate(
-                        scheme=scheme, line_number=line_number
                     )
-                    record.validation_errors.extend(column_validation_errors)  # type: ignore
-                    if len(column_validation_errors) == 0:
-                        record[column_name] = column
+
+            if column is not None:
+                column_validation_errors = column.validate(
+                    scheme=scheme, line_number=line_number
+                )
+                record.validation_errors.extend(column_validation_errors)  # type: ignore
+                if len(column_validation_errors) == 0:
+                    record[column_name] = column
 
         # process validation errors
         record.validate(logger=logger, reset_errors=False)

@@ -11,7 +11,7 @@ iterator.
 """
 
 from enum import Enum, unique
-from typing import Callable, Iterator, List, Optional, Type, Union
+from typing import Any, Callable, Iterator, List, Optional, Type, Union
 
 from maflib.locatable import Locatable
 from maflib.reader import MafReader
@@ -54,11 +54,11 @@ class _SortOrderEnforcingIterator:
                 )
 
         self._last_rec = rec
-        return rec
+        return rec  # type: ignore
 
 
 class LocatableOverlapIterator:
-    """ An iterator over overlapping locatables across multiple `Locatable`s.
+    """An iterator over overlapping locatables across multiple `Locatable`s.
     One or more iterators should be given.  The records in each iterator are
     assumed to be sorted by coordinate order (see
     `maflib.sort_order.Coordinate`), which will be verified during
@@ -147,7 +147,7 @@ class LocatableOverlapIterator:
     def __iter__(self) -> 'LocatableOverlapIterator':
         return self
 
-    def next(self):
+    def next(self) -> List[List[MafRecord]]:
         """Gets the next set of overlapping locatables."""
         return self.__next__()
 
@@ -161,13 +161,13 @@ class LocatableOverlapIterator:
         ]
         # check that we have at least one _iter that return a non-None value
         next(iter([k for k in keys if k]))
-        min_key: Union[Locatable, SortOrderKey] = min([k for k in keys if k])
+        min_key: Union[Locatable, SortOrderKey] = min([k for k in keys if k])  # type: ignore
 
         # 2. while we cannot add anymore, find all that are overlapping,
         # and add them to the list of records to be returned.  We update the
         # end position of the minimum key (min_key) to the maximum end so far
         # so we can return all overlapping variants.
-        records = [[] for _ in self._iters]
+        records: List[List[MafRecord]] = [[] for _ in self._iters]
         added = True
         while added:
             added = False
@@ -180,13 +180,13 @@ class LocatableOverlapIterator:
                     if not keys[i]:
                         keys[i] = self._sort_key(rec)
                     # Check if it overlaps
-                    if self._overlap_f(min_key, keys[i]):
+                    if self._overlap_f(min_key, keys[i]):  # type: ignore
                         # Add it to the list, update the end, set added to
                         # true, and nullify the key
                         next_rec = next(_iter)
                         records[i].append(next_rec)
-                        if min_key.end < keys[i].end:
-                            min_key.end = keys[i].end
+                        if min_key.end < keys[i].end:  # type: ignore
+                            min_key.end = keys[i].end  # type: ignore
                         added = True
                         keys[i] = None
 
@@ -206,7 +206,9 @@ class AlleleOverlapType(Enum):
     Subset = 2
 
     @classmethod
-    def compare_by(cls, overlap_type):
+    def compare_by(
+        cls, overlap_type: 'AlleleOverlapType'
+    ) -> Callable[[Any, Any], bool]:
         """Gets the comparison method by type"""
         if overlap_type == AlleleOverlapType.Equality:
             return cls.equality
@@ -216,18 +218,18 @@ class AlleleOverlapType(Enum):
             return cls.subset
 
     @classmethod
-    def equality(cls, base, other):
+    def equality(cls, base: list, other: list) -> bool:
         """Returns true if the two lists have the same elements in order"""
         return base == other
 
     @classmethod
-    def intersects(cls, base, other):
+    def intersects(cls, base: list, other: list) -> bool:
         """Returns true if the two lists intersect, or are both empty"""
         a = set(base)
         return any(i in a for i in other) or base == other
 
     @classmethod
-    def subset(cls, base, other):
+    def subset(cls, base: list, other: list) -> bool:
         """Returns true if the other list is a subset of the first list"""
         a = set(base)
         return all(i in a for i in other)
@@ -243,11 +245,11 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
 
     def __init__(
         self,
-        iters,
-        fasta_index=None,
-        contigs=None,
-        by_barcodes=True,
-        overlap_type=AlleleOverlapType.Equality,
+        iters: List[MafReader],
+        fasta_index: Optional[str] = None,
+        contigs: Optional[List[str]] = None,
+        by_barcodes: bool = True,
+        overlap_type: AlleleOverlapType = AlleleOverlapType.Equality,
     ):
         """
         :param iters: the list of iterators.
@@ -259,16 +261,16 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
         )
         self._compare_alts = AlleleOverlapType.compare_by(overlap_type)
 
-        self._list_of_items = None
-        self._other_iters = None
+        self._list_of_items: Optional[List[List[MafRecord]]] = None
+        self._other_iters: List[List[MafRecord]]
 
-    def __should_add(self, items, other):
+    def __should_add(self, items: List[MafRecord], other: MafRecord) -> bool:
         for item in items:
             if item.ref == other.ref and self._compare_alts(item.alts, other.alts):
                 return True
         return False
 
-    def __next__(self):
+    def __next__(self) -> List[List[MafRecord]]:
         if not self._list_of_items:
             # ensure that we have a locatable in the first iterator
             iters = super(LocatableByAlleleOverlapIterator, self).__next__()
@@ -279,11 +281,11 @@ class LocatableByAlleleOverlapIterator(LocatableOverlapIterator):
             _iter = iters[0]
             self._list_of_items = []
             while _iter:
-                item = _iter[0]
+                item: MafRecord = _iter[0]
                 for _items in self._list_of_items:
                     if self.__should_add(_items, item):
                         _items.append(item)
-                        item = None
+                        item = None  # type: ignore
                         break
                 if item:
                     self._list_of_items.append([item])

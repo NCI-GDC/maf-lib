@@ -42,7 +42,7 @@ class SortOrderKey:
         elif that is None:
             return -1
         else:
-            return (this > that) - (this < that)
+            return int((this > that) - (this < that))
 
 
 TSortKey = Callable[[Union[MafRecord, Locatable]], SortOrderKey]
@@ -69,7 +69,7 @@ class SortOrder:
 
     # TODO: Implement this better
     @classmethod
-    def all(cls) -> list:
+    def all(cls) -> List[Type['SortOrder']]:
         """Returns the known sort order classes."""
         return [Unknown, Unsorted, BarcodesAndCoordinate, Coordinate]
 
@@ -270,7 +270,7 @@ class SortOrderEnforcingIterator:
 
     def __init__(self, _iter: Iterator[Locatable], sort_order: SortOrderType):
         self._checker: SortOrderChecker = SortOrderChecker(sort_order=sort_order)
-        self._iter: Iterator = _iter
+        self._iter = _iter
 
     def __iter__(self) -> 'SortOrderEnforcingIterator':
         return self
