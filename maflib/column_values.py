@@ -33,6 +33,15 @@ class NullableYOrNEnum(MafEnum):
 
 
 @unique
+class YesNoOrUnknownEnum(MafEnum):
+    """Enumeration for "Yes", "No", "Unknown" column values."""
+
+    Unknown = "Unknown"
+    No = "No"
+    Yes = "Yes"
+
+
+@unique
 class PickEnum(MafEnum):
     """Enumeration for the MAF 'Pick' column value"""
 
