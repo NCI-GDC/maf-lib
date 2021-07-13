@@ -458,6 +458,35 @@ class TestNullableYesOrNo(TestCase):
             column_types.NullableYesOrNo.build("key", 1)
 
 
+class TestYesNoOrUnknown(TestCase):
+    def test_valid(self):
+        self.is_column_is_valid(
+            column_types.YesNoOrUnknown.build("key", "Yes"),
+            column_values.YesNoOrUnknownEnum.Yes,
+        )
+        self.is_column_is_valid(
+            column_types.YesNoOrUnknown.build("key", "No"),
+            column_values.YesNoOrUnknownEnum.No,
+        )
+        self.is_column_is_valid(
+            column_types.YesNoOrUnknown.build("key", "Unknown"),
+            column_values.YesNoOrUnknownEnum.Unknown,
+        )
+
+    def test_invalid(self):
+        self.is_column_invalid(
+            column_types.YesNoOrUnknown.build("key", "Yes"),
+            "Yes",
+            "was not of type 'YesNoOrUnknownEnum'",
+        )
+
+        with self.assertRaises(ValueError):
+            column_types.YesNoOrUnknown.build("key", 1)
+
+        with self.assertRaises(KeyError):
+            column_types.YesNoOrUnknown.build("key", "Who Knows")
+
+
 class TestBooleanColumn(TestCase):
     def test_valid(self):
         self.is_column_is_valid(column_types.BooleanColumn.build("key", "TRUE"), True)
