@@ -26,6 +26,7 @@ from maflib.column_values import (
     VariantClassificationEnum,
     VariantTypeEnum,
     VerificationStatusEnum,
+    YesNoOrUnknownEnum,
 )
 from maflib.util import abstractclassmethod
 
@@ -459,6 +460,20 @@ class NullableYOrN(EnumColumn):
             NullableYOrNEnum.Null.name: NullableYOrNEnum.Null,
             "": NullableYOrNEnum.Null,
         }
+
+
+class YesNoOrUnknown(EnumColumn):
+    """A column that represents the string "Yes", "No", or "Unknown"."""
+
+    @classmethod
+    def __enum_class__(cls):
+        return YesNoOrUnknownEnum
+
+    @classmethod
+    def __build__(cls, value):
+        if not isinstance(value, basestring):
+            raise ValueError("'%s' was not a string" % str(value))
+        return super(YesNoOrUnknown, cls).__build__(value)
 
 
 class SequenceOfNullableYesOrNo(NullableEmptyStringIsEmptyList, SequenceOfValuesColumn):
