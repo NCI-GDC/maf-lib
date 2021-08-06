@@ -458,6 +458,86 @@ class TestNullableYesOrNo(TestCase):
             column_types.NullableYesOrNo.build("key", 1)
 
 
+class TestYesNoOrUnknown(TestCase):
+    def test_valid(self):
+        self.is_column_is_valid(
+            column_types.YesNoOrUnknown.build("key", "Yes"),
+            column_values.YesNoOrUnknownEnum.Yes,
+        )
+        self.is_column_is_valid(
+            column_types.YesNoOrUnknown.build("key", "No"),
+            column_values.YesNoOrUnknownEnum.No,
+        )
+        self.is_column_is_valid(
+            column_types.YesNoOrUnknown.build("key", "Unknown"),
+            column_values.YesNoOrUnknownEnum.Unknown,
+        )
+
+    def test_invalid(self):
+        self.is_column_invalid(
+            column_types.YesNoOrUnknown.build("key", "Yes"),
+            "Yes",
+            "was not of type 'YesNoOrUnknownEnum'",
+        )
+
+        with self.assertRaises(ValueError):
+            column_types.YesNoOrUnknown.build("key", 1)
+
+        with self.assertRaises(KeyError):
+            column_types.YesNoOrUnknown.build("key", "Who Knows")
+
+
+class TestNullableYOrN(TestCase):
+    def test_valid(self):
+        nulls = [
+            column_values.NullableYOrNEnum.Null,
+            column_values.NullableYOrNEnum.Null,
+        ]
+        self.is_column_is_valid(
+            column_types.NullableYOrN.build("key", "Y"),
+            column_values.NullableYOrNEnum.Yes,
+            nulls,
+        )
+        self.is_column_is_valid(
+            column_types.NullableYOrN.build("key", "y"),
+            column_values.NullableYOrNEnum.Yes,
+            nulls,
+        )
+        self.is_column_is_valid(
+            column_types.NullableYOrN.build("key", "N"),
+            column_values.NullableYOrNEnum.No,
+            nulls,
+        )
+        self.is_column_is_valid(
+            column_types.NullableYOrN.build("key", "n"),
+            column_values.NullableYOrNEnum.No,
+            nulls,
+        )
+        self.is_column_is_valid(
+            column_types.NullableYOrN.build("key", ""),
+            column_values.NullableYOrNEnum.Null,
+            nulls,
+        )
+        self.is_column_is_valid(
+            column_types.NullableYOrN.build("key", "Null"),
+            column_values.NullableYOrNEnum.Null,
+            nulls,
+        )
+
+    def test_invalid(self):
+        self.is_column_invalid(
+            column_types.NullableYOrN.build("key", "YES"),
+            "YES",
+            "was not of type 'NullableYOrNEnum'",
+        )
+
+        with self.assertRaises(KeyError):
+            column_types.NullableYOrN.build("key", "False")
+
+        with self.assertRaises(ValueError):
+            column_types.NullableYOrN.build("key", 1)
+
+
 class TestBooleanColumn(TestCase):
     def test_valid(self):
         self.is_column_is_valid(column_types.BooleanColumn.build("key", "TRUE"), True)

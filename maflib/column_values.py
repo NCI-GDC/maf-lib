@@ -27,9 +27,18 @@ class NullableYesOrNoEnum(MafEnum):
 class NullableYOrNEnum(MafEnum):
     """Enumeration for "Y" or "N" column values, with Null being non-value"""
 
-    Null: str = ""
-    No: str = "Y"
-    Yes: str = "N"
+    Null = ""
+    No = "N"
+    Yes = "Y"
+
+
+@unique
+class YesNoOrUnknownEnum(MafEnum):
+    """Enumeration for "Yes", "No", "Unknown" column values."""
+
+    Unknown = "Unknown"
+    No = "No"
+    Yes = "Yes"
 
 
 @unique
