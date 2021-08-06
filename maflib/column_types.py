@@ -456,12 +456,12 @@ class YesNoOrUnknown(EnumColumn):
     """A column that represents the string "Yes", "No", or "Unknown"."""
 
     @classmethod
-    def __enum_class__(cls):
+    def __enum_class__(cls) -> Type[YesNoOrUnknownEnum]:
         return YesNoOrUnknownEnum
 
     @classmethod
-    def __build__(cls, value):
-        if not isinstance(value, basestring):
+    def __build__(cls, value):  # type: ignore
+        if not isinstance(value, str):
             raise ValueError("'%s' was not a string" % str(value))
         return super(YesNoOrUnknown, cls).__build__(value)
 
