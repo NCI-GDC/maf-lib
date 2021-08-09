@@ -7,8 +7,7 @@ from maflib.column_types import FloatColumn, StringColumn
 from maflib.header import MafHeader
 from maflib.locatable import Locatable
 from maflib.reader import MafReader
-from maflib.schemes.base import MafScheme
-from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
+from maflib.schemes import MafScheme, NoRestrictionsScheme
 from maflib.sort_order import Coordinate
 from maflib.validation import MafValidationErrorType, ValidationStringency
 from tests.maflib.testutils import (

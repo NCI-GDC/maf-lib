@@ -7,11 +7,13 @@
                          value of the column.
 """
 import abc
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from uuid import UUID
 
-from maflib.schemes.base import MafScheme
 from maflib.validation import MafValidationError, MafValidationErrorType
+
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
 
 class MafColumnRecord:
@@ -53,7 +55,7 @@ class MafColumnRecord:
     def validate(
         self,
         reset_errors: bool = True,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
         line_number: int = None,
     ) -> List[Optional[MafValidationError]]:
         """
@@ -134,7 +136,7 @@ class MafColumnRecord:
         value: Any,
         column_index: Optional[int] = None,
         description: Optional[str] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
     ) -> 'MafColumnRecord':
         """
         If ``scheme`` is given, then the the appropriate column type will be
@@ -265,7 +267,7 @@ class MafCustomColumnRecord(MafColumnRecord):
         name: str,
         column_index: Optional[int] = None,
         description: Optional[str] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
     ) -> Union['MafCustomColumnRecord', MafColumnRecord]:
         """
         This method should not be overridden by sub-classes.
@@ -294,7 +296,7 @@ class MafCustomColumnRecord(MafColumnRecord):
         value: Any,
         column_index: Optional[int] = None,
         description: Optional[str] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
     ) -> Union['MafColumnRecord', MafColumnRecord]:
         """
         This method should not be overridden by sub-classes.
@@ -337,7 +339,7 @@ class MafCustomColumnRecord(MafColumnRecord):
     def validate(
         self,
         reset_errors: bool = True,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
         line_number: Optional[int] = None,
     ) -> List[Optional[MafValidationError]]:
         """

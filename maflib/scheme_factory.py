@@ -22,8 +22,7 @@ from typing import (
 
 from maflib.column import MafColumnRecord
 from maflib.column_types import get_column_types
-from maflib.schemes.base import MafScheme
-from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
+from maflib.schemes import MafScheme, NoRestrictionsScheme
 from maflib.util import extend_class
 
 

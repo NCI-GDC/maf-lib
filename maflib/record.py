@@ -6,17 +6,19 @@ the annotation values for a single mutation.
 
 import logging
 from collections import MutableMapping
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 from maflib.column import MafColumnRecord
 from maflib.locatable import LocatableByAllele
 from maflib.logger import Logger
-from maflib.schemes.base import MafScheme
 from maflib.validation import (
     MafValidationError,
     MafValidationErrorType,
     ValidationStringency,
 )
+
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
 TKey = Optional[Union[int, MafColumnRecord, str]]
 
@@ -271,7 +273,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         validation_stringency: Optional[ValidationStringency] = None,
         logger: logging.Logger = Logger.RootLogger,
         reset_errors: bool = True,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
     ) -> List[MafValidationError]:
         """
         Collects a list of validation errors.
@@ -351,7 +353,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         cls,
         line: str,
         column_names: Optional[List[str]] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
         line_number: Optional[int] = None,
         validation_stringency: ValidationStringency = ValidationStringency.Strict,
         logger: logging.Logger = Logger.RootLogger,

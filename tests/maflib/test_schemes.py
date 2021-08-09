@@ -4,8 +4,7 @@ import unittest
 from collections import OrderedDict
 
 from maflib.header import MafHeader, MafHeaderRecord, MafHeaderVersionRecord
-from maflib.schemes.base import MafScheme
-from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
+from maflib.schemes import MafScheme, NoRestrictionsScheme
 from tests.maflib.testutils import (
     GdcV1_0_0_BasicScheme,
     GdcV1_0_0_ProtectedScheme,

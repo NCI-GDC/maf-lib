@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from maflib.column import MafColumnRecord, MafCustomColumnRecord
 from maflib.column_types import FloatColumn, StringColumn
-from maflib.schemes.base import MafScheme
+from maflib.schemes import MafScheme
 from maflib.validation import MafValidationErrorType
 
 

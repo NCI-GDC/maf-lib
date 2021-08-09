@@ -19,8 +19,7 @@ from maflib.scheme_factory import (
     scheme_to_columns,
     validate_schemes,
 )
-from maflib.schemes.base import MafScheme
-from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
+from maflib.schemes import MafScheme, NoRestrictionsScheme
 from tests.maflib.testutils import tmp_file
 
 

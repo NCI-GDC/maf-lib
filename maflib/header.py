@@ -17,11 +17,10 @@
 import logging
 from collections import MutableMapping, OrderedDict
 from copy import deepcopy
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from maflib.logger import Logger
 from maflib.scheme_factory import all_schemes, find_scheme
-from maflib.schemes.base import MafScheme
 from maflib.sort_order import Coordinate, SortOrder, Unknown, Unsorted
 from maflib.util import LineReader
 from maflib.validation import (
@@ -29,6 +28,9 @@ from maflib.validation import (
     MafValidationErrorType,
     ValidationStringency,
 )
+
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
 SortOrderType = Optional[SortOrder]
 
@@ -284,7 +286,7 @@ class MafHeader(MutableMapping):
         else:
             return Unsorted()
 
-    def scheme(self) -> Optional[MafScheme]:
+    def scheme(self) -> Optional['MafScheme']:
         """Gets the scheme according to the version and annotation, None if
         no suitable scheme was found.
         """
@@ -543,7 +545,7 @@ class MafHeader(MutableMapping):
         return header
 
     @classmethod
-    def scheme_header_lines(cls, scheme: MafScheme) -> List[str]:
+    def scheme_header_lines(cls, scheme: 'MafScheme') -> List[str]:
         """Gets the list of header lines as they would be printed in a
         MafHeader for the given scheme."""
         return [

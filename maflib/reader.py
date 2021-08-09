@@ -4,19 +4,21 @@
 """
 
 import gzip
-from typing import Any, Iterable, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, List, Optional
 
 from maflib.header import MafHeader
 from maflib.logger import Logger
 from maflib.record import MafRecord
-from maflib.schemes.base import MafScheme
-from maflib.schemes.no_restrictions_scheme import NoRestrictionsScheme
+from maflib.schemes import NoRestrictionsScheme
 from maflib.sort_order import SortOrderEnforcingIterator
 from maflib.validation import (
     MafValidationError,
     MafValidationErrorType,
     ValidationStringency,
 )
+
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
 
 class MafReader:
@@ -32,7 +34,7 @@ class MafReader:
         lines: Iterable,
         closeable: Any = None,
         validation_stringency: Optional[ValidationStringency] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
     ):
         """Initializes a MAF reader and reads in the header and column
         definitions.
@@ -137,12 +139,12 @@ class MafReader:
         )
 
     def __update_scheme__(
-        self, scheme: Optional[MafScheme] = None, column_names: Iterable[str] = None
+        self, scheme: Optional['MafScheme'] = None, column_names: Iterable[str] = None
     ) -> None:
         def add_error(error: MafValidationError) -> None:
             self.validation_errors.append(error)
 
-        self.__scheme: Optional[MafScheme] = self.__header.scheme()
+        self.__scheme: Optional['MafScheme'] = self.__header.scheme()
 
         # Set the scheme if given, but check that they match, otherwise,
         # add an error
@@ -217,7 +219,7 @@ class MafReader:
 
         return record
 
-    def scheme(self) -> Optional[MafScheme]:
+    def scheme(self) -> Optional['MafScheme']:
         """Returns the scheme used to while reading."""
         return self.__scheme
 
@@ -226,7 +228,7 @@ class MafReader:
         cls,
         path: str,
         validation_stringency: Optional[ValidationStringency] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
     ) -> 'MafReader':
         """Create a reader that reads from the given path."""
         if path.endswith(".gz"):

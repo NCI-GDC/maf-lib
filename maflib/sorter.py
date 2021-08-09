@@ -8,13 +8,15 @@ import heapq
 import os
 import struct
 import tempfile
-from typing import Any, Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Generator, List, Optional, Union
 
 from maflib.locatable import Locatable
 from maflib.record import MafRecord
-from maflib.schemes.base import MafScheme
 from maflib.sort_order import SortOrder, SortOrderKey, TSortKey
 from maflib.validation import ValidationStringency
+
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
 
 class _SortEntry:
@@ -176,7 +178,7 @@ class MafSorterCodec(SorterCodec):
     def __init__(
         self,
         column_names: Optional[list] = None,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
         validation_stringency: ValidationStringency = ValidationStringency.Strict,
     ):
         # NB: if neither column_names nor scheme are given, then encode must be
@@ -321,7 +323,7 @@ class MafSorter(Sorter):
     def __init__(
         self,
         sort_order_name: str,
-        scheme: Optional[MafScheme] = None,
+        scheme: Optional['MafScheme'] = None,
         max_objects_in_ram: int = 10000,
         *args: Any,
         **kwargs: Any,
