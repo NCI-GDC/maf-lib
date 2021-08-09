@@ -1,4 +1,7 @@
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/NCI-GDC/maf-lib)
 [![Language](https://img.shields.io/badge/language-python-brightgreen.svg)](http://www.python.org/)
+![GitHub branch checks state](https://img.shields.io/github/checks-status/NCI-GDC/maf-lib/main)
+![Black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 # MAF-LIB: the Mutation Annotation Format Library
 
