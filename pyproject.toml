@@ -11,7 +11,7 @@ fallback_version = "0"
 [tool.black]
 line-length = 88
 skip-string-normalization = true
-target-version = ['py36']
+target-version = ['py38']
 
 [tool.isort]
 multi_line_output = 3
@@ -21,7 +21,7 @@ use_parentheses=true
 line_length = 88
 
 [tool.mypy]
-python_version = 3.6
+python_version = 3.8
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_configs = true
