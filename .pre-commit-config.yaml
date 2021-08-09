@@ -1,6 +1,6 @@
 default_stages: [commit, push]
 default_language_version:
-  python_venv: python3.6
+  python_venv: python3.8
 
 repos:
   - repo: git@github.com:Yelp/detect-secrets
@@ -26,3 +26,9 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
+  - repo: https://github.com/pycqa/flake8
+    rev: '3.9.2'
+    hooks:
+    -   id: flake8
+        additional_dependencies: [flake8-docstrings]
+
