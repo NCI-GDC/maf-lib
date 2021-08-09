@@ -17,7 +17,6 @@ from maflib.column_values import (
     FeatureTypeEnum,
     GdcValidationStatusEnum,
     ImpactEnum,
-    MafEnum,
     MC3OverlapEnum,
     MutationStatusEnum,
     NullableYesOrNoEnum,

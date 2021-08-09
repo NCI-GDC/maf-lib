@@ -13,7 +13,7 @@ modified after being instantiated.
 """
 import abc
 from collections import OrderedDict
-from typing import Any, Iterable, List, NoReturn, Optional, Union
+from typing import Iterable, List, NoReturn, Optional, Union
 
 from maflib.column import MafColumnRecord
 

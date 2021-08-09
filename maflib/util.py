@@ -2,7 +2,7 @@
 import sys
 from contextlib import contextmanager
 from io import StringIO
-from typing import Any, Callable, Generator, Iterator, TextIO, Tuple, Type
+from typing import Any, Generator, Iterator, TextIO, Tuple, Type
 
 from maflib.logger import Logger
 

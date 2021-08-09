@@ -1,24 +1,11 @@
 """Module for building schemes"""
 
-import glob
 import json
 import os
 import pathlib
 import re
-from collections import OrderedDict, namedtuple
-from typing import (
-    AnyStr,
-    Dict,
-    List,
-    NamedTuple,
-    NewType,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from collections import OrderedDict
+from typing import Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
 from maflib.column import MafColumnRecord
 from maflib.column_types import get_column_types
