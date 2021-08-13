@@ -30,6 +30,7 @@ from maflib.validation import (
 )
 
 if TYPE_CHECKING:
+    from maflib.reader import MafReader
     from maflib.schemes import MafScheme
 
 SortOrderType = Optional[SortOrder]
@@ -466,7 +467,7 @@ class MafHeader(MutableMapping):
     @classmethod
     def from_reader(
         cls,
-        reader: Any,  # MafReader, but causes circular import
+        reader: 'MafReader',
         version: Optional[str] = None,
         annotation: Optional[str] = None,
         sort_order: SortOrderType = None,
