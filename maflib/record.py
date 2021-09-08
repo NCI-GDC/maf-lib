@@ -92,8 +92,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             column.column_index = column_index
         elif column_index != column.column_index:
             raise ValueError(
-                "Adding a column with index '%d' but the key "
-                "was the column index '%d'" % (column.column_index, column_index)
+                f"Column index mismatch: {column.column_index} is not {column_index}"
             )
         return column.key
 
@@ -106,8 +105,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         # make sure the keys are the same
         if column.key != key_as_column.key:
             raise ValueError(
-                "Adding a column with name '%s' but key was a "
-                "column with name '%s'" % (column.key, key_as_column.key)
+                f"Column name mismatch '{column.key}' is not '{key_as_column.key}'"
             )
         return key_as_column.key
 
@@ -132,10 +130,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         the `key` in the provided column.
         :param column: an instance of `MafColumnRecord`."""
         if not isinstance(column, MafColumnRecord):
-            raise TypeError(
-                "Adding a column that was not of type "
-                "'MafColumnRecord': '%s'" % str(type(column))
-            )
+            raise TypeError(f"{type(column)} is not 'MafColumnRecord'")
 
         if isinstance(key, int):
             key = self.__get_key_from_int(key, column)
@@ -146,7 +141,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             raise TypeError("Column name must be a string")
         elif column.key != key:
             raise ValueError(
-                "Adding a column with name '%s' but key was '%s'" % (column.key, key)
+                f"Adding a column with name '{column.key}' but key was '{key}'"
             )
         assert key == column.key
 
@@ -154,15 +149,14 @@ class MafRecord(MutableMapping, LocatableByAllele):
         # the same column index, otherwise set the column index if the current
         # record doesn't have one.  If there is no record with the same and the
         # column index is not set, set it as the next column in the list.
+        column_index = self.__columns_dict[key].column_index
         if key in self.__columns_dict:
             if column.column_index is None:
-                column.column_index = self.__columns_dict[key].column_index
+                column.column_index = column_index
             else:
-                if self.__columns_dict[key].column_index != column.column_index:
+                if column_index != column.column_index:
                     raise ValueError(
-                        "Existing column's index '%d' does not "
-                        "match replacement column's index '%d'"
-                        % (self.__columns_dict[key].column_index, column.column_index)  # type: ignore
+                        f"Existing column's index '{column_index}' does not match replacement column's index '{column.column_index}'"
                     )
         elif column.column_index is None:
             # set the column index to the next column
@@ -296,7 +290,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             add_errors(
                 MafValidationError(
                     MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS,
-                    "Found '%d' columns but expected '%d'" % (len(self), len(scheme)),
+                    f"Found '{len(self)}' columns but expected '{len(scheme)}'",
                 )
             )
 
@@ -309,7 +303,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
                 add_errors(
                     MafValidationError(
                         MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE,
-                        "Column '%d' had no value" % (i + 1),
+                        f"Column '{i+1}' had no value",
                         line_number=self.__line_number,
                     )
                 )
@@ -423,14 +417,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
                     add_errors(
                         MafValidationError(
                             MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
-                            "Could not build column '%d' with name '%s' "
-                            "with the scheme '%s': %s"
-                            % (
-                                column_index + 1,
-                                column_name,
-                                scheme.version(),  # type: ignore
-                                str(error),
-                            ),
+                            f"Could not build column '{column_index+1}' with name '{column_name}' scheme '{scheme.version()}': {error}",  # type: ignore
                             line_number=line_number,
                         )
                     )
