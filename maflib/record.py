@@ -149,14 +149,13 @@ class MafRecord(MutableMapping, LocatableByAllele):
         # the same column index, otherwise set the column index if the current
         # record doesn't have one.  If there is no record with the same and the
         # column index is not set, set it as the next column in the list.
-        column_index = self.__columns_dict[key].column_index
         if key in self.__columns_dict:
             if column.column_index is None:
-                column.column_index = column_index
+                column.column_index = self.__columns_dict[key].column_index
             else:
-                if column_index != column.column_index:
+                if self.__columns_dict[key].column_index != column.column_index:
                     raise ValueError(
-                        f"Existing column's index '{column_index}' does not match replacement column's index '{column.column_index}'"
+                        f"Existing column's index '{self.__columns_dict[key].column_index}' does not match replacement column's index '{column.column_index}'"
                     )
         elif column.column_index is None:
             # set the column index to the next column
