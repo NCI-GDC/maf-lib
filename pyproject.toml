@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=6.0"]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -11,7 +11,17 @@ fallback_version = "0"
 [tool.black]
 line-length = 88
 skip-string-normalization = true
-target-version = ['py36']
+target-version = ['py38']
 
-[flake8]
-max-line-length = 88
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses=true
+line_length = 88
+
+[tool.mypy]
+python_version = 3.8
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_configs = true

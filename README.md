@@ -1,6 +1,7 @@
-[![Build Status](https://travis-ci.com/NCI-GDC/maf-lib.svg?token=K8GQK5cmtkEVi41o3Kbx&branch=feat/travis-ci)](https://travis-ci.com/NCI-GDC/maf-lib)
-[![Code Coverage](https://codecov.io/gh/NCI-GDC/maf-lib/branch/master/graph/badge.svg?token=Zr7KTdJ23J)](https://codecov.io/gh/NCI-GDC/maf-lib)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/NCI-GDC/maf-lib)
 [![Language](https://img.shields.io/badge/language-python-brightgreen.svg)](http://www.python.org/)
+![GitHub branch checks state](https://img.shields.io/github/checks-status/NCI-GDC/maf-lib/main)
+![Black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 # MAF-LIB: the Mutation Annotation Format Library
 
@@ -26,7 +27,7 @@ To install locally: `python setup.py install`.
 
 ## API
 
-The MAF API can be found in `src/maflib`.
+The MAF API can be found in `maflib/`.
 Documentation can be generated using your favorite python documentation
 tool, such as `pydoc`.
 
@@ -59,17 +60,3 @@ The following schemes are natively supported:
 | gdc.1.0.0-public | Public | gdc.1.0.0-protected |
 | gdc.1.0.1-protected | Protected | gdc.1.0.0  |
 | gdc.1.0.1-public | Public | gdc.1.0.1-protected |
-
-## Tools
-
-The source for a set of command line tools for manipulating MAF files can be found in `src/maftools`.
-Once installed, they can be invoked via `maftools <global options> <tool name> <tool options>`, for example `maftools -v Strict view -i in.maf`.
-Use the `-h` option with any tool to see command line help.
-
-Support tools are as follows:
-
-| Tool | Description |
-| --- | --- |
-| `sort` | Sort a MAF file |
-| `validate` | Validate the format of a MAF file |
-| `view` | View a MAF file |

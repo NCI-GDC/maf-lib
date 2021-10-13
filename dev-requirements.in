@@ -1,9 +1,11 @@
 -c requirements.txt
-detect-secrets==0.13.1
+detect-secrets==1.0.3
 isort
 flake8
-pre-commit
+flake8-docstrings
+pre-commit>=2.9.0
 tox
 mock
 pytest
 pytest-cov
+mypy

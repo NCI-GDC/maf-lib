@@ -2,9 +2,10 @@
 
 import logging
 import sys
+from typing import IO, Optional
 
 
-class Logger(object):
+class Logger:
     """Provides methods to obtain loggers."""
 
     # NB: do not use an empty string here!
@@ -12,7 +13,7 @@ class Logger(object):
     LoggerFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     @classmethod
-    def setup_root_logger(cls):
+    def setup_root_logger(cls) -> None:
         """Sets up the root logger for maflib.  This should only be called
         once
         """
@@ -27,7 +28,7 @@ class Logger(object):
     LoggerLevel = logging.INFO
 
     @classmethod
-    def get_logger(cls, name, stream=None):
+    def get_logger(cls, name: str, stream: Optional[IO] = None) -> logging.Logger:
         """Gets a logger with the given name.  If a ``stream`` is not
         provided, the logger will be a child of the root logger, otherwise, a
         new logger is created using the given ``stream``."""
@@ -35,7 +36,7 @@ class Logger(object):
             logger = Logger.RootLogger.getChild(name)
         else:
             logger = logging.getLogger(name)
-            handler = logging.StreamHandler(stream)
+            handler = logging.StreamHandler(stream)  # type: ignore
             formatter = logging.Formatter(Logger.LoggerFormat)
             handler.setFormatter(formatter)
             logger.addHandler(handler)

@@ -4,7 +4,9 @@ the annotation values for a single mutation.
 * MafRecord  stores annotations for a single mutation.
 """
 
+import logging
 from collections import MutableMapping
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 from maflib.column import MafColumnRecord
 from maflib.locatable import LocatableByAllele
@@ -14,6 +16,11 @@ from maflib.validation import (
     MafValidationErrorType,
     ValidationStringency,
 )
+
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
+
+TKey = Optional[Union[int, MafColumnRecord, str]]
 
 
 class MafRecord(MutableMapping, LocatableByAllele):
@@ -30,21 +37,25 @@ class MafRecord(MutableMapping, LocatableByAllele):
 
     ColumnSeparator = "\t"
 
-    def __init__(self, line_number=None, validation_stringency=None):
+    def __init__(
+        self,
+        line_number: Optional[int] = None,
+        validation_stringency: ValidationStringency = ValidationStringency.Silent,
+    ):
         self.__line_number = line_number
-        self.__columns_dict = dict()
-        self.__columns_list = list()
+        self.__columns_dict: Dict[str, MafColumnRecord] = dict()
+        self.__columns_list: List[Optional[MafColumnRecord]] = list()
         self.validation_stringency = (
             ValidationStringency.Silent
             if (validation_stringency is None)
             else validation_stringency
         )
-        self.validation_errors = list()
+        self.validation_errors: List[MafValidationError] = list()
         super(MafRecord, self).__init__(
             chromosome=None, start=None, end=None, ref=None, alts=None
         )
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: TKey) -> Optional[MafColumnRecord]:
         """
         :param key: The key can be one of four things:
         1. If an `int`, it is assumed to be the `column_index` of the column.
@@ -69,7 +80,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             return None
 
     @staticmethod
-    def __get_key_from_int(key, column):
+    def __get_key_from_int(key: Union[str, int], column: MafColumnRecord) -> str:
         """Returns the name that should be used for the column and sets the
         column index if not already set"""
         column_index = int(key)
@@ -81,25 +92,25 @@ class MafRecord(MutableMapping, LocatableByAllele):
             column.column_index = column_index
         elif column_index != column.column_index:
             raise ValueError(
-                "Adding a column with index '%d' but the key "
-                "was the column index '%d'" % (column.column_index, column_index)
+                f"Column index mismatch: {column.column_index} is not {column_index}"
             )
         return column.key
 
     @staticmethod
-    def __get_key_from_column(key_as_column, column):
+    def __get_key_from_column(
+        key_as_column: MafColumnRecord, column: MafColumnRecord
+    ) -> str:
         """Returns the name that should be used for the column ensuring the
         names for the two given columns are the same"""
         # make sure the keys are the same
         if column.key != key_as_column.key:
             raise ValueError(
-                "Adding a column with name '%s' but key was a "
-                "column with name '%s'" % (column.key, key_as_column.key)
+                f"Column name mismatch '{column.key}' is not '{key_as_column.key}'"
             )
         return key_as_column.key
 
-    def __setitem__(self, key, column):
-        """ If a record already exists with the column name `key`, we either
+    def __setitem__(self, key: Union[int, str], column: MafColumnRecord) -> None:
+        """If a record already exists with the column name `key`, we either
         check that the `column_index`es are the same, or set the `column_index`
         if it is not set on the record.  Otherwise, if the `column_index` is not
         set and no existing record is found with the column name `key`, then
@@ -117,12 +128,9 @@ class MafRecord(MutableMapping, LocatableByAllele):
         `key` as the provided column. 3. If `None`, then `None` will always be
         returned. 4. Otherwise, it should be the column name, and be the same as
         the `key` in the provided column.
-        :param column: an instance of `MafColumnRecord`. """
+        :param column: an instance of `MafColumnRecord`."""
         if not isinstance(column, MafColumnRecord):
-            raise TypeError(
-                "Adding a column that was not of type "
-                "'MafColumnRecord': '%s'" % str(type(column))
-            )
+            raise TypeError(f"{type(column)} is not 'MafColumnRecord'")
 
         if isinstance(key, int):
             key = self.__get_key_from_int(key, column)
@@ -133,7 +141,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             raise TypeError("Column name must be a string")
         elif column.key != key:
             raise ValueError(
-                "Adding a column with name '%s' but key was '%s'" % (column.key, key)
+                f"Adding a column with name '{column.key}' but key was '{key}'"
             )
         assert key == column.key
 
@@ -147,9 +155,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             else:
                 if self.__columns_dict[key].column_index != column.column_index:
                     raise ValueError(
-                        "Existing column's index '%d' does not "
-                        "match replacement column's index '%d'"
-                        % (self.__columns_dict[key].column_index, column.column_index)
+                        f"Existing column's index '{self.__columns_dict[key].column_index}' does not match replacement column's index '{column.column_index}'"
                     )
         elif column.column_index is None:
             # set the column index to the next column
@@ -166,7 +172,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         # catch this later.
         self.__columns_list[column.column_index] = column
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: TKey) -> None:
         """
         Deletes the item with the given key.
         :param key: can be any key type supported by `__getitem__`, except
@@ -181,9 +187,9 @@ class MafRecord(MutableMapping, LocatableByAllele):
             while self.__columns_list and self.__columns_list[-1] is None:
                 del self.__columns_list[-1]
         else:
-            self.__columns_list[column.column_index] = None
+            self.__columns_list[column.column_index] = None  # type: ignore
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         """
         :return: an iterable over all keys in this record.  `None` are
         substituted for missing columns.
@@ -192,14 +198,14 @@ class MafRecord(MutableMapping, LocatableByAllele):
             [(column.key if column else None) for column in self.__columns_list]
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         :return: the number of columns, including columns that may have missing
          values.
         """
         return len(self.__columns_list)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         :return: The MAF record formatted as though it would be in a MAF file.
           No newline is appended.
@@ -207,48 +213,49 @@ class MafRecord(MutableMapping, LocatableByAllele):
         records = [str(record) for record in self.__columns_list]
         return MafRecord.ColumnSeparator.join(records)
 
-    @property
-    def chromosome(self):
+    # FIXME: Enum
+    @property  # type: ignore
+    def chromosome(self):  # type: ignore
         """Returns the chromosome name"""
         return self["Chromosome"].value
 
-    @property
-    def start(self):
+    @property  # type: ignore
+    def start(self):  # type: ignore
         """Returns the start position"""
         return self["Start_Position"].value
 
-    @property
-    def end(self):
+    @property  # type: ignore
+    def end(self):  # type: ignore
         """Returns the end position"""
         return self["End_Position"].value
 
     @property
-    def ref(self):
+    def ref(self):  # type: ignore
         """Returns the reference allele"""
         return self["Reference_Allele"].value
 
     @property
-    def alts(self):
+    def alts(self) -> list:
         """Returns a list of valid alternate alleles"""
-        return [self["Tumor_Seq_Allele2"].value]
+        return [self["Tumor_Seq_Allele2"].value]  # type: ignore
 
-    def add(self, column):
+    def add(self, column: MafColumnRecord) -> 'MafRecord':
         """Add the column to the record"""
         return self.__iadd__(column)
 
-    def __iadd__(self, column):
+    def __iadd__(self, column: MafColumnRecord) -> 'MafRecord':
         """Add the column to the record"""
         self.__setitem__(column.key, column)
         return self
 
-    def value(self, key):
+    def value(self, key: TKey) -> Any:
         """Gets the value for the column with the given name"""
         try:
-            return self[key].value
+            return self[key].value  # type: ignore
         except KeyError:
             return None
 
-    def column_values(self):
+    def column_values(self) -> List[Optional[Any]]:
         """Gets the values for all columns in order. """
         return [
             (column.value if column is not None else None) for column in self.values()
@@ -256,11 +263,11 @@ class MafRecord(MutableMapping, LocatableByAllele):
 
     def validate(
         self,
-        validation_stringency=None,
-        logger=Logger.RootLogger,
-        reset_errors=True,
-        scheme=None,
-    ):
+        validation_stringency: Optional[ValidationStringency] = None,
+        logger: logging.Logger = Logger.RootLogger,
+        reset_errors: bool = True,
+        scheme: Optional['MafScheme'] = None,
+    ) -> List[MafValidationError]:
         """
         Collects a list of validation errors.
         :return: the list of validation errors, if any.
@@ -273,7 +280,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         if not validation_stringency:
             validation_stringency = self.validation_stringency
 
-        def add_errors(error):
+        def add_errors(error: MafValidationError) -> None:
             self.validation_errors.append(error)
 
         # Validate the # of columns against the given scheme
@@ -282,7 +289,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             add_errors(
                 MafValidationError(
                     MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS,
-                    "Found '%d' columns but expected '%d'" % (len(self), len(scheme)),
+                    f"Found '{len(self)}' columns but expected '{len(scheme)}'",
                 )
             )
 
@@ -295,14 +302,14 @@ class MafRecord(MutableMapping, LocatableByAllele):
                 add_errors(
                     MafValidationError(
                         MafValidationErrorType.RECORD_COLUMN_WITH_NO_VALUE,
-                        "Column '%d' had no value" % (i + 1),
+                        f"Column '{i+1}' had no value",
                         line_number=self.__line_number,
                     )
                 )
             else:
                 # add any validation errors from the column itself.
                 self.validation_errors.extend(
-                    column.validate(reset_errors=reset_errors, scheme=scheme)
+                    column.validate(reset_errors=reset_errors, scheme=scheme)  # type: ignore
                 )
 
         # if we did not find any None columns, then do a bunch of internal
@@ -315,12 +322,12 @@ class MafRecord(MutableMapping, LocatableByAllele):
             assert len(self.__columns_dict) == len(self.__columns_list)
             # validate we have the same columns in the list as in the dict
             assert (
-                sorted(self.__columns_dict.values(), key=lambda r: r.column_index)
+                sorted(self.__columns_dict.values(), key=lambda r: r.column_index)  # type: ignore
                 == self.__columns_list
             )
             # ensure that all records' column_index match the index in the list
             for (column_index, column) in enumerate(self.__columns_list):
-                assert column_index == column.column_index
+                assert column_index == column.column_index  # type: ignore
 
         # TODO: validate cross-column constraints (ex. Mutation_Status)
         # TODO: validate that chromosome/start/end are defined
@@ -329,7 +336,6 @@ class MafRecord(MutableMapping, LocatableByAllele):
         MafValidationError.process_validation_errors(
             validation_errors=self.validation_errors,
             validation_stringency=validation_stringency,
-            name=self.__class__.__name__,
             logger=logger,
         )
 
@@ -338,13 +344,13 @@ class MafRecord(MutableMapping, LocatableByAllele):
     @classmethod
     def from_line(
         cls,
-        line,
-        column_names=None,
-        scheme=None,
-        line_number=None,
-        validation_stringency=None,
-        logger=Logger.RootLogger,
-    ):
+        line: str,
+        column_names: Optional[List[str]] = None,
+        scheme: Optional['MafScheme'] = None,
+        line_number: Optional[int] = None,
+        validation_stringency: ValidationStringency = ValidationStringency.Strict,
+        logger: logging.Logger = Logger.RootLogger,
+    ) -> 'MafRecord':
         """
         Parses a record from a single tab-delimited line.
         :param column_names: the expected names of the columns, in order,
@@ -357,7 +363,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
         :param logger the logger to which to write errors
         :return:
         """
-        record = MafRecord(
+        record = cls(
             line_number=line_number, validation_stringency=validation_stringency
         )
 
@@ -366,69 +372,62 @@ class MafRecord(MutableMapping, LocatableByAllele):
                 raise ValueError("Either column_names or scheme must be given")
             column_names = scheme.column_names()
 
-        def add_errors(error):
+        def add_errors(error: MafValidationError) -> None:
             record.validation_errors.append(error)
 
-        column_values = line.rstrip("\r\n").split(MafRecord.ColumnSeparator)
+        column_values = line.rstrip("\r\n").split(cls.ColumnSeparator)
 
         if len(column_names) != len(column_values):
             add_errors(
                 MafValidationError(
                     MafValidationErrorType.RECORD_MISMATCH_NUMBER_OF_COLUMNS,
-                    "Found '%d' columns but expected '%d'"
-                    % (len(column_values), len(column_names)),
+                    f"Found '{len(column_values)}' columns but expected '{len(column_names)}'",
                     line_number=line_number,
                 )
             )
-        else:
-            for column_index, column_name_and_value in enumerate(
-                zip(column_names, column_values)
-            ):
-                column_name = column_name_and_value[0]
-                column_value = column_name_and_value[1]
-                column = None
+            record.validate(logger=logger, reset_errors=False)
 
-                scheme_column_class = (
-                    scheme.column_class(name=column_name) if scheme else None
+            return record
+
+        for column_index, (column_name, column_value) in enumerate(
+            zip(column_names, column_values)
+        ):
+            column = None
+
+            scheme_column_class = (
+                scheme.column_class(name=column_name) if scheme else None
+            )
+
+            # A validation error will be found later if we don't find the
+            # column name
+            if scheme_column_class is None:
+                column = MafColumnRecord(
+                    key=column_name, value=column_value, column_index=column_index
                 )
-
-                # A validation error will be found later if we don't find the
-                # column name
-                if scheme_column_class is None:
-                    column = MafColumnRecord(
-                        key=column_name, value=column_value, column_index=column_index
+            else:
+                try:
+                    scheme_column_class = scheme.column_class(name=column_name)  # type: ignore
+                    column = scheme_column_class.build(  # type: ignore
+                        name=column_name,
+                        value=column_value,
+                        column_index=column_index,
                     )
-                else:
-                    try:
-                        scheme_column_class = scheme.column_class(name=column_name)
-                        column = scheme_column_class.build(
-                            name=column_name,
-                            value=column_value,
-                            column_index=column_index,
+                except Exception as error:
+                    add_errors(
+                        MafValidationError(
+                            MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
+                            f"Could not build column '{column_index+1}' with name '{column_name}' scheme '{scheme.version()}': {error}",  # type: ignore
+                            line_number=line_number,
                         )
-                    except Exception as error:
-                        add_errors(
-                            MafValidationError(
-                                MafValidationErrorType.RECORD_INVALID_COLUMN_VALUE,
-                                "Could not build column '%d' with name '%s' "
-                                "with the scheme '%s': %s"
-                                % (
-                                    column_index + 1,
-                                    column_name,
-                                    scheme.version(),
-                                    str(error),
-                                ),
-                                line_number=line_number,
-                            )
-                        )
-
-                if column is not None:
-                    column_validation_errors = column.validate(
-                        scheme=scheme, line_number=line_number
                     )
-                    record.validation_errors.extend(column_validation_errors)
-                    if len(column_validation_errors) == 0:
-                        record[column_name] = column
+
+            if column is not None:
+                column_validation_errors = column.validate(
+                    scheme=scheme, line_number=line_number
+                )
+                record.validation_errors.extend(column_validation_errors)  # type: ignore
+                if len(column_validation_errors) == 0:
+                    record[column_name] = column
 
         # process validation errors
         record.validate(logger=logger, reset_errors=False)

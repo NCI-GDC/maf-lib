@@ -10,7 +10,7 @@ from maflib.util import extend_class
 class TestCase(unittest.TestCase):
     def is_column_is_valid(self, column, value, nullable_values=None):
         if nullable_values is None:
-            self.assertIsNone(column.__nullable_values__())
+            self.assertFalse(column.__nullable_values__())
         else:
             self.assertListEqual(column.__nullable_values__(), nullable_values)
         self.assertEqual(column.value, value)
