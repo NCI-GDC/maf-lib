@@ -7,12 +7,16 @@
                          value of the column.
 """
 import abc
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from uuid import UUID
 
-from maflib.util import abstractclassmethod
 from maflib.validation import MafValidationError, MafValidationErrorType
 
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
-class MafColumnRecord(object):
+
+class MafColumnRecord:
     """
     A generic container for storing key and value pairs for a given column in a
     MafRecord.  Provides methods to validate the value of the column,
@@ -23,7 +27,9 @@ class MafColumnRecord(object):
     the values that should be treated as null.
     """
 
-    def __init__(self, key, value, column_index=None, description=None):
+    def __init__(
+        self, key: str, value: Any, column_index: int = None, description: str = None
+    ):
         """
         :param key: the name of the column
         :param value: the value of the column
@@ -34,7 +40,7 @@ class MafColumnRecord(object):
         self.value = value
         self.column_index = column_index
         self.description = description
-        self.validation_errors = list()
+        self.validation_errors: List[Optional[MafValidationError]] = list()
 
         # check that all nullable keys are strings
         if self.is_nullable():
@@ -46,7 +52,12 @@ class MafColumnRecord(object):
                         % (str(key), key.__class__.__name__, self.__class__.__name__)
                     )
 
-    def validate(self, reset_errors=True, scheme=None, line_number=None):
+    def validate(
+        self,
+        reset_errors: bool = True,
+        scheme: Optional['MafScheme'] = None,
+        line_number: int = None,
+    ) -> List[Optional[MafValidationError]]:
         """
         Validates that the value is of the correct type and an acceptable
         value.
@@ -58,12 +69,14 @@ class MafColumnRecord(object):
 
         if scheme:
 
-            def add_errors(error):
+            def add_errors(error: MafValidationError) -> None:
                 """Adds an error"""
                 self.validation_errors.append(error)
 
-            scheme_column_index = scheme.column_index(name=self.key)
-            scheme_column_class = scheme.column_class(name=self.key)
+            scheme_column_index: Optional[int] = scheme.column_index(name=self.key)
+            scheme_column_class: Optional[MafColumnRecord] = scheme.column_class(
+                name=self.key
+            )
 
             if scheme_column_index is None:
                 add_errors(
@@ -93,7 +106,7 @@ class MafColumnRecord(object):
                         line_number=line_number,
                     )
                 )
-            elif not isinstance(self, scheme_column_class):
+            elif not isinstance(self, scheme_column_class):  # type: ignore
                 add_errors(
                     MafValidationError(
                         MafValidationErrorType.RECORD_COLUMN_WRONG_FORMAT,
@@ -106,7 +119,7 @@ class MafColumnRecord(object):
 
         return self.validation_errors
 
-    def is_null(self):
+    def is_null(self) -> bool:
         """
         :return: ``True`` if the value is a "null" value, ``False`` otherwise
         """
@@ -117,7 +130,14 @@ class MafColumnRecord(object):
             return self.value in values
 
     @classmethod
-    def build(cls, name, value, column_index=None, description=None, scheme=None):
+    def build(
+        cls,
+        name: str,
+        value: Any,
+        column_index: Optional[int] = None,
+        description: Optional[str] = None,
+        scheme: Optional['MafScheme'] = None,
+    ) -> 'MafColumnRecord':
         """
         If ``scheme`` is given, then the the appropriate column type will be
         built by matching the provided name with the column name in the
@@ -139,7 +159,7 @@ class MafColumnRecord(object):
                     % (str(column_index), str(scheme_column_index))
                 )
             # NB: do not pass the scheme!
-            return scheme.column_class(name=name).build(
+            return scheme.column_class(name=name).build(  # type: ignore
                 name=name,
                 value=value,
                 column_index=scheme_column_index,
@@ -154,15 +174,15 @@ class MafColumnRecord(object):
             )
 
     @classmethod
-    def is_nullable(cls):
+    def is_nullable(cls) -> bool:
         """
         :return: ``True`` if this column has a possible "null" value, ``False``
         otherwise.
         """
-        return cls.__nullable_values__() is not None
+        return bool(cls.__nullable_values__())
 
     @classmethod
-    def __nullable_dict__(cls):
+    def __nullable_dict__(cls) -> Optional[Dict[str, Any]]:
         """
         :return: a map from the string representation of nullable values to
         the actual nullable value.  For example, an empty string may map to
@@ -171,32 +191,30 @@ class MafColumnRecord(object):
         return None
 
     @classmethod
-    def __nullable_values__(cls):
+    def __nullable_values__(cls) -> List[str]:
         """
         This method should not be overridden by sub-classes.
         :return: a list of values that should be treated as "null", ``None``
         otherwise.
         """
-        return (
-            list(cls.__nullable_dict__().values())
-            if cls.__nullable_dict__() is not None
-            else None
-        )
+        if cls.__nullable_dict__() is not None:
+            return list(cls.__nullable_dict__().values())  # type: ignore
+        else:
+            return []
 
     @classmethod
-    def __nullable_keys__(cls):
+    def __nullable_keys__(cls) -> List[str]:
         """
         This method should not be overridden by sub-classes.
         :return: a list of values that should be treated as "null", ``None``
         otherwise.
         """
-        return (
-            list(cls.__nullable_dict__().keys())
-            if cls.__nullable_dict__() is not None
-            else None
-        )
+        if cls.__nullable_dict__() is not None:
+            return list(cls.__nullable_dict__().keys())  # type: ignore
+        else:
+            return []
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Delegates the conversion to a string for non-null values to
         __string_it__()"""
 
@@ -207,6 +225,7 @@ class MafColumnRecord(object):
                 key for key, value in nullable_dict.items() if value == self.value
             ]
 
+            # FIXME: Too-clever solution for grabbing first item of list without IndexError
             key = next(iter(possible_keys), None)
 
             # did we find a key for the given null value?
@@ -217,7 +236,7 @@ class MafColumnRecord(object):
                 return key
         return self.__string_it__()
 
-    def __string_it__(self):
+    def __string_it__(self) -> str:
         """Sub-classes can override this method to print a string when the
         value is not null"""
         return str(self.value)
@@ -235,8 +254,7 @@ class MafCustomColumnRecord(MafColumnRecord):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
-    @abstractclassmethod
-    def __build__(cls, value):
+    def __build__(cls, value: str) -> Union[list, Union[float, int, str], UUID]:
         """
         Builds the column's value from the given string.  Raises a
         ``ValueError`` if there was a formatting error.  Any logic about
@@ -244,7 +262,13 @@ class MafCustomColumnRecord(MafColumnRecord):
         """
 
     @classmethod
-    def build_nullable(cls, name, column_index=None, description=None, scheme=None):
+    def build_nullable(
+        cls,
+        name: str,
+        column_index: Optional[int] = None,
+        description: Optional[str] = None,
+        scheme: Optional['MafScheme'] = None,
+    ) -> Union['MafCustomColumnRecord', MafColumnRecord]:
         """
         This method should not be overridden by sub-classes.
 
@@ -256,7 +280,7 @@ class MafCustomColumnRecord(MafColumnRecord):
                 "Column name '%s' is not nullable, "
                 "but build_nullable was called ('%s')" % (name, cls.__name__)
             )
-        key = cls.__nullable_keys__()[0]  # get the first one
+        key = cls.__nullable_keys__()[0]  # type: ignore
         return cls.build(
             name=name,
             value=key,
@@ -266,7 +290,14 @@ class MafCustomColumnRecord(MafColumnRecord):
         )
 
     @classmethod
-    def build(cls, name, value, column_index=None, description=None, scheme=None):
+    def build(
+        cls,
+        name: str,
+        value: Any,
+        column_index: Optional[int] = None,
+        description: Optional[str] = None,
+        scheme: Optional['MafScheme'] = None,
+    ) -> Union['MafColumnRecord', MafColumnRecord]:
         """
         This method should not be overridden by sub-classes.
 
@@ -296,7 +327,7 @@ class MafCustomColumnRecord(MafColumnRecord):
             description=description,
         )
 
-    def __validate__(self):
+    def __validate__(self) -> Optional[Any]:
         """
         A sub-class should implement this to perform any custom validation on
         the type and value of the value returned by ``__build__``.
@@ -305,7 +336,12 @@ class MafCustomColumnRecord(MafColumnRecord):
         """
         return None
 
-    def validate(self, reset_errors=True, scheme=None, line_number=None):
+    def validate(
+        self,
+        reset_errors: bool = True,
+        scheme: Optional['MafScheme'] = None,
+        line_number: Optional[int] = None,
+    ) -> List[Optional[MafValidationError]]:
         """
         This method should not be overridden by sub-classes.
 

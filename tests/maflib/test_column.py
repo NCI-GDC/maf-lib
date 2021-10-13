@@ -46,9 +46,9 @@ class TestMafColumnRecord(unittest.TestCase):
             name="key", value="value", column_index=0, description="Foo Bar"
         )
         self.assertFalse(column.is_nullable())
-        self.assertIsNone(column.__nullable_values__())
+        self.assertEqual([], column.__nullable_values__())
         self.assertIsNone(column.__nullable_dict__())
-        self.assertIsNone(column.__nullable_keys__())
+        self.assertEqual([], column.__nullable_keys__())
         self.assertFalse(column.is_null())
         self.assertEqual(str(column), "value")
 

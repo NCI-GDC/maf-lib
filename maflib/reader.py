@@ -4,6 +4,7 @@
 """
 
 import gzip
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, List, Optional
 
 from maflib.header import MafHeader
 from maflib.logger import Logger
@@ -16,8 +17,11 @@ from maflib.validation import (
     ValidationStringency,
 )
 
+if TYPE_CHECKING:
+    from maflib.schemes import MafScheme
 
-class MafReader(object):
+
+class MafReader:
     """A reader for a MAF file.
 
     The reader initially reads in the header and column definitions from the MAF
@@ -25,8 +29,14 @@ class MafReader(object):
     lines) one-by-one.
     """
 
-    def __init__(self, lines, closeable=None, validation_stringency=None, scheme=None):
-        """ Initializes a MAF reader and reads in the header and column
+    def __init__(
+        self,
+        lines: Iterable,
+        closeable: Any = None,
+        validation_stringency: Optional[ValidationStringency] = None,
+        scheme: Optional['MafScheme'] = None,
+    ):
+        """Initializes a MAF reader and reads in the header and column
         definitions.
 
         If no scheme is provided, the scheme will be determined from the
@@ -42,7 +52,7 @@ class MafReader(object):
         :param scheme: a scheme that should be used to override the scheme in
         the header.
         """
-        self.__iter = iter(lines)
+        self.__iter: Iterator = iter(lines)
         self.__closeable = closeable
         self.validation_stringency = (
             ValidationStringency.Silent
@@ -50,16 +60,16 @@ class MafReader(object):
             else validation_stringency
         )
         self.__logger = Logger.get_logger(self.__class__.__name__)
-        self.validation_errors = list()
+        self.validation_errors: List[MafValidationError] = list()
 
         self.__next_line = None
         self.__line_number = 0
 
-        def add_error(error):
+        def add_error(error: MafValidationError) -> None:
             self.validation_errors.append(error)
 
         # read in the header lines
-        header_lines = list()
+        header_lines: List[str] = list()
         while True:
             self.__next_line__()
             if self.__next_line is not None and self.__next_line.startswith(
@@ -125,15 +135,16 @@ class MafReader(object):
         MafValidationError.process_validation_errors(
             validation_errors=self.validation_errors,
             validation_stringency=self.validation_stringency,
-            name=self.__class__.__name__,
             logger=self.__logger,
         )
 
-    def __update_scheme__(self, scheme=None, column_names=None):
-        def add_error(error):
+    def __update_scheme__(
+        self, scheme: Optional['MafScheme'] = None, column_names: Iterable[str] = None
+    ) -> None:
+        def add_error(error: MafValidationError) -> None:
             self.validation_errors.append(error)
 
-        self.__scheme = self.__header.scheme()
+        self.__scheme: Optional['MafScheme'] = self.__header.scheme()
 
         # Set the scheme if given, but check that they match, otherwise,
         # add an error
@@ -164,31 +175,31 @@ class MafReader(object):
                 )
             self.__scheme = NoRestrictionsScheme(column_names=column_names)
 
-    def __next_line__(self):
+    def __next_line__(self) -> None:
         try:
             self.__next_line = next(self.__iter).rstrip("\r\n")
             self.__line_number += 1
         except StopIteration:
             self.__next_line = None
 
-    def header(self):
+    def header(self) -> MafHeader:
         """Get the file header."""
         return self.__header
 
-    def close(self):
+    def close(self) -> None:
         """Closes the reader and the provided closeable if any"""
         if self.__closeable is not None:
             self.__closeable.close()
 
-    def __iter__(self):
+    def __iter__(self) -> SortOrderEnforcingIterator:
         return SortOrderEnforcingIterator(
             _iter=self, sort_order=self.header().sort_order()
         )
 
-    def next(self):
+    def next(self) -> MafRecord:
         return self.__next__()
 
-    def __next__(self):
+    def __next__(self) -> MafRecord:
         """Gets the next ``MafRecord``.  Raises a ``StopIteration`` when no
         more records can be read."""
         if self.__next_line is None:
@@ -208,12 +219,17 @@ class MafReader(object):
 
         return record
 
-    def scheme(self):
+    def scheme(self) -> Optional['MafScheme']:
         """Returns the scheme used to while reading."""
         return self.__scheme
 
     @classmethod
-    def reader_from(cls, path, validation_stringency=None, scheme=None):
+    def reader_from(
+        cls,
+        path: str,
+        validation_stringency: Optional[ValidationStringency] = None,
+        scheme: Optional['MafScheme'] = None,
+    ) -> 'MafReader':
         """Create a reader that reads from the given path."""
         if path.endswith(".gz"):
             handle = gzip.open(path, "rt")

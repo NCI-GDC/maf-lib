@@ -6,83 +6,11 @@
 * ValidationStringency    an enumeartion for the stringency in which to validate
 """
 
+import logging
 from enum import Enum, unique
+from typing import List, Optional
 
 from maflib.logger import Logger
-
-
-class MafFormatException(Exception):
-    """
-    Thrown when reading or writing MAF files after finding a formatting error.
-    """
-
-    def __init__(self, tpe, message, line_number=None):
-        super(MafFormatException, self).__init__(message)
-        self.tpe = tpe
-        self.line_number = line_number
-        self.message = message
-
-    def __str__(self):
-        return self.message
-
-
-class MafValidationError(object):
-    """Stores a specific validation error and type """
-
-    __IgnoringMessageFormat = "Ignoring MAF validation error: %s"
-
-    @staticmethod
-    def ignore_message(validation_error):
-        """Returns a string message for when an error will be ignored"""
-        return MafValidationError.__IgnoringMessageFormat % str(validation_error)
-
-    def __init__(self, tpe, message, line_number=None):
-        self.tpe = tpe
-        self.message = message
-        self.line_number = line_number
-
-    def __str__(self):
-        if self.line_number:
-            return "%s: On line number %d: %s" % (
-                self.tpe.name,
-                self.line_number,
-                self.message,
-            )
-        else:
-            return "%s: %s" % (self.tpe.name, self.message)
-
-    @staticmethod
-    def process_validation_errors(
-        validation_errors, validation_stringency, name=None, logger=Logger.RootLogger
-    ):
-        """Handles a list of errors given a validation stringency.
-
-        If the validation stringency is ``Silent`` or no errors are given,
-        then nothing is done.  If the validation stringency is ``Lenient``, then
-        the errors are logged.  If the validation stringency is ``Strict``,
-        then the a ``MafFormatException`` is thrown using the first error found.
-        """
-        if (
-            validation_errors
-            and not validation_stringency == ValidationStringency.Silent
-        ):
-            if validation_stringency == ValidationStringency.Strict:
-                error = validation_errors[0]
-                raise MafFormatException(
-                    tpe=error.tpe, message=str(error), line_number=error.line_number
-                )
-            else:
-                assert validation_stringency == ValidationStringency.Lenient
-                for error in validation_errors:
-                    logger.warning(MafValidationError.ignore_message(error))
-
-    # TODO: tpe should have a severity
-    # class Severity(Enum):
-    #    '''
-    #    The severity of an :class:`Error`
-    #    '''
-    #    Warning = "Warning"
-    #    Error   = "Error"
 
 
 @unique
@@ -134,3 +62,75 @@ class ValidationStringency(Enum):
     Strict = 1
     Lenient = 2
     Silent = 3
+
+
+class MafFormatException(Exception):
+    """
+    Thrown when reading or writing MAF files after finding a formatting error.
+    """
+
+    def __init__(
+        self, tpe: MafValidationErrorType, message: str, line_number: int = None
+    ):
+        super(MafFormatException, self).__init__(message)
+        self.tpe = tpe
+        self.line_number = line_number
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message
+
+
+class MafValidationError:
+    """Stores a specific validation error and type """
+
+    __IgnoringMessageFormat = "Ignoring MAF validation error: %s"
+
+    @staticmethod
+    def ignore_message(validation_error: 'MafValidationError') -> str:
+        """Returns a string message for when an error will be ignored"""
+        return MafValidationError.__IgnoringMessageFormat % str(validation_error)
+
+    def __init__(
+        self, tpe: MafValidationErrorType, message: str, line_number: int = None
+    ):
+        self.tpe = tpe
+        self.message = message
+        self.line_number = line_number
+
+    def __str__(self) -> str:
+        if self.line_number:
+            return "%s: On line number %d: %s" % (
+                self.tpe.name,
+                self.line_number,
+                self.message,
+            )
+        else:
+            return "%s: %s" % (self.tpe.name, self.message)
+
+    @staticmethod
+    def process_validation_errors(
+        validation_errors: Optional[List['MafValidationError']],
+        validation_stringency: ValidationStringency,
+        logger: logging.Logger = Logger.RootLogger,
+    ) -> None:
+        """Handles a list of errors given a validation stringency.
+
+        If the validation stringency is ``Silent`` or no errors are given,
+        then nothing is done.  If the validation stringency is ``Lenient``, then
+        the errors are logged.  If the validation stringency is ``Strict``,
+        then the a ``MafFormatException`` is thrown using the first error found.
+        """
+        if (
+            validation_errors
+            and not validation_stringency == ValidationStringency.Silent
+        ):
+            if validation_stringency == ValidationStringency.Strict:
+                error = validation_errors[0]
+                raise MafFormatException(
+                    tpe=error.tpe, message=str(error), line_number=error.line_number
+                )
+            else:
+                assert validation_stringency == ValidationStringency.Lenient
+                for error in validation_errors:
+                    logger.warning(MafValidationError.ignore_message(error))
