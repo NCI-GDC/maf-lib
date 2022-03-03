@@ -3,12 +3,12 @@
 	"annotation-spec" : "gdc-2.0.0-aliquot-merged",
 	"extends" : "gdc-2.0.0-aliquot",
 	"columns" : [
-            [ "RNA_Support", "YesNoOrUnknown", "Indicates if the variant is supported (Yes) or not supported (No) by tumor RNA-Seq. If it has not been checked against RNA-Seq data, the value will be 'Unknown'." ],
+            [ "RNA_Support", "VariantSupport", "Indicates if the variant is found and alleles (Match), simply (Overlap), or is not supported (No) by tumor RNA-Seq. If it has not been checked against RNA-Seq data, the value will be 'Unknown'." ],
             [ "RNA_depth", "NullableZeroBasedIntegerColumn", "Read depth at this locus if the variant is supported by tumor RNA-seq data." ],
             [ "RNA_ref_count", "NullableZeroBasedIntegerColumn", "Read depth supporting the reference allele at this locus if the variant is supported by tumor RNA-seq data." ],
             [ "RNA_alt_count", "NullableZeroBasedIntegerColumn", "Read depth supporting the variant allele at this locus if the variant is supported by tumor RNA-seq data." ],
             [ "callers", "SequenceOfStrings", "A semicolon delimited list of supporting variant callers. If an asterisk is added to the caller name, this indicates the locus is a complex variant and this caller overlapped but did not support (e.g., not all callers can detect MNPs)" ]
 	],
 	"filtered" : ["ALLELE_NUM", "MINIMISED", "FILTER", "src_vcf_id", "vcf_region",
-                  "vcf_info", "vcf_format", "vcf_tumor_gt", "vcf_normal_gt"] 
+                  "vcf_info", "vcf_format", "vcf_tumor_gt", "vcf_normal_gt"]
 }

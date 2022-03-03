@@ -96,6 +96,16 @@ class VariantTypeEnum(MafEnum):
 
 
 @unique
+class VariantSupportEnum(MafEnum):
+    """Enumeration for "Match", "Overlap", "No", "Unknown" column values."""
+
+    Match = "Match"
+    Overlap = "Overlap"
+    No = "No"
+    Unknown = "Unknown"
+
+
+@unique
 class VerificationStatusEnum(MafEnum):
     """Enumeration for the MAF 'Verification_Status' column value"""
 
