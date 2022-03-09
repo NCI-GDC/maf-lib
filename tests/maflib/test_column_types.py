@@ -487,6 +487,33 @@ class TestYesNoOrUnknown(TestCase):
             column_types.YesNoOrUnknown.build("key", "Who Knows")
 
 
+class TestVariantSupport(TestCase):
+    def test_valid(self):
+        self.is_column_is_valid(
+            column_types.VariantSupport.build("key", "Match"),
+            column_values.VariantSupportEnum.Match,
+        )
+        self.is_column_is_valid(
+            column_types.VariantSupport.build("key", "Overlap"),
+            column_values.VariantSupportEnum.Overlap,
+        )
+        self.is_column_is_valid(
+            column_types.VariantSupport.build("key", "No"),
+            column_values.VariantSupportEnum.No,
+        )
+        self.is_column_is_valid(
+            column_types.VariantSupport.build("key", "Unknown"),
+            column_values.VariantSupportEnum.Unknown,
+        )
+
+    def test_invalid(self):
+        # "Foo" is an invalid value so ValueError is raised but is caught and
+        # the fallback attempts to use "Foo" to lookup the correct Enum value
+        # hence generating a KeyError
+        with self.assertRaises(KeyError):
+            column_types.VariantSupport.build("key", "Foo")
+
+
 class TestNullableYOrN(TestCase):
     def test_valid(self):
         nulls = [
@@ -594,6 +621,7 @@ class TestCustomEnums(TestCase):
         column_types.Impact,
         column_types.MC3Overlap,
         column_types.GdcValidationStatus,
+        column_types.VariantSupport,
     ]
 
     def test_valid(self):
