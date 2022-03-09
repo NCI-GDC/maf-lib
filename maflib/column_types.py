@@ -26,6 +26,7 @@ from maflib.column_values import (
     StrandEnum,
     ValidationStatusEnum,
     VariantClassificationEnum,
+    VariantSupportEnum,
     VariantTypeEnum,
     VerificationStatusEnum,
     YesNoOrUnknownEnum,
@@ -550,6 +551,14 @@ class VariantType(EnumColumn):
     @classmethod
     def __enum_class__(cls) -> Type[VariantTypeEnum]:
         return VariantTypeEnum
+
+
+class VariantSupport(EnumColumn):
+    """A column that represents the RNA_Support MAF column"""
+
+    @classmethod
+    def __enum_class__(cls) -> Type[VariantSupportEnum]:
+        return VariantSupportEnum
 
 
 class VerificationStatus(NullableEmptyStringIsNone, EnumColumn):
