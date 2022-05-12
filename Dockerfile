@@ -4,23 +4,18 @@ COPY ./ /opt
 
 WORKDIR /opt
 
-RUN python -m pip install tox && tox
-
-# tox step builds sdist
+RUN pip install tox && tox -e build
 
 FROM quay.io/ncigdc/python38
 
 COPY --from=builder /opt/dist/*.tar.gz /opt
-COPY ./requirements.txt /opt/requirements.txt
-
-ENV BINARY=maflib
+COPY requirements.txt /opt
 
 WORKDIR /opt
 
-# Install package from sdist
-RUN pip install -r requirements.txt \
-	&& pip install *.tar.gz \
-	&& rm -rf *.tar.gz requirements.txt
+RUN pip install --no-deps -r requirements.txt \
+	&& pip install --no-deps *.tar.gz \
+	&& rm -f *.tar.gz requirements.txt
 
 ENTRYPOINT ["maflib"]
 
