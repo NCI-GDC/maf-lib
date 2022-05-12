@@ -256,7 +256,7 @@ class MafRecord(MutableMapping, LocatableByAllele):
             return None
 
     def column_values(self) -> List[Optional[Any]]:
-        """Gets the values for all columns in order. """
+        """Gets the values for all columns in order."""
         return [
             (column.value if column is not None else None) for column in self.values()
         ]
