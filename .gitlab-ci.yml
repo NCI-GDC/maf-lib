@@ -1,0 +1,23 @@
+---
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+include:
+  - project: nci-gdc/gitlab-templates
+    ref: master
+    file:
+      - templates/global/full.yaml
+      - templates/python/full.yaml
+
+variables:
+ BASE_CONTAINER_VERSION: "latest"
+
+tox:
+  before_script:
+    - mkdir -p /usr/share/man/man1
+
+.python_versions:
+  parallel:
+    matrix:
+      - REPO_PY_VERSION: [python38]
