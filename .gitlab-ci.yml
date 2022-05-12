@@ -12,9 +12,9 @@ include:
 
 variables:
  BASE_CONTAINER_VERSION: "latest"
- GIT_DEPTH: 0
+ GIT_DEPTH: "0"
  GIT_FETCH_EXTRA_FLAGS: --tags
- GIT_STRATEGY: fetch
+ GIT_STRATEGY: clone
 
 tox:
   before_script:
