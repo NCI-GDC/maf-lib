@@ -3,7 +3,7 @@ requires = ["flit_scm"]
 build-backend = "flit_scm:buildapi"
 
 [project]
-name = "maflib"
+name = "bioinf_maflib"
 description = "MAF library"
 authors = [
     {name = "Charles Czysz", email = "czysz@uchicago.edu"}
@@ -36,6 +36,10 @@ fallback_version = "0"
 source = ["maflib"]
 branch = true
 parallel = true
+
+[tool.flit.module]
+# Required because project name is different
+name = "maflib"
 
 [tool.flit.sdist]
 include = ["maflib/_version.py"]
