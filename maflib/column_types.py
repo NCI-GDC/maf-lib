@@ -101,7 +101,7 @@ class NullableStringColumn(
 
 
 class StringColumn(NullableStringColumn):
-    """ A column where the value must be a non-empty string"""
+    """A column where the value must be a non-empty string"""
 
     EmptyStringMessage = "Empty string is not allowed"
 
