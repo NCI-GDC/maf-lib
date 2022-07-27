@@ -26,7 +26,7 @@ release:
 .python_versions:
   parallel:
     matrix:
-      - REPO_PY_VERSION: [python3.8]
+      - REPO_PY_VERSION: [python3.8, python3.10]
 
 docker_build:
   rules:
