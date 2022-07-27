@@ -11,7 +11,7 @@ RUN pip install tox && tox -e build
 
 FROM ${REGISTRY}/ncigdc/python3.8:${BASE_CONTAINER_VERSION}
 
-COPY --from=builder /opt/build/dist/*.tar.gz /opt
+COPY --from=builder /opt/dist/*.tar.gz /opt
 COPY requirements.txt /opt
 
 WORKDIR /opt
