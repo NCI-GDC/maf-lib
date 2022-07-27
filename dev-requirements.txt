@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=dev-requirements.txt dev-requirements.in
 #
+--extra-index-url https://nexus.osdc.io/repository/pypi-all/simple
+
 appdirs==1.4.4
     # via virtualenv
 attrs==20.2.0
@@ -16,7 +18,7 @@ chardet==4.0.0
     # via requests
 coverage==5.3
     # via pytest-cov
-detect-secrets==1.0.3
+detect-secrets==1.2.0
     # via -r dev-requirements.in
 distlib==0.3.1
     # via virtualenv
