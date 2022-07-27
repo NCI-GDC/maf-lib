@@ -16,8 +16,12 @@ variables:
  DOCKER_BUILD_OPTS: "--build-arg PIP_EXTRA_INDEX_URL=https://nexus.osdc.io/repository/pypi-all/simple"
 
 tox:
+  image: ${BASE_CONTAINER_REGISTRY}/${REPO_PY_VERSION}-builder:${BASE_CONTAINER_VERSION}
   before_script:
     - mkdir -p /usr/share/man/man1
+
+release:
+  image: ${BASE_CONTAINER_REGISTRY}/${REPO_PY_VERSION}-builder:${BASE_CONTAINER_VERSION}
 
 .python_versions:
   parallel:
@@ -40,6 +44,7 @@ docker_build:
     - echo "docker push ${DOCKER_PUSH_OPTS} ${RELEASE_REGISTRY}/$CI_PROJECT_NAME:$VERSION"
     - docker build . 
       --file ./Dockerfile
+      ${DOCKER_BUILD_OPTS}
       --build-arg http_proxy
       --build-arg https_proxy
       --build-arg BASE_CONTAINER_VERSION
