@@ -5,7 +5,7 @@ the annotation values for a single mutation.
 """
 
 import logging
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 
 from maflib.column import MafColumnRecord
