@@ -20,13 +20,10 @@ REGISTRY ?= quay.io
 
 .PHONY: version version-*
 version:
-	@python setup.py --version
+	@tox -e version
 
 version-docker:
 	@echo ${DOCKER_IMAGE_DESCRIBE}
-
-version-docker-tag:
-	@echo
 
 .PHONY: docker-login
 docker-login:
@@ -40,7 +37,7 @@ venv:
 
 .PHONY: init init-*
 init: init-pip init-hooks
-init-pip:
+init-pip: init-venv
 	@echo
 	@echo -- Installing pip packages --
 	pip-sync requirements.txt dev-requirements.txt
@@ -63,10 +60,8 @@ clean-dirs:
 	rm -rf ./*.egg-info/
 	rm -rf ./test-reports/
 	rm -rf ./htmlcov/
-
-clean-docker:
-	@echo
-
+	rm -rf coverage.xml
+	rm -rf .coverage
 
 .PHONY: requirements requirements-*
 requirements: init-venv requirements-prod requirements-dev
@@ -94,15 +89,7 @@ build-docker: clean
 
 build-pypi: clean
 	@echo
-	tox -e check_dist
-
-.PHONY: run run-*
-run:
-	@echo
-
-run-docker:
-	@echo
-	docker run --rm "${DOCKER_IMAGE_COMMIT}"
+	tox -e build
 
 .PHONY: lint test test-* tox
 test: tox
@@ -112,7 +99,7 @@ lint:
 	tox -p -e flake8
 
 test-unit:
-	pytest tests/
+	tox -e py3
 
 test-docker:
 	@echo
