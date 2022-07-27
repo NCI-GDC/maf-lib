@@ -82,7 +82,7 @@ class MafFormatException(Exception):
 
 
 class MafValidationError:
-    """Stores a specific validation error and type """
+    """Stores a specific validation error and type"""
 
     __IgnoringMessageFormat = "Ignoring MAF validation error: %s"
 

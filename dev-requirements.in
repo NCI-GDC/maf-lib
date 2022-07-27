@@ -1,5 +1,5 @@
 -c requirements.txt
-detect-secrets==1.0.3
+detect-secrets==1.2.0
 isort
 flake8
 flake8-docstrings

@@ -1,12 +1,55 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_scm"]
+build-backend = "flit_scm:buildapi"
+
+[project]
+name = "bioinf-maflib"
+description = "Library for creating and reading MAF files"
+authors = [
+    {name = "Charles Czysz", email = "czysz@uchicago.edu"}
+]
+
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3 :: Only"
+]
+dynamic = ["version"]
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/NCI-GDC/maf-lib"
+
+[project.scripts]
+maflib = "maflib.__main__:main"
 
 [tool.setuptools_scm]
-local_scheme = "dirty-tag"
-version_scheme = "release-branch-semver"
 write_to = "maflib/_version.py"
+local_scheme = "dirty-tag"
+version_scheme = "python-simplified-semver"
 fallback_version = "0"
+
+[tool.coverage.run]
+source = ["maflib"]
+branch = true
+parallel = true
+
+[tool.flit.module]
+name = "maflib"
+
+[tool.flit.sdist]
+include = ["maflib/_version.py"]
+exclude = [
+        ".*",
+        "dev-requirements.*",
+        "Dockerfile",
+        "Jenkinsfile",
+        "*travis.yml",
+        "tox.ini",
+]
 
 [tool.black]
 line-length = 88
@@ -25,3 +68,6 @@ python_version = 3.8
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_configs = true
+
+[tool.coverage.report]
+show_missing = true
