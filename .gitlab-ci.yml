@@ -1,0 +1,48 @@
+---
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+include:
+  - project: nci-gdc/gitlab-templates
+    ref: master
+    file:
+      - templates/global/full.yaml
+      - templates/python/full.yaml
+
+variables:
+ BASE_CONTAINER_VERSION: "2.0.1"
+ DOCKER_BUILDKIT: 1
+ PIP_EXTRA_INDEX_URL: https://nexus.osdc.io/repository/pypi-all/simple
+ DOCKER_BUILD_OPTS: "--build-arg PIP_EXTRA_INDEX_URL=https://nexus.osdc.io/repository/pypi-all/simple"
+
+tox:
+  before_script:
+    - mkdir -p /usr/share/man/man1
+
+.python_versions:
+  parallel:
+    matrix:
+      - REPO_PY_VERSION: [python3.8]
+
+docker_build:
+  rules:
+    - when: always
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        RELEASE_REGISTRY: containers.osdc.io/ncigdc  # Override globally-defined RELEASE_REGISTRY
+    - if: $CI_COMMIT_REF_NAME =~ /main/
+      variables:
+        RELEASE_REGISTRY: containers.osdc.io/ncigdc
+  script:
+    - echo "docker build ${DOCKER_BUILD_OPTS} -t ${RELEASE_REGISTRY}/$CI_PROJECT_NAME:$VERSION ."
+    - echo "docker push ${DOCKER_PUSH_OPTS} ${RELEASE_REGISTRY}/$CI_PROJECT_NAME:$VERSION"
+    - docker build . 
+      --file ./Dockerfile
+      --build-arg http_proxy
+      --build-arg https_proxy
+      --build-arg BASE_CONTAINER_VERSION
+      -t ${RELEASE_REGISTRY}/${CI_PROJECT_NAME}:${VERSION}
+    - docker push ${DOCKER_PUSH_OPTS} ${RELEASE_REGISTRY}/${CI_PROJECT_NAME}:${VERSION}
