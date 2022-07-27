@@ -11,6 +11,13 @@ DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${COMMIT_HASH}
 DOCKER_IMAGE_DESCRIBE := ${DOCKER_REPO}/${REPO}:${GIT_DESCRIBE}
 DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
 
+# Env args
+PIP_EXTRA_INDEX_URL ?=
+http_proxy ?=
+https_proxy ?=
+REGISTRY ?= quay.io
+
+
 .PHONY: version version-*
 version:
 	@python setup.py --version
@@ -67,7 +74,7 @@ requirements-dev:
 	pip-compile -o dev-requirements.txt dev-requirements.in
 
 requirements-prod:
-	pip-compile -o requirements.txt
+	pip-compile -o requirements.txt pyproject.toml
 
 .PHONY: build build-*
 
@@ -78,10 +85,12 @@ build-docker: clean
 	@echo -- Building docker --
 	docker build . \
 		--file ./Dockerfile \
-		--build-arg http_proxy=${PROXY} \
-		--build-arg https_proxy=${PROXY} \
+		--build-arg http_proxy \
+		--build-arg https_proxy \
+		--build-arg REGISTRY \
 		-t "${DOCKER_IMAGE_COMMIT}" \
-		-t "${DOCKER_IMAGE_LATEST}"
+		-t "${DOCKER_IMAGE_DESCRIBE}" \
+		-t "${REPO}"
 
 build-pypi: clean
 	@echo
@@ -114,7 +123,6 @@ tox:
 
 .PHONY: publish-*
 publish-docker:
-	docker tag ${DOCKER_IMAGE_COMMIT} ${DOCKER_IMAGE_DESCRIBE}
 	docker push ${DOCKER_IMAGE_COMMIT}
 	docker push ${DOCKER_IMAGE_DESCRIBE}
 

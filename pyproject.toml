@@ -3,12 +3,11 @@ requires = ["flit_scm"]
 build-backend = "flit_scm:buildapi"
 
 [project]
-name = "bioinf_maflib"
-description = "MAF library"
+name = "bioinf-maflib"
+description = "Library for creating and reading MAF files"
 authors = [
     {name = "Charles Czysz", email = "czysz@uchicago.edu"}
 ]
-dependencies = []
 
 readme = "README.md"
 requires-python = ">=3.8"
@@ -19,6 +18,7 @@ classifiers = [
 	"Programming Language :: Python :: 3 :: Only"
 ]
 dynamic = ["version"]
+dependencies = []
 
 [project.urls]
 homepage = "https://github.com/NCI-GDC/maf-lib"
@@ -38,7 +38,6 @@ branch = true
 parallel = true
 
 [tool.flit.module]
-# Required because project name is different
 name = "maflib"
 
 [tool.flit.sdist]

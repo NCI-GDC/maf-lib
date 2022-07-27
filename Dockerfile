@@ -1,17 +1,20 @@
-FROM quay.io/ncigdc/python38-builder as builder
+ARG REGISTRY=quay.io
+ARG BASE_CONTAINER_VERSION=2.0.1
 
-COPY ./ /opt
+FROM ${REGISTRY}/ncigdc/python3.8-builder:${BASE_CONTAINER_VERSION} as builder
 
-WORKDIR /opt
+COPY ./ /opt/build
 
-RUN pip install tox && tox -e build
+WORKDIR /opt/build
 
-FROM quay.io/ncigdc/python38
+RUN pip install tox && git status && tox -e build
 
-COPY --from=builder /opt/dist/*.tar.gz /opt
-COPY requirements.txt /opt
+FROM ${REGISTRY}/ncigdc/python3.8:${BASE_CONTAINER_VERSION}
 
-WORKDIR /opt
+COPY --from=builder /opt/build/dist/*.tar.gz /opt/build/
+COPY requirements.txt /opt/build/
+
+WORKDIR /opt/build
 
 RUN pip install --no-deps -r requirements.txt \
 	&& pip install --no-deps *.tar.gz \
