@@ -18,9 +18,7 @@ classifiers = [
 	"Programming Language :: Python :: 3 :: Only"
 ]
 dynamic = ["version"]
-dependencies = [
-    "click"
-]
+dependencies = []
 
 [project.urls]
 homepage = "https://github.com/NCI-GDC/maf-lib"
