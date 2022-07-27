@@ -1,26 +1,24 @@
-FROM quay.io/ncigdc/python38-builder as builder
+ARG REGISTRY=quay.io
+ARG BASE_CONTAINER_VERSION=2.0.1
 
-COPY ./ /opt
+FROM ${REGISTRY}/ncigdc/python3.8-builder:${BASE_CONTAINER_VERSION} as builder
 
-WORKDIR /opt
+COPY ./ /opt/build
 
-RUN python -m pip install tox && tox
+WORKDIR /opt/build
 
-# tox step builds sdist
+RUN pip install tox && git status && tox -e build
 
-FROM quay.io/ncigdc/python38
+FROM ${REGISTRY}/ncigdc/python3.8:${BASE_CONTAINER_VERSION}
 
-COPY --from=builder /opt/dist/*.tar.gz /opt
-COPY ./requirements.txt /opt/requirements.txt
+COPY --from=builder /opt/build/dist/*.tar.gz /opt/build/
+COPY requirements.txt /opt/build/
 
-ENV BINARY=maflib
+WORKDIR /opt/build
 
-WORKDIR /opt
-
-# Install package from sdist
-RUN pip install -r requirements.txt \
-	&& pip install *.tar.gz \
-	&& rm -rf *.tar.gz requirements.txt
+RUN pip install --no-deps -r requirements.txt \
+	&& pip install --no-deps *.tar.gz \
+	&& rm -f *.tar.gz requirements.txt
 
 ENTRYPOINT ["maflib"]
 
