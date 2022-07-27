@@ -7,7 +7,7 @@ COPY ./ /opt
 
 WORKDIR /opt
 
-RUN pip install tox tox -e build
+RUN pip install tox && tox -e build
 
 FROM ${REGISTRY}/ncigdc/python3.8:${BASE_CONTAINER_VERSION}
 
