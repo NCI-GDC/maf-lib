@@ -4,23 +4,21 @@ MODULE = maflib
 
 # Redirect error when run in container
 COMMIT_HASH:=$(shell git rev-parse HEAD 2>/dev/null)
-GIT_DESCRIBE:=$(shell git describe --tags 2>/dev/null)
+GIT_DESCRIBE:=$(shell git describe --tags --always 2>/dev/null)
 
-DOCKER_REPO := quay.io/ncigdc
-DOCKER_IMAGE_COMMIT := ${DOCKER_REPO}/${REPO}:${COMMIT_HASH}
-DOCKER_IMAGE_DESCRIBE := ${DOCKER_REPO}/${REPO}:${GIT_DESCRIBE}
-DOCKER_IMAGE_LATEST := ${DOCKER_REPO}/${REPO}:latest
+DOCKER_REGISTRY := docker.osdc.io
+DOCKER_IMAGE_COMMIT := ${DOCKER_REGISTRY}/ncigdc/${REPO}:${COMMIT_HASH}
+DOCKER_IMAGE_DESCRIBE := ${DOCKER_REGISTRY}/ncigdc/${REPO}:${GIT_DESCRIBE}
+DOCKER_IMAGE_LATEST := ${DOCKER_REGISTRY}/ncigdc/${REPO}:latest
 
 # Env args
 PIP_EXTRA_INDEX_URL ?=
-http_proxy ?=
-https_proxy ?=
-REGISTRY ?= quay.io
+PROXY ?=
 
 
 .PHONY: version version-*
 version:
-	@tox -e version
+	@python -m setuptools_scm
 
 version-docker:
 	@echo ${DOCKER_IMAGE_DESCRIBE}
@@ -37,7 +35,7 @@ venv:
 
 .PHONY: init init-*
 init: init-pip init-hooks
-init-pip: init-venv
+init-pip:
 	@echo
 	@echo -- Installing pip packages --
 	pip-sync requirements.txt dev-requirements.txt
@@ -60,8 +58,10 @@ clean-dirs:
 	rm -rf ./*.egg-info/
 	rm -rf ./test-reports/
 	rm -rf ./htmlcov/
-	rm -rf coverage.xml
-	rm -rf .coverage
+
+clean-docker:
+	@echo
+
 
 .PHONY: requirements requirements-*
 requirements: init-venv requirements-prod requirements-dev
@@ -80,16 +80,24 @@ build-docker: clean
 	@echo -- Building docker --
 	docker build . \
 		--file ./Dockerfile \
-		--build-arg http_proxy \
-		--build-arg https_proxy \
-		--build-arg REGISTRY \
+		--build-arg http_proxy="${PROXY}" \
+		--build-arg https_proxy="${PROXY}" \
+		--build-arg REGISTRY="${DOCKER_REGISTRY}" \
 		-t "${DOCKER_IMAGE_COMMIT}" \
 		-t "${DOCKER_IMAGE_DESCRIBE}" \
 		-t "${REPO}"
 
 build-pypi: clean
 	@echo
-	tox -e build
+	tox -e check_dist
+
+.PHONY: run run-*
+run:
+	@echo
+
+run-docker:
+	@echo
+	docker run --rm "${DOCKER_IMAGE_COMMIT}"
 
 .PHONY: lint test test-* tox
 test: tox
@@ -99,7 +107,7 @@ lint:
 	tox -p -e flake8
 
 test-unit:
-	tox -e py3
+	pytest tests/
 
 test-docker:
 	@echo
