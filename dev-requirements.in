@@ -7,5 +7,7 @@ pre-commit>=2.9.0
 tox
 mock
 pytest
-pytest-cov
+coverage[toml]
 mypy
+black
+pip-tools

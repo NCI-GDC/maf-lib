@@ -1,0 +1,20 @@
+{
+    "template": "git@github.com:NCI-GDC/bio-python-template.git",
+    "commit": "2538d116b1c2f3cf68b734c5a5179a4fc70acc9f",
+    "context": {
+      "cookiecutter": {
+        "full_name": "Charles Czysz",
+        "email": "czysz@uchicago.edu",
+        "github_username": "czyszCTDS",
+        "project_name": "maf-lib",
+        "package_name": "maflib",
+        "project_short_description": "Python package for processing and creating MAF files for the GDC",
+        "min_python_version": "3.8",
+        "github_repo": "https://github.com/NCI-GDC/maf-lib",
+        "commit": "2538d116b1c2f3cf68b734c5a5179a4fc70acc9f",
+        "_template": "git@github.com:NCI-GDC/bio-python-template.git"
+      }
+    },
+    "directory": null,
+    "checkout": null
+  }

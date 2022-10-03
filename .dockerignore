@@ -108,6 +108,3 @@ ENV/
 # VSCode
 .vscode/
 test-reports/
-
-# Gitlab CI
-vars.env
