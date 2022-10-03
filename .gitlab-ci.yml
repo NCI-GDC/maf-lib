@@ -33,13 +33,13 @@ docker_build:
   rules:
     - if: $CI_COMMIT_TAG
       variables:
-        DOCKER_RELEASE_REGISTRY: "quay.io"
+        DOCKER_RELEASE_REGISTRY: "quay.io/ncigdc"
     - if: $CI_COMMIT_REF_NAME =~ /main/
       variables:
-        DOCKER_RELEASE_REGISTRY: "quay.io"
+        DOCKER_RELEASE_REGISTRY: "quay.io/ncigdc"
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
       variables:
-        DOCKER_RELEASE_REGISTRY: "quay.io"
+        DOCKER_RELEASE_REGISTRY: "quay.io/ncigdc"
     - when: always
   script:
     - docker build . 
