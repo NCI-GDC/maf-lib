@@ -4,7 +4,7 @@ build-backend = "flit_scm:buildapi"
 
 [project]
 name = "bioinf-maflib"
-description = "Library for creating and reading MAF files"
+description = "Python package for processing and creating MAF files for the GDC"
 authors = [
     {name = "Charles Czysz", email = "czysz@uchicago.edu"}
 ]
@@ -18,13 +18,15 @@ classifiers = [
 	"Programming Language :: Python :: 3 :: Only"
 ]
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "click"
+]
 
 [project.urls]
 homepage = "https://github.com/NCI-GDC/maf-lib"
 
 [project.scripts]
-maflib = "maflib.__main__:main"
+"maflib" = "maflib.__main__:main"
 
 [tool.setuptools_scm]
 write_to = "maflib/_version.py"
