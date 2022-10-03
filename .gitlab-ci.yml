@@ -40,6 +40,7 @@ release:
       when: always
       variables:
         TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
+    - when: always
 
 .python_versions:
   parallel:
