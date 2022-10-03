@@ -24,22 +24,22 @@ tox:
 release:
   image: ${BASE_CONTAINER_REGISTRY}/${REPO_PY_VERSION}-builder:${BASE_CONTAINER_VERSION}
   rules:
-  - if: $CI_COMMIT_TAG
-    when: always
-    variables:
-      TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
-  - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-    when: always
-    variables:
-      TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
-  - if: $CI_COMMIT_REF_NAME =~ /master/
-    when: always
-    variables:
-      TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
-  - if: $CI_COMMIT_REF_NAME =~ /main/
-    when: always
-    variables:
-      TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
+    - if: $CI_COMMIT_TAG
+      when: always
+      variables:
+        TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: always
+      variables:
+        TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
+    - if: $CI_COMMIT_REF_NAME =~ /master/
+      when: always
+      variables:
+        TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
+    - if: $CI_COMMIT_REF_NAME =~ /main/
+      when: always
+      variables:
+        TWINE_REPOSITORY_URL: "https://nexus.osdc.io/repository/pypi-releases/"
 
 .python_versions:
   parallel:
