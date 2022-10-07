@@ -9,21 +9,18 @@ Python API library and command line tools for GDC MAF files.
 
 <!---toc start-->
   * [Contributing](#contributing)
-  * [Building](#building)
+  * [Installation](#installation)
   * [API](#api)
-  * [Tools](#tools)
 
 <!---toc end-->
 
 ## Contributing
 
-Read how to contribute [here](https://github.com/NCI-GDC/gdcapi/blob/master/CONTRIBUTING.md).
+Read how to contribute [here](CONTRIBUTING.md).
 
-## Building
+## Installation
 
-To clone the repository: `git clone git@github.com:NCI-GDC/maf-lib.git`.
-
-To install locally: `python setup.py install`.
+To install: `pip install git+https://github.com/NCI-GDC/maf-lib.git@2.3.3`.
 
 ## API
 
