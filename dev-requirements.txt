@@ -8,7 +8,7 @@ attrs==21.4.0
     # via pytest
 black==22.3.0
     # via -r dev-requirements.in
-certifi==2021.10.8
+certifi==2022.12.7
     # via requests
 cfgv==3.3.1
     # via pre-commit
@@ -107,17 +107,13 @@ toml==0.10.2
     #   tox
 tomli==2.0.1
     # via
-    #   black
     #   coverage
-    #   mypy
     #   pep517
     #   pytest
 tox==3.25.0
     # via -r dev-requirements.in
 typing-extensions==4.2.0
-    # via
-    #   black
-    #   mypy
+    # via mypy
 urllib3==1.26.9
     # via requests
 virtualenv==20.14.1
