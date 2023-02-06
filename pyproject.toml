@@ -38,6 +38,14 @@ test = [
     "pytest",
 ]
 
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-material-extensions",
+    "mkautodoc",
+    "mkdocs-click",
+]
+
 [project.urls]
 homepage = "https://github.com/NCI-GDC/maf-lib"
 

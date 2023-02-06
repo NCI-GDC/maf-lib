@@ -1,0 +1,43 @@
+site_name: maf-lib
+repo_url: https://github.com/NCI-GDC/maf-lib
+nav:
+  - Home: 'index.md'
+
+theme:
+  favicon: img/favicon.ico
+  logo: img/brh-logo.png
+  name: material
+
+  palette:
+   # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: brh_platform
+      toggle:
+        icon: material/eye
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: brh_platform_dark
+      toggle:
+        icon: material/eye-outline
+        name: Switch to light mode
+  features:
+    - navigation.indexes
+    - navigation.tracking
+
+use_directory_urls: true
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: True
+      baselevel: 1
+  - pymdownx.superfences
+  - pymdownx.details
+  - codehilite
+  - mkautodoc
+  - mkdocs-click
+plugins:
+  - search
