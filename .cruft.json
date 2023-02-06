@@ -1,6 +1,6 @@
 {
   "template": "git@github.com:NCI-GDC/bio-python-template.git",
-  "commit": "4fb23e1d5a0c683559633b755385ab5ed388f063",
+  "commit": "a73c331723b3083eb17bcfe6d9ec13e9bb892bdd",
   "context": {
     "cookiecutter": {
       "full_name": "Charles Czysz",
@@ -11,6 +11,7 @@
       "project_short_description": "Python package for processing and creating MAF files for the GDC",
       "min_python_version": "3.8",
       "github_repo": "https://github.com/NCI-GDC/maf-lib",
+      "docker_release_repo": "quay.io",
       "commit": "2538d116b1c2f3cf68b734c5a5179a4fc70acc9f",
       "_template": "git@github.com:NCI-GDC/bio-python-template.git"
     }
