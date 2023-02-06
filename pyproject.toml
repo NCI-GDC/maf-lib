@@ -22,6 +22,22 @@ dependencies = [
     "click"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "black",
+    "detect-secrets==1.2.0",
+    "flake8-docstrings",
+    "flake8",
+    "isort",
+    "mypy",
+    "pre-commit>=2.9.0",
+]
+
+test = [
+    "coverage[toml]",
+    "pytest",
+]
+
 [project.urls]
 homepage = "https://github.com/NCI-GDC/maf-lib"
 

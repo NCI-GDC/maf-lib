@@ -38,8 +38,8 @@ init: init-pip init-hooks
 init-pip:
 	@echo
 	@echo -- Installing pip packages --
-	pip-sync requirements.txt dev-requirements.txt
-	python -m pip install -e .
+	python -m pip install ".[dev,test]"
+	python -m pip install --no-deps -r requirements.txt -e .
 
 init-hooks:
 	@echo
@@ -64,12 +64,8 @@ clean-docker:
 
 
 .PHONY: requirements requirements-*
-requirements: init-venv requirements-prod requirements-dev
-requirements-dev:
-	pip-compile -o dev-requirements.txt dev-requirements.in
-
-requirements-prod:
-	pip-compile -o requirements.txt pyproject.toml
+requirements:
+	tox -e requirements
 
 .PHONY: build build-*
 
