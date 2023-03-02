@@ -37,4 +37,5 @@ repos:
     hooks:
       - id: cruft
         name: cruft
+        verbose: true
         entry: bash -c 'cruft check || true' --
