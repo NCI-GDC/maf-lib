@@ -184,26 +184,26 @@ class TestMafRecord(unittest.TestCase):
     def test_getitem_with_column_index_out_of_range(self):
         record = MafRecord()
         with self.assertRaises(KeyError):
-            column = record[0]
+            record[0]
         record[0] = MafColumnRecord(key="key1", value="value2")
         with self.assertRaises(KeyError):
-            column = record[-1]
+            record[-1]
         with self.assertRaises(KeyError):
-            column = record[2]
+            record[2]
 
     def test_getitem_with_missing_key(self):
         record = MafRecord()
         with self.assertRaises(KeyError):
-            column = record[0]
+            record[0]
         with self.assertRaises(KeyError):
-            column = record[MafColumnRecord(key="key1", value="value2")]
+            record[MafColumnRecord(key="key1", value="value2")]
         with self.assertRaises(KeyError):
-            column = record["key"]
+            record["key"]
 
     def test_getitem_with_wrong_type(self):
         record = MafRecord()
         with self.assertRaises(TypeError):
-            column = record[list()]
+            record[list()]
 
     def test_getitem_with_none_key(self):
         record = MafRecord()

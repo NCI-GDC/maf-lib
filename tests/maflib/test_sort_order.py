@@ -24,9 +24,9 @@ class TestSortOrder(unittest.TestCase):
 
     def test_invalid_sort_key(self):
         with self.assertRaises(Exception):
-            key = Unknown().sort_key()
+            Unknown().sort_key()
         with self.assertRaises(Exception):
-            key = Unsorted().sort_key()
+            Unsorted().sort_key()
 
 
 class TestSortOrderKey(unittest.TestCase):
@@ -140,7 +140,7 @@ class TestBarcodeAndCoordinateKey(unittest.TestCase):
 
         # contig undefined
         with self.assertRaises(ValueError):
-            k3 = sort_key(r3)
+            sort_key(r3)
 
         fd.close()
         os.remove(fn)
@@ -224,7 +224,7 @@ class TestCoordinateKey(unittest.TestCase):
 
         # contig undefined
         with self.assertRaises(ValueError):
-            k3 = sort_key(r3)
+            sort_key(r3)
 
         fd.close()
         os.remove(fn)
@@ -275,7 +275,7 @@ class TestSortOrderEnforcingIterator(unittest.TestCase):
             _iter=iter([r1, r2]), sort_order=Coordinate()
         )
         with self.assertRaises(ValueError):
-            items = [item for item in so_iter]
+            [item for item in so_iter]
 
     def test_unsorted(self):
         r1 = TestCoordinateKey.DummyRecord("C", 3, 4)
