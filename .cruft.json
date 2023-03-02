@@ -1,6 +1,6 @@
 {
   "template": "git@github.com:NCI-GDC/bio-python-template.git",
-  "commit": "a73c331723b3083eb17bcfe6d9ec13e9bb892bdd",
+  "commit": "5808028b4cbc04d2c48a603f3e9266d82657ad90",
   "context": {
     "cookiecutter": {
       "full_name": "Charles Czysz",

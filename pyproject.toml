@@ -26,8 +26,7 @@ dependencies = [
 dev = [
     "black",
     "detect-secrets==1.2.0",
-    "flake8-docstrings",
-    "flake8",
+    "ruff",
     "isort",
     "mypy",
     "pre-commit>=2.9.0",
