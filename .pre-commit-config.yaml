@@ -38,4 +38,5 @@ repos:
       - id: cruft
         name: cruft
         verbose: true
+        always_run: true
         entry: bash -c 'cruft check || true' --
