@@ -378,7 +378,7 @@ class TestMafReader(unittest.TestCase):
         self.assertEqual(reader.header().sort_order().name(), Coordinate().name())
 
         with self.assertRaises(ValueError):
-            records = [record for record in reader]
+            [record for record in reader]
 
         reader.close()
 

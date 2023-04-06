@@ -49,7 +49,7 @@ class TestSortOrderEnforcingIterator(unittest.TestCase):
         records = [DummyRecord("A", 2, 2), DummyRecord("A", 1, 2)]
 
         with self.assertRaises(Exception) as context:
-            items = [r for r in _SortOrderEnforcingIterator(iter(records), sort_order)]
+            [r for r in _SortOrderEnforcingIterator(iter(records), sort_order)]
         self.assertIn("out of order", str(context.exception))
 
 
