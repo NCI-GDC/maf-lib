@@ -5,13 +5,13 @@
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
 include:
   - project: nci-gdc/gitlab-templates
-    ref: master
+    ref: 0.1.0
     file:
       - templates/global/full.yaml
       - templates/python/full.yaml
 
 variables:
- BASE_CONTAINER_VERSION: "2.1.0"
+ BASE_CONTAINER_VERSION: "2.3.0"
  DOCKER_BUILDKIT: 1
  PIP_EXTRA_INDEX_URL: https://nexus.osdc.io/repository/pypi-all/simple
  DOCKER_BUILD_OPTS: "--build-arg PIP_EXTRA_INDEX_URL=https://nexus.osdc.io/repository/pypi-all/simple"

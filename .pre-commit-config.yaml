@@ -24,16 +24,17 @@ repos:
     hooks:
       - id: isort
         name: isort
+        args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 23.3.0
     hooks:
       - id: black
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.253'
+    rev: 'v0.0.265'
     hooks:
       - id: ruff
   - repo: https://github.com/cruft/cruft
-    rev: 2.11.1
+    rev: 2.14.0
     hooks:
       - id: cruft
         name: cruft
