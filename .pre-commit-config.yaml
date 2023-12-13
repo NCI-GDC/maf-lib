@@ -37,7 +37,3 @@ repos:
     rev: 2.14.0
     hooks:
       - id: cruft
-        name: cruft
-        verbose: true
-        always_run: true
-        entry: bash -c 'cruft check || true' --
